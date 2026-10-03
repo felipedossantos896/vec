@@ -1,0 +1,30 @@
+# Roda a cada push e a cada Pull Request: confere formatação, analisa e testa o código.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Formatação (gofmt)
+        run: |
+          test -z "$(gofmt -l .)" || { echo "Arquivos fora do padrão:"; gofmt -l .; exit 1; }
+
+      - name: Análise estática (go vet)
+        run: go vet ./...
+
+      - name: Testes
+        run: go test ./...
+
+      - name: Compila
+        run: go build ./...

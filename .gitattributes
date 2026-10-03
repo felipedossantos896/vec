@@ -1,0 +1,5 @@
+# Evita avisos de fim de linha entre Windows e Linux
+* text=auto
+*.go text eol=lf
+*.sql text eol=lf
+*.html text eol=lf
