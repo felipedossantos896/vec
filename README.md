@@ -31,7 +31,9 @@ internal/
   config/      leitura do .env e das variáveis de ambiente
 migrations/    versões do banco: 0001_inicial.sql, 0002_...  (VERSIONADAS NO GIT)
 web/           formulário (index.html) e painel (admin/index.html)
-docs/          guias (comece por docs/NOTEBOOK.md)
+fly.toml       configuração do Fly.io
+Dockerfile     imagem do servidor
+docs/          guias: NOTEBOOK.md (trabalhar no seu computador) e DEPLOY.md (colocar no ar)
 ```
 
 ## Versionamento do banco
@@ -72,6 +74,7 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 | Aplicar migrations | `go run ./cmd/migrate` (o servidor também faz isso ao iniciar) |
 | Criar usuário | `go run ./cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope"` |
 | Importar a planilha | `go run ./cmd/importar -arquivo dados/respostas.csv` (use `-simular` antes) |
+| Agir no banco de produção | `ENV_FILE=.env.prod go run ./cmd/usuario ...` (todo comando mostra `Banco: ...` na primeira linha) |
 
 ## Permissões
 
@@ -87,70 +90,43 @@ permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê a aba
 
 ## Hospedagem (onde o servidor roda)
 
-O servidor é um container comum (`Dockerfile`), então roda em qualquer lugar.
+O servidor é um container comum (`Dockerfile`, binário único de ~7 MB), então roda em
+qualquer lugar. O caminho com tudo pronto (configuração e deploy automático) é o **Fly.io**, na região de São Paulo,
+com o banco do Turso também em São Paulo (assim cada consulta leva cerca de 1 ms
+entre servidor e banco). **Guia completo: [docs/DEPLOY.md](docs/DEPLOY.md).**
 
-> **Atenção ao Netlify:** funções em Go no Netlify usam o modo "Lambda compatibility",
-> que a Netlify declarou **obsoleto: deploys com funções nesse modo deixam de ser
-> aceitos a partir de 1º de julho de 2027**. Por isso este projeto **não** usa
-> Netlify Functions. O Netlify continua servindo para hospedar só as páginas, se
-> você quiser manter o endereço atual (veja "Manter o endereço do Netlify").
-
-| Opção | Custo aproximado | Observações |
+| | Fly.io | Google Cloud Run |
 |---|---|---|
-| **Google Cloud Run** (região `southamerica-east1`, São Paulo) | tende a ficar na faixa gratuita para esse volume | exige cartão; "dorme" quando ninguém usa (primeira visita após um tempo pode levar 1–3 s) |
-| **Fly.io** (região `gru`, São Paulo) | em torno de US$ 2 a 4 por mês | sempre ligado, sem espera; exige cartão |
+| Custo aproximado | máquina de 256 MB sempre ligada: cerca de **US$ 3,54/mês em São Paulo** (US$ 2,19 em Ashburn, nos EUA) | tende a ficar na faixa gratuita para esse volume |
+| Primeira visita após tempo parado | sem espera (sempre ligado) | o servidor "dorme" e a primeira visita fica mais lenta (não medi quanto) |
+| Conta | cartão obrigatório depois do teste de 7 dias; sem plano gratuito para contas novas | exige uma conta de cobrança no Google |
+| Arquivo de configuração | `fly.toml` (já incluído) | nenhum (usa o `Dockerfile`) |
 
-**Escolha a mesma região do banco.** Crie o banco do Turso em São Paulo
-(`aws-sa-east-1`) e o servidor também em São Paulo: assim cada consulta leva
-cerca de 1 ms entre servidor e banco.
+Sobre os preços:
 
-> Os comandos abaixo seguem a documentação de cada plataforma, mas **ainda não foram
-> executados de ponta a ponta** neste projeto. Confira no primeiro deploy.
+- O Fly **não tem mensalidade**. Os **US$ 29** que aparecem em alguns lugares são o plano de **suporte** opcional; não é necessário.
+- No Cloud Run, a faixa gratuita (2 milhões de requisições, 180 mil vCPU-segundos e 360 mil GiB-segundos por mês) vale em São Paulo como um desconto em dólares calculado a preço da faixa 1. Como São Paulo é da faixa 2, o limite efetivo de CPU fica em cerca de 128 mil vCPU-segundos. É muito acima do que um sistema de poucos usuários consome.
 
-### Cloud Run
+> **Por que não Netlify Functions?** Funções em Go no Netlify usam o modo "Lambda
+> compatibility", que a Netlify declarou **obsoleto: deploys com funções nesse modo
+> deixam de ser aceitos a partir de 1º de julho de 2027**. O Netlify continua servindo
+> para hospedar só as páginas, se você quiser manter o endereço atual (veja o guia de deploy).
+
+**CI/CD:** a cada merge na `main`, o GitHub Actions roda os testes e, se passarem e a
+variável `FLY_DEPLOY` estiver como `true`, publica no Fly.io (`.github/workflows/ci.yml`).
+
+**Cloud Run (alternativa):** segue a documentação do Google, mas não foi testado aqui:
 
 ```bash
 gcloud run deploy vec --source . --region southamerica-east1 --allow-unauthenticated \
   --set-env-vars "TURSO_DATABASE_URL=libsql://...,TURSO_AUTH_TOKEN=...,SESSION_SECRET=..."
-# opcional, para evitar a espera da primeira visita: --min-instances=1
 ```
-
-### Fly.io
-
-```bash
-fly launch --region gru          # detecta o Dockerfile e cria o fly.toml
-fly secrets set TURSO_DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." SESSION_SECRET="..."
-fly deploy
-```
-
-Use sempre o banco **de produção** (`vec-prod`) e um `SESSION_SECRET` diferente do
-de desenvolvimento nas plataformas de hospedagem.
-
-### Manter o endereço do Netlify
-
-Se quiser continuar com `area-vec.netlify.app` (que já está nos WhatsApps), hospede
-só a pasta `web/` no Netlify e encaminhe `/api` para o servidor Go:
-
-```toml
-# netlify.toml (exemplo — ajuste a URL do servidor)
-[build]
-  publish = "web"
-
-[[redirects]]
-  from = "/api"
-  to = "https://SEU-SERVIDOR.exemplo.app/api"
-  status = 200
-  force = true
-```
-
-Isso acrescenta uma parada a cada chamada. Com um domínio próprio apontando direto
-para o servidor, o Netlify deixa de ser necessário.
 
 ## Plano de virada (sem tirar o formulário do ar)
 
-1. Suba o servidor com o banco de produção vazio e crie o administrador (`cmd/usuario`).
-2. Na planilha, **Arquivo → Fazer download → Valores separados por vírgula**, na aba `Respostas`. Salve em `dados/respostas.csv`.
-3. `go run ./cmd/importar -arquivo dados/respostas.csv -simular`, confira, e rode sem `-simular`.
+1. Suba o servidor com o banco de produção vazio e crie o administrador (veja [docs/DEPLOY.md](docs/DEPLOY.md), passos 1 a 6).
+2. Na planilha, aba `Respostas`: **Arquivo → Fazer download → Valores separados por vírgula**. Salve em `dados/respostas.csv`.
+3. `ENV_FILE=.env.prod go run ./cmd/importar -arquivo dados/respostas.csv -simular`, confira, e rode sem `-simular`.
 4. Teste o painel com os dados importados e crie os líderes pela aba **Usuários**. As senhas antigas **não** migram (são guardadas de outro jeito): cada líder recebe uma senha nova.
 5. Troque o link do formulário (ou aponte o Netlify para o novo servidor). A planilha e o Apps Script antigo continuam intactos como plano B.
 6. Depois de alguns dias, importe de novo (é seguro repetir) para pegar quem respondeu no meio do caminho.

@@ -156,7 +156,22 @@ Quando eu entregar arquivos novos ou alterados:
 
 Se algo der errado, `git restore .` desfaz tudo o que ainda não foi registrado.
 
-## 8. Problemas comuns
+## 8. Publicar e mexer no banco de produção
+
+A publicação é automática: ao fazer **merge na `main`**, o GitHub roda os testes e,
+se passarem, publica no Fly.io. A configuração está em **[DEPLOY.md](DEPLOY.md)**.
+
+Para tarefas pontuais no banco de produção (criar o primeiro administrador, importar a
+planilha), use um arquivo separado, o `.env.prod`, que também é ignorado pelo Git:
+
+```bash
+ENV_FILE=.env.prod go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+```
+
+Todo comando mostra na primeira linha **`Banco: ...`**. Confira se é o banco certo
+(`vec-dev` no dia a dia, `vec-prod` só quando for de propósito) **antes** de continuar.
+
+## 9. Problemas comuns
 
 | Mensagem | Causa e solução |
 |---|---|

@@ -15,12 +15,13 @@ import (
 )
 
 func main() {
-	config.LoadDotEnv(".env")
+	config.LoadEnv()
 	db, err := config.OpenDB()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "erro:", err)
 		os.Exit(1)
 	}
+	fmt.Println("Banco:", config.DBHost())
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	feitas, err := turso.Migrate(ctx, db, migrations.FS, ".")

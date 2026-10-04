@@ -3,11 +3,33 @@ package config
 
 import (
 	"errors"
+	"net/url"
 	"os"
 	"strings"
 
 	"vec/internal/turso"
 )
+
+// LoadEnv carrega o arquivo indicado na variável ENV_FILE ou, se ela não
+// existir, o arquivo ".env". Assim dá para ter um ".env.prod" separado para
+// tarefas pontuais no banco de produção, sem misturar com o de desenvolvimento.
+func LoadEnv() {
+	path := os.Getenv("ENV_FILE")
+	if path == "" {
+		path = ".env"
+	}
+	LoadDotEnv(path)
+}
+
+// DBHost devolve só o endereço do banco (sem token), para mostrar em qual
+// banco um comando está agindo.
+func DBHost() string {
+	raw := strings.Replace(os.Getenv("TURSO_DATABASE_URL"), "libsql://", "https://", 1)
+	if u, err := url.Parse(raw); err == nil && u.Host != "" {
+		return u.Host
+	}
+	return "(não definido)"
+}
 
 // LoadDotEnv lê um arquivo .env (se existir) e define as variáveis que ainda
 // não estão definidas no ambiente. Em produção as variáveis vêm da plataforma.

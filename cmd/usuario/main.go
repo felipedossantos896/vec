@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	config.LoadDotEnv(".env")
+	config.LoadEnv()
 
 	usuario := flag.String("usuario", "", "login (3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado)")
 	nome := flag.String("nome", "", "nome de exibição")
@@ -61,6 +61,7 @@ func main() {
 	if err != nil {
 		die(err.Error())
 	}
+	fmt.Println("Banco:", config.DBHost())
 	st := &store.Store{DB: db}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

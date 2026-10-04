@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	config.LoadDotEnv(".env")
+	config.LoadEnv()
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	db, err := config.OpenDB()
@@ -81,7 +81,7 @@ func main() {
 		_ = httpSrv.Shutdown(shutdown)
 	}()
 
-	log.Info("servidor no ar", "porta", port, "endereco", "http://localhost:"+port)
+	log.Info("servidor no ar", "porta", port, "banco", config.DBHost())
 	if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		fatal(log, "http", err)
 	}

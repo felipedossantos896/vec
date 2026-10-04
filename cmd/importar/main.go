@@ -47,7 +47,7 @@ func normaliza(s string) string {
 }
 
 func main() {
-	config.LoadDotEnv(".env")
+	config.LoadEnv()
 	arquivo := flag.String("arquivo", "", "CSV exportado da aba Respostas")
 	simular := flag.Bool("simular", false, "só mostra o que seria importado, sem gravar")
 	flag.Parse()
@@ -78,6 +78,7 @@ func main() {
 	if err != nil {
 		die(err.Error())
 	}
+	fmt.Println("Banco:", config.DBHost())
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	novas, err := (&store.Store{DB: db}).ImportarRespostas(ctx, rs)
