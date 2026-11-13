@@ -9,22 +9,6 @@
 *.sqlite
 dados/
 
-# Planilhas exportadas (a origem dos dados é uma planilha)
-*.xlsx
-*.xls
-*.ods
-*.tsv
-
-# Chaves e credenciais
-*.pem
-*.key
-credentials*.json
-service-account*.json
-
-# SQLite auxiliares
-*.db-*
-*.sqlite3
-
 # Binários e temporários
 /bin/
 *.exe
@@ -34,4 +18,3 @@ service-account*.json
 Thumbs.db
 .vscode/settings.json
 .idea/
-.claude/settings.local.json
