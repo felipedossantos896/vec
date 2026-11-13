@@ -78,13 +78,21 @@ func New(rawURL, token string) (*Client, error) {
 		return nil, errors.New("TURSO_DATABASE_URL está vazio")
 	}
 	u = strings.Replace(u, "libsql://", "https://", 1)
-	if !strings.HasPrefix(u, "https://") && !strings.HasPrefix(u, "http://") {
+	if !strings.HasPrefix(u, "https://") {
 		return nil, fmt.Errorf("URL do banco inválida (%q): deve começar com libsql:// ou https://", rawURL)
 	}
 	return &Client{
 		endpoint: strings.TrimRight(u, "/") + "/v2/pipeline",
 		token:    strings.TrimSpace(token),
-		http:     &http.Client{Timeout: 20 * time.Second},
+		http: &http.Client{
+			Timeout: 20 * time.Second,
+			CheckRedirect: func(req *http.Request, _ []*http.Request) error {
+				if req.URL.Scheme != "https" {
+					return errors.New("turso: redirecionamento para URL sem TLS bloqueado")
+				}
+				return nil
+			},
+		},
 	}, nil
 }
 

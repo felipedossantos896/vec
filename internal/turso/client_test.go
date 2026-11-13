@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
 // servidor falso que guarda o corpo recebido e devolve uma resposta pronta
 func fake(t *testing.T, status int, resposta string, recebido *map[string]any) *Client {
 	t.Helper()
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v2/pipeline" {
 			t.Errorf("caminho inesperado: %s", r.URL.Path)
 		}
@@ -32,6 +33,7 @@ func fake(t *testing.T, status int, resposta string, recebido *map[string]any) *
 	if err != nil {
 		t.Fatal(err)
 	}
+	c.http.Transport = srv.Client().Transport
 	return c
 }
 
@@ -48,6 +50,35 @@ func TestNewConverteLibsql(t *testing.T) {
 	}
 	if _, err := New("ftp://x", "t"); err == nil {
 		t.Error("esquema inválido deveria falhar")
+	}
+	if _, err := New("http://db.exemplo", "t"); err == nil {
+		t.Error("HTTP sem TLS deveria falhar")
+	}
+}
+
+func TestDoBloqueiaRedirectHTTP(t *testing.T) {
+	var redirected atomic.Bool
+	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		redirected.Store(true)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer httpServer.Close()
+
+	tlsServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, httpServer.URL, http.StatusTemporaryRedirect)
+	}))
+	defer tlsServer.Close()
+
+	c, err := New(tlsServer.URL, "segredo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.http.Transport = tlsServer.Client().Transport
+	if _, err := c.Do(context.Background(), Stmt{SQL: "SELECT 1"}); err == nil {
+		t.Fatal("redirecionamento para HTTP deveria falhar")
+	}
+	if redirected.Load() {
+		t.Fatal("requisição foi enviada sem TLS após o redirecionamento")
 	}
 }
 
