@@ -128,8 +128,10 @@ No GitHub aparece um botão **Compare & pull request**. Ao abrir o Pull Request,
 GitHub roda os testes sozinho (arquivo `.github/workflows/ci.yml`). Estando verde,
 clique em **Merge**. Depois, no notebook: `git switch main` e `git pull`.
 
-Mensagens de commit: comece com `feat:` (novidade), `fix:` (correção), `docs:` (texto),
-`refactor:` (reorganização sem mudar comportamento).
+Mensagens de commit: use `feat:` para novidades, `improve:` para melhorias e
+`fix:` para correções. No deploy, novidades/melhorias aumentam a versão minor,
+correções e outros tipos aumentam patch; uma mudança incompatível deve incluir
+`!` no tipo (ex.: `feat!:`) ou `BREAKING CHANGE:` no corpo e aumenta major.
 
 ## 6. Mudando a estrutura do banco
 
