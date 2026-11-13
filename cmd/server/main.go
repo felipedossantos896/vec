@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -21,6 +22,8 @@ import (
 	"vec/migrations"
 	"vec/web"
 )
+
+var version = "local"
 
 func main() {
 	config.LoadEnv()
@@ -57,6 +60,7 @@ func main() {
 	apiHandler := srv.Handler()
 	root.Handle("/api", apiHandler)
 	root.Handle("/healthz", apiHandler)
+	root.HandleFunc("/version", versionHandler(version))
 	root.Handle("/", noCacheHTML(http.FileServerFS(web.FS)))
 
 	port := os.Getenv("PORT")
@@ -86,6 +90,19 @@ func main() {
 		fatal(log, "http", err)
 	}
 	log.Info("servidor encerrado")
+}
+
+func versionHandler(appVersion string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", http.MethodGet)
+			http.Error(w, "método não permitido", http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = io.WriteString(w, appVersion)
+	}
 }
 
 // As páginas HTML mudam a cada deploy, então o navegador deve sempre conferir.

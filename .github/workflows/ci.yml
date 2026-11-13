@@ -1,4 +1,10 @@
-# Roda a cada push e a cada Pull Request: confere formatação, analisa e testa o código.
+# CI/CD da Área VEC
+#
+#  - A cada push e a cada Pull Request: confere formatação, analisa e testa.
+#  - A cada push na branch main (e só se os testes passarem): publica no Fly.io,
+#    mas SOMENTE se a variável FLY_DEPLOY do repositório estiver como "true"
+#    (GitHub: Settings > Secrets and variables > Actions > Variables).
+#    Enquanto ela não existir, nada é publicado e o fluxo fica verde.
 name: CI
 
 on:
@@ -28,3 +34,18 @@ jobs:
 
       - name: Compila
         run: go build ./...
+
+  deploy:
+    name: Publicar no Fly.io
+    needs: testes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.FLY_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    concurrency: deploy-group # nunca dois deploys ao mesmo tempo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy
+        run: flyctl deploy --remote-only --ha=false --build-arg "APP_VERSION=${APP_VERSION}"
+        env:
+          APP_VERSION: ${{ github.run_number }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -186,6 +186,9 @@ fly tokens create deploy -a vec-igreja-fulano -x 8760h
    - aba **Variables** → *New repository variable* → nome `FLY_DEPLOY`, valor `true`.
 3. Pronto: a cada merge na `main`, se os testes passarem, o GitHub publica no Fly.io.
    Para **pausar** os deploys automáticos, mude `FLY_DEPLOY` para `false`.
+   A tela de login mostra a versão do deploy, baseada no número da execução do
+   workflow do GitHub Actions. Como o mesmo workflow também roda em Pull Requests,
+   os números podem ter saltos entre deploys.
 
 O token vale 1 ano (8760 h). Anote uma data para gerar outro e trocar o secret.
 

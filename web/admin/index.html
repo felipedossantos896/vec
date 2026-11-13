@@ -41,6 +41,7 @@
   .pass-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); min-height: 42px; padding: 0 12px; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 0.95rem; cursor: pointer; border-radius: 8px; }
   .btn-primary { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; border: none; border-radius: 12px; background: var(--gold); color: var(--navy); font-family: var(--serif); font-size: 1.2rem; font-weight: 600; cursor: pointer; }
   .btn-primary:disabled { opacity: 0.7; cursor: wait; }
+  .login-card > .deploy-version { color: var(--muted); font-size: 0.85rem; text-align: center; margin: 8px 0 0; }
   .msg { min-height: 1.4em; margin-top: 12px; color: var(--danger); font-weight: 700; font-size: 0.95rem; }
   .msg.info { color: var(--muted); font-weight: 400; }
   .spinner { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(26,35,64,0.25); border-top-color: var(--navy); animation: spin 0.8s linear infinite; }
@@ -253,6 +254,7 @@
       </div>
     </div>
     <button type="submit" class="btn-primary" id="btnLogin">Entrar</button>
+    <p class="deploy-version" id="deployVersion" aria-live="polite">Versão do deploy: carregando</p>
     <p class="msg" id="loginMsg" role="alert"></p>
   </form>
 </section>
@@ -1014,7 +1016,21 @@ $('uCopiar').addEventListener('click', async () => {
 });
 $('uDlg').addEventListener('click', e => { if (e.target === $('uDlg')) $('uDlg').close(); });
 
+async function carregarVersaoDeploy() {
+  const el = $('deployVersion');
+  try {
+    const r = await fetch('/version', { cache: 'no-store' });
+    if (!r.ok) throw new Error(`http ${r.status}`);
+    const v = (await r.text()).trim();
+    if (!v) throw new Error('versão vazia');
+    el.textContent = `Versão do deploy: ${v}`;
+  } catch {
+    el.textContent = 'Versão do deploy indisponível';
+  }
+}
+
 // ── Início ──
+carregarVersaoDeploy();
 if (lerSessao()) entrar(); else mostrarLogin();
 </script>
 </body>
