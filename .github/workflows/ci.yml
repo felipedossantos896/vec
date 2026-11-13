@@ -37,6 +37,7 @@ jobs:
           test "$(bash scripts/next-version.sh 1.2.3 'feat: novo recurso')" = "1.3.0"
           test "$(bash scripts/next-version.sh 1.2.3 'improve: busca')" = "1.3.0"
           test "$(bash scripts/next-version.sh 1.2.3 'fix: correção')" = "1.2.4"
+          test "$(bash scripts/next-version.sh 1.2.3 $'fix: correção\nfeat: novo recurso')" = "1.3.0"
           test "$(bash scripts/next-version.sh 1.2.3 'feat!: breaking change')" = "2.0.0"
           test "$(bash scripts/next-version.sh 1.2.3 'refactor: mudança' 'BREAKING CHANGE: incompatível')" = "2.0.0"
 
@@ -65,13 +66,16 @@ jobs:
             app_version="${version_tag#v}"
           else
             latest_tag="$(git tag --list 'v*' --sort=-version:refname | awk '/^v[0-9]+\.[0-9]+\.[0-9]+$/ { print; exit }')"
-            base_version="${latest_tag#v}"
             if [[ -z "$latest_tag" ]]; then
               base_version="1.0.0"
+              commit_range="HEAD"
+            else
+              base_version="${latest_tag#v}"
+              commit_range="${latest_tag}..HEAD"
             fi
-            subject="$(git log -1 --format=%s)"
-            body="$(git log -1 --format=%b)"
-            app_version="$(bash scripts/next-version.sh "$base_version" "$subject" "$body")"
+            subjects="$(git log --format=%s "$commit_range")"
+            bodies="$(git log --format=%b "$commit_range")"
+            app_version="$(bash scripts/next-version.sh "$base_version" "$subjects" "$bodies")"
             version_tag="v${app_version}"
           fi
           echo "version=${app_version}" >> "$GITHUB_OUTPUT"
@@ -80,6 +84,8 @@ jobs:
         env:
           VERSION_TAG: ${{ steps.version.outputs.tag }}
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if ! git rev-parse --verify --quiet "refs/tags/$VERSION_TAG"; then
             git tag -a "$VERSION_TAG" -m "Release $VERSION_TAG"
           fi

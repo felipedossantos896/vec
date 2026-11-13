@@ -187,7 +187,8 @@ fly tokens create deploy -a vec-igreja-fulano -x 8760h
 3. Pronto: a cada merge na `main`, se os testes passarem, o GitHub publica no Fly.io.
    Para **pausar** os deploys automáticos, mude `FLY_DEPLOY` para `false`.
    A tela de login mostra `version: MAJOR.MINOR.PATCH`. O workflow cria uma tag
-   `vMAJOR.MINOR.PATCH` em cada deploy: commits `feat:`/`improve:` aumentam
+   `vMAJOR.MINOR.PATCH` em cada deploy, considerando todos os commits desde a
+   última tag: `feat:`/`improve:` aumentam
    `MINOR`, correções e outros tipos aumentam `PATCH`, e `BREAKING CHANGE:` ou
    `!` no tipo aumentam `MAJOR`. Sem tags anteriores, a base é `1.0.0`. Uma
    nova tentativa do mesmo commit reutiliza sua tag.
