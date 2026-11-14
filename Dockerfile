@@ -4,7 +4,7 @@ WORKDIR /src
 COPY go.mod ./
 COPY . .
 ARG APP_VERSION=local
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${APP_VERSION}" -o /out/server ./cmd/server
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${APP_VERSION}" -o /out/server ./backend/cmd/server
 
 # distroless: sem shell, com certificados HTTPS, roda como usuário comum
 FROM gcr.io/distroless/static-debian12:nonroot

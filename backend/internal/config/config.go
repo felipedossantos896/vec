@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"vec/internal/turso"
+	"vec/backend/internal/turso"
 )
 
 // LoadEnv carrega o arquivo indicado na variável ENV_FILE ou, se ela não

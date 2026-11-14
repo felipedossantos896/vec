@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"vec/internal/turso"
+	"vec/backend/internal/turso"
 )
 
 type Store struct {

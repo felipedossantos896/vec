@@ -1,6 +1,6 @@
 // Comando migrate: aplica as migrations pendentes no banco.
 //
-//	go run ./cmd/migrate
+//	go run ./backend/cmd/migrate
 package main
 
 import (
@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"vec/internal/config"
-	"vec/internal/turso"
-	"vec/migrations"
+	"vec/backend/internal/config"
+	"vec/backend/internal/turso"
+	"vec/backend/migrations"
 )
 
 func main() {

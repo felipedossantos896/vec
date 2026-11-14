@@ -10,27 +10,19 @@ Navegador ──►  Servidor Go  ──►  Turso (SQLite)
    painel)
 ```
 
-Um único programa (`cmd/server`) serve as páginas e a API. O formato da API é o
+Um único programa (`backend/cmd/server`) serve as páginas e a API. O formato da API é o
 mesmo que o Google Apps Script usava, então o formulário e o painel quase não
 mudaram.
 
 ## O que tem aqui
 
 ```
-cmd/
-  server/      o servidor (páginas + API)
-  migrate/     aplica as mudanças de estrutura do banco
-  usuario/     cria/atualiza usuários direto no banco (para o 1º administrador)
-  importar/    copia as respostas da planilha do Google para o banco
-  segredo/     gera o SESSION_SECRET
-internal/
-  api/         regras de negócio e rotas HTTP
-  store/       todo o SQL do projeto
-  turso/       cliente do Turso (protocolo HTTP) e executor de migrations
-  auth/        senhas (PBKDF2) e sessões assinadas
-  config/      leitura do .env e das variáveis de ambiente
-migrations/    versões do banco: 0001_inicial.sql, 0002_...  (VERSIONADAS NO GIT)
-web/           formulário (index.html) e painel (admin/index.html)
+backend/
+  cmd/         servidor, migrations, usuários, importação e geração do SESSION_SECRET
+  internal/    API, SQL, cliente Turso, autenticação e configuração
+  migrations/  versões do banco: 0001_inicial.sql, 0002_... (VERSIONADAS NO GIT)
+frontend/      formulário (index.html), painel (admin/index.html) e empacotamento dos HTML
+go.mod         módulo Go compartilhado pelo backend e pelo pacote de frontend
 fly.toml       configuração do Fly.io
 Dockerfile     imagem do servidor
 docs/          guias: NOTEBOOK.md (trabalhar no seu computador) e DEPLOY.md (colocar no ar)
@@ -38,7 +30,7 @@ docs/          guias: NOTEBOOK.md (trabalhar no seu computador) e DEPLOY.md (col
 
 ## Versionamento do banco
 
-A **estrutura** do banco (tabelas, colunas, índices) fica na pasta `migrations/`,
+A **estrutura** do banco (tabelas, colunas, índices) fica na pasta `backend/migrations/`,
 em arquivos numerados que vão para o Git como qualquer código. Cada arquivo roda
 uma única vez, em ordem, dentro de uma transação, e fica registrado na tabela
 `schema_migrations`.
@@ -56,10 +48,10 @@ Veja o passo a passo completo em **[docs/NOTEBOOK.md](docs/NOTEBOOK.md)**. Resum
 4. Rode:
 
 ```bash
-go run ./cmd/segredo          # gera o valor do SESSION_SECRET (cole no .env)
-go run ./cmd/migrate          # cria as tabelas no banco
-go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
-go run ./cmd/server           # abre em http://localhost:8080
+go run ./backend/cmd/segredo          # gera o valor do SESSION_SECRET (cole no .env)
+go run ./backend/cmd/migrate          # cria as tabelas no banco
+go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+go run ./backend/cmd/server           # abre em http://localhost:8080
 ```
 
 Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
@@ -68,13 +60,13 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 
 | Para quê | Comando |
 |---|---|
-| Rodar o sistema | `go run ./cmd/server` |
+| Rodar o sistema | `go run ./backend/cmd/server` |
 | Rodar os testes | `go test ./...` |
 | Conferir o código | `go vet ./...` e `gofmt -l .` |
-| Aplicar migrations | `go run ./cmd/migrate` (o servidor também faz isso ao iniciar) |
-| Criar usuário | `go run ./cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope"` |
-| Importar a planilha | `go run ./cmd/importar -arquivo dados/respostas.csv` (use `-simular` antes) |
-| Agir no banco de produção | `ENV_FILE=.env.prod go run ./cmd/usuario ...` (todo comando mostra `Banco: ...` na primeira linha) |
+| Aplicar migrations | `go run ./backend/cmd/migrate` (o servidor também faz isso ao iniciar) |
+| Criar usuário | `go run ./backend/cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope"` |
+| Importar a planilha | `go run ./backend/cmd/importar -arquivo dados/respostas.csv` (use `-simular` antes) |
+| Agir no banco de produção | `ENV_FILE=.env.prod go run ./backend/cmd/usuario ...` (todo comando mostra `Banco: ...` na primeira linha) |
 
 ## Permissões
 
@@ -126,7 +118,7 @@ gcloud run deploy vec --source . --region southamerica-east1 --allow-unauthentic
 
 1. Suba o servidor com o banco de produção vazio e crie o administrador (veja [docs/DEPLOY.md](docs/DEPLOY.md), passos 1 a 6).
 2. Na planilha, aba `Respostas`: **Arquivo → Fazer download → Valores separados por vírgula**. Salve em `dados/respostas.csv`.
-3. `ENV_FILE=.env.prod go run ./cmd/importar -arquivo dados/respostas.csv -simular`, confira, e rode sem `-simular`.
+3. `ENV_FILE=.env.prod go run ./backend/cmd/importar -arquivo dados/respostas.csv -simular`, confira, e rode sem `-simular`.
 4. Teste o painel com os dados importados e crie os líderes pela aba **Usuários**. As senhas antigas **não** migram (são guardadas de outro jeito): cada líder recebe uma senha nova.
 5. Troque o link do formulário (ou aponte o Netlify para o novo servidor). A planilha e o Apps Script antigo continuam intactos como plano B.
 6. Depois de alguns dias, importe de novo (é seguro repetir) para pegar quem respondeu no meio do caminho.

@@ -84,7 +84,7 @@ turso db tokens create vec-prod        # anote o token
 Crie também um segredo de sessão **novo** (não reutilize o do notebook):
 
 ```bash
-go run ./cmd/segredo
+go run ./backend/cmd/segredo
 ```
 
 ## 2. Instalar o `flyctl` e criar a conta
@@ -144,13 +144,13 @@ TURSO_AUTH_TOKEN=O-TOKEN-DO-VEC-PROD
 Rode (macOS/Linux):
 
 ```bash
-ENV_FILE=.env.prod go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+ENV_FILE=.env.prod go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
 ```
 
 No PowerShell:
 
 ```powershell
-$env:ENV_FILE=".env.prod"; go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+$env:ENV_FILE=".env.prod"; go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
 Remove-Item Env:ENV_FILE
 ```
 
@@ -165,8 +165,8 @@ Entre em `https://vec-igreja-fulano.fly.dev/admin/` e crie os demais líderes pe
 2. Simule, confira o resultado e depois importe de verdade:
 
 ```bash
-ENV_FILE=.env.prod go run ./cmd/importar -arquivo dados/respostas.csv -simular
-ENV_FILE=.env.prod go run ./cmd/importar -arquivo dados/respostas.csv
+ENV_FILE=.env.prod go run ./backend/cmd/importar -arquivo dados/respostas.csv -simular
+ENV_FILE=.env.prod go run ./backend/cmd/importar -arquivo dados/respostas.csv
 ```
 
 Repetir a importação é seguro: o que já existe é ignorado.
@@ -202,7 +202,7 @@ errada, crie uma nova que corrija.
 ## 9. Domínio próprio e o endereço antigo do Netlify
 
 - **Domínio próprio** (ex.: `vec.suaigreja.com.br`): `fly certs add vec.suaigreja.com.br` e siga as instruções de DNS que o comando mostra. Vale a pena: o link passa a não depender de plataforma.
-- **Manter `area-vec.netlify.app`** (já distribuído nos WhatsApps): publique no Netlify só a pasta `web/` e encaminhe `/api` para o Fly com um `netlify.toml` como o do README. Cada chamada ganha uma parada extra, então o ideal é migrar os links para o domínio próprio.
+- **Manter `area-vec.netlify.app`** (já distribuído nos WhatsApps): publique no Netlify só a pasta `frontend/` e encaminhe `/api` para o Fly com um `netlify.toml` como o do README. Cada chamada ganha uma parada extra, então o ideal é migrar os links para o domínio próprio.
 
 ## 10. Medindo o desempenho de verdade
 
@@ -229,7 +229,7 @@ do comentário "Modo economia" e publique de novo.
 | `fly deploy` diz que o nome do app já existe | Nome em uso por outra pessoa. Escolha outro e edite o `app` no `fly.toml`. |
 | Deploy termina mas `/healthz` não abre | Veja `fly logs`. Se aparecer `TURSO_DATABASE_URL está vazio`, os segredos não foram definidos (passo 4). |
 | `acesso negado (HTTP 401)` nos logs | Token do Turso errado ou de outro banco. Gere outro e rode o passo 4 de novo. |
-| `SESSION_SECRET deve ter 32+ caracteres` | Gere com `go run ./cmd/segredo` e rode o passo 4 de novo. |
+| `SESSION_SECRET deve ter 32+ caracteres` | Gere com `go run ./backend/cmd/segredo` e rode o passo 4 de novo. |
 | Duas máquinas aparecem em `fly status` | Esqueceu o `--ha=false`. Rode `fly scale count 1`. |
 | O tamanho da máquina volta ao antigo depois do deploy | O `[[vm]]` do `fly.toml` manda. Edite o arquivo, não use `fly scale vm`. |
 | Deploy automático não roda | A variável `FLY_DEPLOY` precisa ser `true`, e o segredo `FLY_API_TOKEN` precisa existir. |

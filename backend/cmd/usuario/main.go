@@ -1,8 +1,8 @@
 // Comando usuario: cria ou atualiza um usuário do painel direto no banco.
 // Serve para criar o PRIMEIRO administrador (depois, use a aba "Usuários" do painel).
 //
-//	go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
-//	go run ./cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope,Betânia"
+//	go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+//	go run ./backend/cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope,Betânia"
 package main
 
 import (
@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"vec/internal/api"
-	"vec/internal/auth"
-	"vec/internal/config"
-	"vec/internal/store"
+	"vec/backend/internal/api"
+	"vec/backend/internal/auth"
+	"vec/backend/internal/config"
+	"vec/backend/internal/store"
 )
 
 func main() {

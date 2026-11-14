@@ -2,8 +2,8 @@
 // exportada como CSV) para o banco. Pode rodar mais de uma vez: o que já foi
 // importado é ignorado.
 //
-//	go run ./cmd/importar -arquivo dados/respostas.csv
-//	go run ./cmd/importar -arquivo dados/respostas.csv -simular
+//	go run ./backend/cmd/importar -arquivo dados/respostas.csv
+//	go run ./backend/cmd/importar -arquivo dados/respostas.csv -simular
 package main
 
 import (
@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"vec/internal/config"
-	"vec/internal/store"
+	"vec/backend/internal/config"
+	"vec/backend/internal/store"
 )
 
 var fusoBR = time.FixedZone("-03", -3*60*60)

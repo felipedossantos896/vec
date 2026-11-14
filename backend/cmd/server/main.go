@@ -1,6 +1,6 @@
 // Comando server: serve o formulário, o painel e a API em um único programa.
 //
-//	go run ./cmd/server        (desenvolvimento, lê o arquivo .env)
+//	go run ./backend/cmd/server (desenvolvimento, lê o arquivo .env)
 package main
 
 import (
@@ -15,12 +15,12 @@ import (
 	"syscall"
 	"time"
 
-	"vec/internal/api"
-	"vec/internal/config"
-	"vec/internal/store"
-	"vec/internal/turso"
-	"vec/migrations"
-	"vec/web"
+	"vec/backend/internal/api"
+	"vec/backend/internal/config"
+	"vec/backend/internal/store"
+	"vec/backend/internal/turso"
+	"vec/backend/migrations"
+	"vec/frontend"
 )
 
 var version = "local"
@@ -36,7 +36,7 @@ func main() {
 
 	secret := os.Getenv("SESSION_SECRET")
 	if len(secret) < 32 {
-		fatal(log, "configuração", errors.New("SESSION_SECRET deve ter 32+ caracteres (gere com: go run ./cmd/segredo)"))
+		fatal(log, "configuração", errors.New("SESSION_SECRET deve ter 32+ caracteres (gere com: go run ./backend/cmd/segredo)"))
 	}
 
 	if os.Getenv("AUTO_MIGRATE") != "0" {
@@ -61,7 +61,7 @@ func main() {
 	root.Handle("/api", apiHandler)
 	root.Handle("/healthz", apiHandler)
 	root.HandleFunc("/version", versionHandler(version))
-	root.Handle("/", noCacheHTML(http.FileServerFS(web.FS)))
+	root.Handle("/", noCacheHTML(http.FileServerFS(frontend.FS)))
 
 	port := os.Getenv("PORT")
 	if port == "" {

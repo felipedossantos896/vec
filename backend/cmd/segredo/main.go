@@ -1,6 +1,6 @@
 // Comando segredo: gera um valor aleatório para SESSION_SECRET.
 //
-//	go run ./cmd/segredo
+//	go run ./backend/cmd/segredo
 package main
 
 import (

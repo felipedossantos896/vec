@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"vec/internal/store"
+	"vec/backend/internal/store"
 )
 
 type listasCache struct {

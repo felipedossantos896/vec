@@ -80,14 +80,14 @@ cp .env.example .env          # no PowerShell: copy .env.example .env
 Abra o `.env` no VS Code e preencha:
 
 - `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` com os dados do **vec-dev**;
-- `SESSION_SECRET` com o resultado de `go run ./cmd/segredo`.
+- `SESSION_SECRET` com o resultado de `go run ./backend/cmd/segredo`.
 
 Depois:
 
 ```bash
-go run ./cmd/migrate
-go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
-go run ./cmd/server
+go run ./backend/cmd/migrate
+go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+go run ./backend/cmd/server
 ```
 
 Abra `http://localhost:8080/` (formulário) e `http://localhost:8080/admin/` (painel).
@@ -109,7 +109,7 @@ git switch -c feat/painel-paginacao   # cria o ramo da melhoria
 Edite os arquivos, rode e teste:
 
 ```bash
-go run ./cmd/server                   # testar na mão
+go run ./backend/cmd/server           # testar na mão
 go test ./...                         # testes automáticos
 go vet ./...                          # análise do código
 gofmt -l .                            # lista arquivos fora do padrão (o VS Code formata ao salvar)
@@ -135,17 +135,17 @@ correções e outros tipos aumentam patch; uma mudança incompatível deve inclu
 
 ## 6. Mudando a estrutura do banco
 
-Nunca altere o banco "na mão". Crie um arquivo novo em `migrations/`, por exemplo
-`migrations/0003_membros_telefone.sql`:
+Nunca altere o banco "na mão". Crie um arquivo novo em `backend/migrations/`, por exemplo
+`backend/migrations/0003_membros_telefone.sql`:
 
 ```sql
 ALTER TABLE respostas ADD COLUMN telefone TEXT NOT NULL DEFAULT '';
 ```
 
-Ao iniciar, o servidor aplica as migrations pendentes (ou rode `go run ./cmd/migrate`).
+Ao iniciar, o servidor aplica as migrations pendentes (ou rode `go run ./backend/cmd/migrate`).
 Teste primeiro no `vec-dev`. Quando o código for publicado, o servidor de produção
 aplica a mesma migration no `vec-prod`. As regras completas estão no topo de
-`migrations/0001_inicial.sql`.
+`backend/migrations/0001_inicial.sql`.
 
 ## 7. Trazendo mudanças que fiz no chat para o seu repositório
 
@@ -167,7 +167,7 @@ Para tarefas pontuais no banco de produção (criar o primeiro administrador, im
 planilha), use um arquivo separado, o `.env.prod`, que também é ignorado pelo Git:
 
 ```bash
-ENV_FILE=.env.prod go run ./cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
+ENV_FILE=.env.prod go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
 ```
 
 Todo comando mostra na primeira linha **`Banco: ...`**. Confira se é o banco certo
@@ -180,7 +180,7 @@ Todo comando mostra na primeira linha **`Banco: ...`**. Confira se é o banco ce
 | `go: command not found` | Go não instalado ou terminal aberto antes da instalação. Reabra o terminal. |
 | `TURSO_DATABASE_URL está vazio` | Falta preencher o `.env` ou você não está na pasta do projeto. |
 | `acesso negado (HTTP 401)` | Token errado ou de outro banco. Gere outro com `turso db tokens create`. |
-| `SESSION_SECRET deve ter 32+ caracteres` | Rode `go run ./cmd/segredo` e cole o resultado no `.env`. |
+| `SESSION_SECRET deve ter 32+ caracteres` | Rode `go run ./backend/cmd/segredo` e cole o resultado no `.env`. |
 | `address already in use` | A porta 8080 está ocupada. Mude `PORT=8081` no `.env`. |
 | `git push` pede senha e falha | Use `gh auth login` ou o login pelo navegador; o GitHub não aceita mais a senha da conta. |
 | Aviso de `LF will be replaced by CRLF` | Normal no Windows; o arquivo `.gitattributes` cuida disso. |

@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"vec/internal/auth"
-	"vec/internal/store"
-	"vec/internal/turso"
+	"vec/backend/internal/auth"
+	"vec/backend/internal/store"
+	"vec/backend/internal/turso"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"vec/internal/store"
+	"vec/backend/internal/store"
 )
 
 // Fortaleza não tem horário de verão desde 2019: UTC-3 fixo dispensa o banco de fusos.
@@ -17,7 +17,7 @@ func normUser(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 
 func validUser(s string) bool { return reUsuario.MatchString(s) }
 
-// NormUser e ValidUser são usados também pelos comandos de linha (cmd/usuario).
+// NormUser e ValidUser são usados também pelos comandos de linha (backend/cmd/usuario).
 func NormUser(s string) string { return normUser(s) }
 
 func ValidUser(s string) bool { return validUser(s) }
