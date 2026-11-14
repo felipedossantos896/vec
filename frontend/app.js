@@ -44,9 +44,13 @@ function byId(id) {
 }
 const form = byId('vecForm');
 const btnSend = byId('btnSend');
+const btnBack = byId('btnBack');
+const btnNext = byId('btnNext');
 const sendError = byId('sendError');
 const ministerioWrap = byId('ministerioWrap');
+const etapas = [...form.querySelectorAll('.card')];
 const ynNames = [];
+let etapaAtual = 0;
 function novoRequestId() {
     const bytes = crypto.getRandomValues(new Uint8Array(16));
     return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -69,8 +73,6 @@ for (const [grupo, lista] of Object.entries(PERGUNTAS)) {
       </div>`;
     }).join('');
 }
-// Campos que contam para a barra de progresso
-const progressFields = ['nome', 'nascimento', ...ynNames, 'setor', 'celula'];
 function valor(name) {
     const radio = form.querySelector(`input[type="radio"][name="${name}"]:checked`);
     if (radio)
@@ -83,12 +85,34 @@ function valor(name) {
         : '';
 }
 function atualizarProgresso() {
-    const total = progressFields.length;
-    const feitos = progressFields.filter(n => n === 'nascimento' ? !!paraISO(valor(n)) : valor(n) !== '').length;
-    const pct = Math.round((feitos / total) * 100);
+    const pct = Math.round(((etapaAtual + 1) / etapas.length) * 100);
     byId('progressFill').style.width = pct + '%';
-    byId('progressText').textContent = `${feitos} de ${total}`;
+    byId('progressText').textContent = `Etapa ${etapaAtual + 1} de ${etapas.length}`;
     byId('progressBar').setAttribute('aria-valuenow', String(pct));
+    byId('progressBar').setAttribute('aria-valuetext', `Etapa ${etapaAtual + 1} de ${etapas.length}`);
+}
+function mostrarEtapa(focar = false) {
+    etapas.forEach((etapa, i) => {
+        etapa.hidden = i !== etapaAtual;
+        if (i === etapaAtual)
+            etapa.setAttribute('aria-current', 'step');
+        else
+            etapa.removeAttribute('aria-current');
+    });
+    btnBack.classList.toggle('hidden', etapaAtual === 0);
+    btnNext.classList.toggle('hidden', etapaAtual === etapas.length - 1);
+    btnSend.classList.toggle('hidden', etapaAtual !== etapas.length - 1);
+    atualizarProgresso();
+    if (focar)
+        etapas[etapaAtual].querySelector('h2')?.focus();
+}
+function avancarEtapa() {
+    if (etapaAtual === 0 && !validar())
+        return;
+    if (etapaAtual < etapas.length - 1) {
+        etapaAtual++;
+        mostrarEtapa(true);
+    }
 }
 form.addEventListener('change', (e) => {
     const t = e.target;
@@ -105,14 +129,19 @@ form.addEventListener('change', (e) => {
                 byId('ministerioNome').value = '';
         }
     }
-    atualizarProgresso();
 });
 form.addEventListener('input', (e) => {
     const field = e.target instanceof Element ? e.target.closest('.field') : null;
-    if (field)
+    if (field) {
         field.classList.remove('invalid');
+        field.querySelector('[aria-invalid]')?.setAttribute('aria-invalid', 'false');
+    }
     sendError.classList.remove('show');
-    atualizarProgresso();
+});
+btnNext.addEventListener('click', avancarEtapa);
+btnBack.addEventListener('click', () => {
+    etapaAtual--;
+    mostrarEtapa(true);
 });
 // "Próximo" no teclado do celular pula do nome para a data
 byId('nome').addEventListener('keydown', e => {
@@ -134,7 +163,6 @@ nascInput.addEventListener('input', () => {
     else if (d.length > 2)
         out = `${d.slice(0, 2)}/${d.slice(2)}`;
     nascInput.value = out;
-    atualizarProgresso();
 });
 // Converte DD/MM/AAAA em AAAA-MM-DD; devolve '' se a data for inválida
 function paraISO(txt) {
@@ -195,6 +223,10 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (enviando)
         return;
+    if (etapaAtual < etapas.length - 1) {
+        avancarEtapa();
+        return;
+    }
     sendError.classList.remove('show');
     if (!validar())
         return;
@@ -234,13 +266,14 @@ form.addEventListener('submit', async (e) => {
 byId('btnAgain').addEventListener('click', () => {
     requestId = novoRequestId();
     form.reset();
+    etapaAtual = 0;
     form.querySelectorAll('.q.answered').forEach(q => q.classList.remove('answered'));
     form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
     ministerioWrap.classList.remove('show');
     byId('done').classList.remove('show');
     byId('topbar').style.display = '';
     form.style.display = '';
-    atualizarProgresso();
+    mostrarEtapa(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
-atualizarProgresso();
+mostrarEtapa();

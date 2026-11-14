@@ -30,8 +30,8 @@ jobs:
         run: |
           npm run typecheck
           npm run build
-          git diff --exit-code -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js frontend/tailwind.css
-          test -z "$(git status --short --untracked-files=all -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js frontend/tailwind.css)"
+          git diff --exit-code -- frontend/app.js frontend/admin/admin.js frontend/admin/dashboard.js frontend/admin/users.js frontend/tailwind.css
+          test -z "$(git status --short --untracked-files=all -- frontend/app.js frontend/admin/admin.js frontend/admin/dashboard.js frontend/admin/users.js frontend/tailwind.css)"
 
       - uses: actions/setup-go@v5
         with:

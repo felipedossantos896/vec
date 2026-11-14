@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 1.0
+**Versão vigente:** 1.3
 **Atualizado em:** 2026-11-14
 
 ## Fonte da verdade
@@ -40,5 +40,11 @@ devem ser guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **1.3 — 2026-11-14:** foco com contraste reforçado e abas do painel operáveis
+  por setas do teclado.
+- **1.2 — 2026-11-14:** painel com título de contexto e hierarquia reforçada
+  para indicadores, distribuição por célula e cartões de usuários.
+- **1.1 — 2026-11-14:** formulário público dividido em etapas com navegação,
+  progresso por etapa e foco acessível nos títulos.
 - **1.0 — 2026-11-14:** tokens compartilhados e primeira atualização visual do
   formulário e do painel, sem alterar fluxos ou dados.

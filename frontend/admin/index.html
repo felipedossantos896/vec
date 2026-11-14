@@ -59,14 +59,19 @@
 
   <main class="wrap mx-auto max-w-[1180px] px-[max(12px,env(safe-area-inset-right,0px))] pb-[calc(40px+env(safe-area-inset-bottom,0px))] pt-5 pl-[max(12px,env(safe-area-inset-left,0px))]">
     <nav class="tabs hidden" id="tabs" role="tablist" aria-label="Seções do painel">
-      <button type="button" role="tab" data-aba="cadastros" aria-selected="true">Cadastros</button>
-      <button type="button" role="tab" data-aba="usuarios" aria-selected="false">Usuários</button>
+      <button type="button" role="tab" data-aba="cadastros" aria-selected="true" tabindex="0">Cadastros</button>
+      <button type="button" role="tab" data-aba="usuarios" aria-selected="false" tabindex="-1">Usuários</button>
     </nav>
 
     <div id="cadastrosView">
     <div id="loading" class="loading"><span class="spinner"></span>Carregando cadastros...</div>
 
     <div id="content" class="hidden">
+      <header class="page-heading">
+        <p class="page-eyebrow">Painel de gestão</p>
+        <h1>Acompanhamento da área</h1>
+        <p>Indicadores, células e cadastros reunidos em um só lugar.</p>
+      </header>
       <h2 class="sec">Resumo</h2>
       <div class="stats" id="stats"></div>
 
@@ -204,6 +209,7 @@
 </dialog>
 
 <script src="admin.js" defer></script>
+<script src="dashboard.js" defer></script>
 <script src="users.js" defer></script>
 
 </body>

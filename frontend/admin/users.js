@@ -13,10 +13,26 @@ const MSG_USUARIO = {
     auto_bloqueio: 'Você não pode desativar o próprio acesso nem remover sua permissão de gerenciar usuários.'
 };
 let editando = null;
-document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'cadastros')));
+const abas = [...document.querySelectorAll('#tabs button')];
+abas.forEach((b, i) => {
+    b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'cadastros'));
+    b.addEventListener('keydown', e => {
+        const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!delta)
+            return;
+        e.preventDefault();
+        const proxima = abas[(i + delta + abas.length) % abas.length];
+        proxima.focus();
+        proxima.click();
+    });
+});
 function mostrarAba(aba) {
     estado.aba = aba;
-    document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.aba === aba)));
+    abas.forEach(b => {
+        const selecionada = b.dataset.aba === aba;
+        b.setAttribute('aria-selected', String(selecionada));
+        b.tabIndex = selecionada ? 0 : -1;
+    });
     $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
     $('usersView').classList.toggle('hidden', aba !== 'usuarios');
     if (aba === 'usuarios' && !estado.usuariosCarregados)

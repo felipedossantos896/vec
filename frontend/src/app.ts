@@ -48,9 +48,13 @@ function byId<T extends HTMLElement>(id: string): T {
 
 const form = byId<HTMLFormElement>('vecForm');
 const btnSend = byId<HTMLButtonElement>('btnSend');
+const btnBack = byId<HTMLButtonElement>('btnBack');
+const btnNext = byId<HTMLButtonElement>('btnNext');
 const sendError = byId<HTMLElement>('sendError');
 const ministerioWrap = byId<HTMLElement>('ministerioWrap');
+const etapas = [...form.querySelectorAll<HTMLElement>('.card')];
 const ynNames: string[] = [];
+let etapaAtual = 0;
 
 function novoRequestId() {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -75,9 +79,6 @@ for (const [grupo, lista] of Object.entries(PERGUNTAS)) {
   }).join('');
 }
 
-// Campos que contam para a barra de progresso
-const progressFields = ['nome', 'nascimento', ...ynNames, 'setor', 'celula'];
-
 function valor(name: string): string {
   const radio = form.querySelector<HTMLInputElement>(`input[type="radio"][name="${name}"]:checked`);
   if (radio) return radio.value;
@@ -89,12 +90,32 @@ function valor(name: string): string {
 }
 
 function atualizarProgresso() {
-  const total = progressFields.length;
-  const feitos = progressFields.filter(n => n === 'nascimento' ? !!paraISO(valor(n)) : valor(n) !== '').length;
-  const pct = Math.round((feitos / total) * 100);
+  const pct = Math.round(((etapaAtual + 1) / etapas.length) * 100);
   byId<HTMLElement>('progressFill').style.width = pct + '%';
-  byId<HTMLElement>('progressText').textContent = `${feitos} de ${total}`;
+  byId<HTMLElement>('progressText').textContent = `Etapa ${etapaAtual + 1} de ${etapas.length}`;
   byId<HTMLElement>('progressBar').setAttribute('aria-valuenow', String(pct));
+  byId<HTMLElement>('progressBar').setAttribute('aria-valuetext', `Etapa ${etapaAtual + 1} de ${etapas.length}`);
+}
+
+function mostrarEtapa(focar = false) {
+  etapas.forEach((etapa, i) => {
+    etapa.hidden = i !== etapaAtual;
+    if (i === etapaAtual) etapa.setAttribute('aria-current', 'step');
+    else etapa.removeAttribute('aria-current');
+  });
+  btnBack.classList.toggle('hidden', etapaAtual === 0);
+  btnNext.classList.toggle('hidden', etapaAtual === etapas.length - 1);
+  btnSend.classList.toggle('hidden', etapaAtual !== etapas.length - 1);
+  atualizarProgresso();
+  if (focar) etapas[etapaAtual].querySelector('h2')?.focus();
+}
+
+function avancarEtapa() {
+  if (etapaAtual === 0 && !validar()) return;
+  if (etapaAtual < etapas.length - 1) {
+    etapaAtual++;
+    mostrarEtapa(true);
+  }
 }
 
 form.addEventListener('change', (e: Event) => {
@@ -109,14 +130,21 @@ form.addEventListener('change', (e: Event) => {
       else byId<HTMLInputElement>('ministerioNome').value = '';
     }
   }
-  atualizarProgresso();
 });
 
 form.addEventListener('input', (e: Event) => {
   const field = e.target instanceof Element ? e.target.closest('.field') : null;
-  if (field) field.classList.remove('invalid');
+  if (field) {
+    field.classList.remove('invalid');
+    field.querySelector<HTMLInputElement>('[aria-invalid]')?.setAttribute('aria-invalid', 'false');
+  }
   sendError.classList.remove('show');
-  atualizarProgresso();
+});
+
+btnNext.addEventListener('click', avancarEtapa);
+btnBack.addEventListener('click', () => {
+  etapaAtual--;
+  mostrarEtapa(true);
 });
 
 // "Próximo" no teclado do celular pula do nome para a data
@@ -135,7 +163,6 @@ nascInput.addEventListener('input', () => {
   if (d.length > 4) out = `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
   else if (d.length > 2) out = `${d.slice(0, 2)}/${d.slice(2)}`;
   nascInput.value = out;
-  atualizarProgresso();
 });
 
 // Converte DD/MM/AAAA em AAAA-MM-DD; devolve '' se a data for inválida
@@ -200,6 +227,7 @@ let enviando = false;
 form.addEventListener('submit', async (e: SubmitEvent): Promise<void> => {
   e.preventDefault();
   if (enviando) return;
+  if (etapaAtual < etapas.length - 1) { avancarEtapa(); return; }
   sendError.classList.remove('show');
   if (!validar()) return;
 
@@ -240,14 +268,15 @@ form.addEventListener('submit', async (e: SubmitEvent): Promise<void> => {
 byId<HTMLButtonElement>('btnAgain').addEventListener('click', () => {
   requestId = novoRequestId();
   form.reset();
+  etapaAtual = 0;
   form.querySelectorAll('.q.answered').forEach(q => q.classList.remove('answered'));
   form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
   ministerioWrap.classList.remove('show');
   byId<HTMLElement>('done').classList.remove('show');
   byId<HTMLElement>('topbar').style.display = '';
   form.style.display = '';
-  atualizarProgresso();
+  mostrarEtapa(true);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-atualizarProgresso();
+mostrarEtapa();

@@ -19,10 +19,10 @@
   <div class="topbar-inner mx-auto max-w-[760px]">
     <div class="topbar-row">
       <span class="topbar-title">Formulário Membro · Área VEC</span>
-      <span class="topbar-count" id="progressText" aria-live="polite">0 de 0</span>
+      <span class="topbar-count" id="progressText" aria-live="polite">Etapa 1 de 5</span>
     </div>
-    <div class="progress" role="progressbar" aria-label="Progresso do preenchimento" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
-      <div class="progress-fill" id="progressFill"></div>
+    <div class="progress" role="progressbar" aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" aria-valuetext="Etapa 1 de 5" id="progressBar">
+      <div class="progress-fill" id="progressFill" style="width:20%"></div>
     </div>
   </div>
 </header>
@@ -32,7 +32,7 @@
   <div class="intro">
     <div class="intro-mark" aria-hidden="true">✝</div>
     <h1>Formulário Membro da Área VEC</h1>
-    <p>Leva cerca de 3 minutos. Toque nas opções para responder.</p>
+    <p>São 5 etapas rápidas. Você pode voltar para revisar suas respostas.</p>
   </div>
 
   <form id="vecForm" novalidate>
@@ -41,7 +41,7 @@
     <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s1">
       <div class="card-head">
         <span class="step" aria-hidden="true">1</span>
-        <div><h2 id="s1">Dados pessoais</h2></div>
+        <div><h2 id="s1" tabindex="-1">Dados pessoais</h2></div>
       </div>
 
       <div class="field" id="f-nome">
@@ -60,19 +60,19 @@
     </section>
 
     <!-- 2. Jornada -->
-    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s2">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s2" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">2</span>
-        <div><h2 id="s2">Etapas da jornada</h2><p>Você já participou de:</p></div>
+        <div><h2 id="s2" tabindex="-1">Etapas da jornada</h2><p>Você já participou de:</p></div>
       </div>
       <div class="qgrid" data-group="jornada"></div>
     </section>
 
     <!-- 3. Setor e célula -->
-    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s3">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s3" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">3</span>
-        <div><h2 id="s3">Setor, célula e serviço</h2></div>
+        <div><h2 id="s3" tabindex="-1">Setor, célula e serviço</h2></div>
       </div>
 
       <div role="radiogroup" aria-labelledby="l-setor">
@@ -105,19 +105,19 @@
     </section>
 
     <!-- 4. Treinamentos -->
-    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s4">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s4" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">4</span>
-        <div><h2 id="s4">Treinamentos</h2><p>Você já fez ou participa de:</p></div>
+        <div><h2 id="s4" tabindex="-1">Treinamentos</h2><p>Você já fez ou participa de:</p></div>
       </div>
       <div class="qgrid" data-group="treinamentos"></div>
     </section>
 
     <!-- 5. Discipulado e interesses -->
-    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s5">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s5" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">5</span>
-        <div><h2 id="s5">Discipulado e interesses</h2></div>
+        <div><h2 id="s5" tabindex="-1">Discipulado e interesses</h2></div>
       </div>
 
       <div class="field">
@@ -133,8 +133,12 @@
       </div>
     </section>
 
+    <div class="step-nav" aria-label="Navegação entre etapas">
+      <button type="button" class="btn-back hidden" id="btnBack">Voltar</button>
+      <button type="button" class="btn-next" id="btnNext">Próxima etapa</button>
+      <button type="submit" class="btn-send hidden" id="btnSend">Enviar formulário</button>
+    </div>
     <div class="actions">
-      <button type="submit" class="btn-send" id="btnSend">Enviar formulário</button>
       <p class="send-error" id="sendError" role="alert"></p>
       <p class="privacy">Suas respostas são enviadas somente para a liderança da área.</p>
     </div>
