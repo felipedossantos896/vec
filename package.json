@@ -1,0 +1,11 @@
+{
+  "name": "vec",
+  "private": true,
+  "scripts": {
+    "build": "tsc --project frontend/tsconfig.json",
+    "typecheck": "tsc --project frontend/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

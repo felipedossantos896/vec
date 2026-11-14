@@ -17,10 +17,9 @@ teste contra um banco de produção.
 
 ## Como o sistema está organizado
 
-- `frontend/index.html`: formulário público, com HTML, CSS e JavaScript no mesmo
-  arquivo.
-- `frontend/admin/index.html`: login, painel, exportação CSV e gestão de
-  usuários; também é um arquivo único.
+- `frontend/index.html` e `frontend/admin/index.html`: páginas servidas pelo Go.
+- `frontend/src/`: fontes TypeScript do formulário e do painel; os arquivos
+  JavaScript compilados permanecem nos caminhos embutidos pelo Go.
 - `backend/internal/api`: rotas, validação, autenticação e protocolo JSON.
 - `backend/internal/store`: consultas SQL, gravações, escopos e mapeamento dos
   dados.
@@ -129,18 +128,13 @@ teste contra um banco de produção.
    - **Se deixarmos:** Uma mudança incompleta pode parecer funcionar, mas perder
      o campo ou deixar uma opção indisponível para quem preenche.
 
-6. **O JavaScript não tem verificação automatizada no CI**
-   (`frontend/index.html:430-664`, `frontend/admin/index.html:429-1037`,
-   `.github/workflows/ci.yml`).
-   - **O que é:** O frontend é JavaScript puro embutido nos HTMLs; o workflow
-     verifica somente o código Go e o script de versão.
-   - **Problema:** Uma alteração pode quebrar envio, filtros, acessibilidade ou
-     a proteção contra fórmulas no CSV sem falhar nos testes do CI.
-   - **Correção:** Antes de reorganizar o frontend, automatizar ao menos os
-     casos de contrato e CSV e documentar uma verificação manual curta em
-     navegador móvel e desktop. Adicionar ferramenta ou dependência só se esses
-     testes não puderem ser feitos com o que já existe.
-   - **Se deixarmos:** Erros de interface chegam ao deploy sem sinal do CI.
+6. **O frontend não tinha verificação automatizada no CI — corrigido**
+   (`frontend/src/`, `frontend/tsconfig.json`, `.github/workflows/ci.yml`).
+   - **O que era:** O frontend era escrito em JavaScript sem checagem de tipos
+     no CI.
+   - **Correção:** As três telas agora têm fontes TypeScript com modo estrito.
+     O CI instala o compilador, verifica os tipos, compila os arquivos
+     JavaScript embutidos pelo Go e confirma que os artefatos estão atualizados.
 
 ### Adiar até a escala justificar
 
@@ -182,15 +176,17 @@ teste contra um banco de produção.
 - Só extrair helpers ou dividir arquivos quando isso remover duplicação real ou
   permitir testar uma regra; não dividir apenas por tamanho.
 
-### Fase 2 — Tornar o frontend seguro para mudar
+### Fase 2 — Tornar o frontend seguro para mudar (iniciada)
 
-- Automatizar os casos críticos do JavaScript antes de editar sua estrutura.
+- [x] Migrar as fontes do formulário e do painel para TypeScript estrito.
+- [x] Verificar tipos e sincronização dos arquivos embutidos no CI.
+- Automatizar os casos críticos de envio e CSV antes de alterar seu comportamento.
 - Resolver a fonte única das listas de setor/célula se elas forem mudar com
   frequência.
 - Manter HTML semântico, navegação por teclado, movimento reduzido e
   compatibilidade móvel.
-- Não migrar para framework nem adicionar pipeline de build sem uma necessidade
-  observada.
+- Não migrar para framework; a compilação TypeScript é mantida sem runtime ou
+  dependências de produção.
 
 ### Fase 3 — Escalar o painel por medição
 

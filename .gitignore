@@ -11,6 +11,7 @@ dados/
 
 # Binários e temporários
 /bin/
+node_modules/
 *.exe
 *.test
 *.out

@@ -21,7 +21,7 @@ backend/
   cmd/         servidor, migrations, usuários, importação e geração do SESSION_SECRET
   internal/    API, SQL, cliente Turso, autenticação e configuração
   migrations/  versões do banco: 0001_inicial.sql, 0002_... (VERSIONADAS NO GIT)
-frontend/      formulário (index.html), painel (admin/index.html) e empacotamento dos HTML
+frontend/      fontes TypeScript em src/; HTML/CSS e JavaScript compilado embutido pelo Go
 go.mod         módulo Go compartilhado pelo backend e pelo pacote de frontend
 fly.toml       configuração do Fly.io
 Dockerfile     imagem do servidor
@@ -43,12 +43,14 @@ uma única vez, em ordem, dentro de uma transação, e fica registrado na tabela
 
 Veja o passo a passo completo em **[docs/NOTEBOOK.md](docs/NOTEBOOK.md)**. Resumo:
 
-1. Instale **Git**, **Go** (1.24 ou mais novo) e o **VS Code**.
+1. Instale **Git**, **Go** (1.24 ou mais novo), **Node.js** (24 ou mais novo) e o **VS Code**.
 2. No Turso, crie um banco de **desenvolvimento** (`vec-dev`) e um token para ele.
 3. Copie `.env.example` para `.env` e preencha (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `SESSION_SECRET`).
 4. Rode:
 
 ```bash
+npm ci
+npm run build
 go run ./backend/cmd/segredo          # gera o valor do SESSION_SECRET (cole no .env)
 go run ./backend/cmd/migrate          # cria as tabelas no banco
 go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
@@ -61,6 +63,8 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 
 | Para quê | Comando |
 |---|---|
+| Compilar o frontend após editar TypeScript | `npm run build` |
+| Verificar tipos do frontend | `npm run typecheck` |
 | Rodar o sistema | `go run ./backend/cmd/server` |
 | Rodar os testes | `go test ./...` |
 | Conferir o código | `go vet ./...` e `gofmt -l .` |
@@ -68,6 +72,10 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 | Criar usuário | `go run ./backend/cmd/usuario -usuario ana -nome "Ana" -perfil CELULA -celulas "Hope"` |
 | Importar a planilha | `go run ./backend/cmd/importar -arquivo dados/respostas.csv` (use `-simular` antes) |
 | Agir no banco de produção | `ENV_FILE=.env.prod go run ./backend/cmd/usuario ...` (todo comando mostra `Banco: ...` na primeira linha) |
+
+As fontes do frontend ficam em `frontend/src/`. Após editá-las, rode
+`npm run build`: os arquivos JavaScript gerados são mantidos nos caminhos
+embutidos pelo Go, e o CI verifica que estão sincronizados.
 
 ## Permissões
 

@@ -1,4 +1,4 @@
-// Package frontend embute o formulário e o painel dentro do binário do servidor.
+// Package frontend embute as páginas e o JavaScript compilado dentro do binário do servidor.
 package frontend
 
 import "embed"

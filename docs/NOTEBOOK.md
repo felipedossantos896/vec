@@ -10,6 +10,7 @@ Funciona em Windows, macOS e Linux. Os comandos são digitados em um terminal
 |---|---|---|
 | **Git** | guardar o histórico do código | git-scm.com |
 | **Go** 1.24 ou mais novo | compilar e rodar o sistema | go.dev/dl |
+| **Node.js** 24 ou mais novo | compilar e verificar o frontend TypeScript | nodejs.org |
 | **VS Code** | editar os arquivos | code.visualstudio.com (instale também a extensão **Go**) |
 | **GitHub CLI** (opcional) | facilita o login no GitHub | cli.github.com |
 
@@ -18,6 +19,8 @@ Confira se deu certo (feche e abra o terminal depois de instalar):
 ```bash
 git --version
 go version
+node --version
+npm --version
 ```
 
 ## 2. Colocar o projeto no GitHub (primeira vez)
@@ -85,6 +88,8 @@ Abra o `.env` no VS Code e preencha:
 Depois:
 
 ```bash
+npm ci
+npm run build
 go run ./backend/cmd/migrate
 go run ./backend/cmd/usuario -usuario admin -nome "Administrador" -perfil AREA -gerencia
 go run ./backend/cmd/server
@@ -106,9 +111,12 @@ git pull                              # traz o que mudou no GitHub
 git switch -c feat/painel-paginacao   # cria o ramo da melhoria
 ```
 
-Edite os arquivos, rode e teste:
+Edite os arquivos TypeScript em `frontend/src/`. Depois de mudar o frontend,
+compile e verifique os tipos antes de iniciar o servidor:
 
 ```bash
+npm run typecheck
+npm run build
 go run ./backend/cmd/server           # testar na mão
 go test ./...                         # testes automáticos
 go vet ./...                          # análise do código

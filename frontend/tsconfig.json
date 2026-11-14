@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "module": "ESNext",
+    "strict": true,
+    "noEmitOnError": true,
+    "rootDir": "src",
+    "outDir": "."
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}

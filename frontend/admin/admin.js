@@ -1,301 +1,330 @@
+"use strict";
 // O servidor Go atende /api no mesmo endereço desta página.
-const API_URL = '/api';
-
+const ADMIN_API_URL = '/api';
 const CHAVE_SESSAO = 'vec_admin_sessao';
-
 const JORNADA = [['cafePastor', 'Café com Pastor'], ['estacaoDNA', 'Estação DNA'], ['acompInicial', 'Acompanhamento Inicial'], ['novaCriatura', 'Nova Criatura'], ['batismo', 'Batismo'], ['batismoEspirito', 'Batismo no Espírito']];
 const TREINOS = [['expresso01', 'Expresso 01 · Discipuladores'], ['expresso02', 'Expresso 02 · Líderes de Célula'], ['tlc', 'TLC'], ['encontroDeus', 'Encontro com Deus'], ['tadel', 'Participa do TADEL']];
 const INTERESSES = [['interesseDiscipulado', 'Ser discipulado(a)'], ['interesseCuidar', 'Cuidar de pessoas'], ['interesseLider', 'Ser líder de célula'], ['interesseAnfitrao', 'Ser anfitrião']];
 const SETORES = ['Fogo no Altar', 'Tabernáculo de Deus'];
 const CELULAS = ['Hope', 'Ramos da Videira', 'Ashrei', 'Betânia', 'Vencedores em Cristo', 'Despertar', 'Pi-Hairote'];
-
 const SITUACOES = {
-  todos:          { label: 'Todas as situações', f: () => true },
-  naoBatizados:   { label: 'Ainda não batizados', f: r => r.batismo !== 'S' },
-  naoRecebeu:     { label: 'Ainda não receberam Jesus', f: r => r.recebeuJesus === 'N' },
-  naoFrequenta:   { label: 'Não congregam com frequência', f: r => r.frequentaCultos === 'N' },
-  semDiscipulador:{ label: 'Sem discipulador', f: r => !r.discipulador },
-  querDiscipulado:{ label: 'Querem ser discipulados', f: r => r.interesseDiscipulado === 'S' },
-  querCuidar:     { label: 'Querem cuidar de pessoas', f: r => r.interesseCuidar === 'S' },
-  querLiderar:    { label: 'Querem liderar célula', f: r => r.interesseLider === 'S' },
-  querAnfitriao:  { label: 'Querem ser anfitriões', f: r => r.interesseAnfitrao === 'S' },
-  servem:         { label: 'Servem em ministério', f: r => r.serveMinisterio === 'S' },
+    todos: { label: 'Todas as situações', f: () => true },
+    naoBatizados: { label: 'Ainda não batizados', f: r => r.batismo !== 'S' },
+    naoRecebeu: { label: 'Ainda não receberam Jesus', f: r => r.recebeuJesus === 'N' },
+    naoFrequenta: { label: 'Não congregam com frequência', f: r => r.frequentaCultos === 'N' },
+    semDiscipulador: { label: 'Sem discipulador', f: r => !r.discipulador },
+    querDiscipulado: { label: 'Querem ser discipulados', f: r => r.interesseDiscipulado === 'S' },
+    querCuidar: { label: 'Querem cuidar de pessoas', f: r => r.interesseCuidar === 'S' },
+    querLiderar: { label: 'Querem liderar célula', f: r => r.interesseLider === 'S' },
+    querAnfitriao: { label: 'Querem ser anfitriões', f: r => r.interesseAnfitrao === 'S' },
+    servem: { label: 'Servem em ministério', f: r => r.serveMinisterio === 'S' },
 };
-
 const RESUMO = [
-  ['todos', 'cadastros', rs => rs.length],
-  ['naoBatizados', 'ainda não batizados', null],
-  ['querDiscipulado', 'querem ser discipulados', null],
-  ['querLiderar', 'querem liderar célula', null],
+    ['todos', 'cadastros', rs => rs.length],
+    ['naoBatizados', 'ainda não batizados', null],
+    ['querDiscipulado', 'querem ser discipulados', null],
+    ['querLiderar', 'querem liderar célula', null],
 ];
-
 const CSV_COLS = [
-  ['dataHora', 'Enviado em'], ['nome', 'Nome'], ['nascimento', 'Nascimento'], ['recebeuJesus', 'Recebeu Jesus'],
-  ...JORNADA, ['setor', 'Setor'], ['celula', 'Célula'], ['frequentaCultos', 'Frequenta cultos'],
-  ['serveMinisterio', 'Serve ministério'], ['ministerioNome', 'Qual ministério'], ...TREINOS,
-  ['discipulador', 'Discipulador'], ...INTERESSES, ['sugestao', 'Sugestão']
+    ['dataHora', 'Enviado em'], ['nome', 'Nome'], ['nascimento', 'Nascimento'], ['recebeuJesus', 'Recebeu Jesus'],
+    ...JORNADA, ['setor', 'Setor'], ['celula', 'Célula'], ['frequentaCultos', 'Frequenta cultos'],
+    ['serveMinisterio', 'Serve ministério'], ['ministerioNome', 'Qual ministério'], ...TREINOS,
+    ['discipulador', 'Discipulador'], ...INTERESSES, ['sugestao', 'Sugestão']
 ];
-
-const $ = id => document.getElementById(id);
-const estado = { regs: [], busca: '', setor: '', celula: '', situacao: 'todos', escopo: { todos: true, setores: [], celulas: [] } };
-
+function $(id) {
+    const element = document.getElementById(id);
+    if (!element)
+        throw new Error(`Elemento não encontrado: #${id}`);
+    return element;
+}
+const estado = {
+    regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
+    escopo: { todos: true, setores: [], celulas: [] },
+    gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
+};
 function rotulo(e) {
-  if (!e || e.todos) return 'Líder de área';
-  const p = [];
-  if (e.setores.length) p.push((e.setores.length > 1 ? 'Setores ' : 'Setor ') + e.setores.join(', '));
-  if (e.celulas.length) p.push((e.celulas.length > 1 ? 'Células ' : 'Célula ') + e.celulas.join(', '));
-  return p.join(' · ');
+    if (!e || e.todos)
+        return 'Líder de área';
+    const p = [];
+    if (e.setores.length)
+        p.push((e.setores.length > 1 ? 'Setores ' : 'Setor ') + e.setores.join(', '));
+    if (e.celulas.length)
+        p.push((e.celulas.length > 1 ? 'Células ' : 'Célula ') + e.celulas.join(', '));
+    return p.join(' · ');
 }
 // Líder de área vê a lista fixa; os demais só veem o que existe nos dados deles
 const baseSetores = () => estado.escopo.todos ? SETORES : [];
 const baseCelulas = () => estado.escopo.todos ? CELULAS : [];
-
 // ── Utilidades ──
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 function parseData(s) {
-  s = String(s || '').trim();
-  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
-  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
-  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-  return null;
+    const value = String(s || '').trim();
+    let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(value);
+    if (m)
+        return new Date(+m[1], +m[2] - 1, +m[3]);
+    m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(value);
+    if (m)
+        return new Date(+m[3], +m[2] - 1, +m[1]);
+    return null;
 }
 function idade(d) {
-  if (!d) return null;
-  const h = new Date();
-  let a = h.getFullYear() - d.getFullYear();
-  if (h.getMonth() < d.getMonth() || (h.getMonth() === d.getMonth() && h.getDate() < d.getDate())) a--;
-  return a >= 0 && a < 130 ? a : null;
+    if (!d)
+        return null;
+    const h = new Date();
+    let a = h.getFullYear() - d.getFullYear();
+    if (h.getMonth() < d.getMonth() || (h.getMonth() === d.getMonth() && h.getDate() < d.getDate()))
+        a--;
+    return a >= 0 && a < 130 ? a : null;
 }
-const fmtData = d => d ? d.toLocaleDateString('pt-BR') : '';
-const pill = v => v === 'S' ? '<span class="pill s">Sim</span>' : v === 'N' ? '<span class="pill n">Não</span>' : '<span class="pill x">—</span>';
-
+const fmtData = (d) => d ? d.toLocaleDateString('pt-BR') : '';
+const pill = (v) => v === 'S' ? '<span class="pill s">Sim</span>' : v === 'N' ? '<span class="pill n">Não</span>' : '<span class="pill x">—</span>';
 // ── Sessão ──
 function lerSessao() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO) || 'null');
-    return s && s.expira > Date.now() ? s : null;
-  } catch (e) { return null; }
+    try {
+        const s = JSON.parse(sessionStorage.getItem(CHAVE_SESSAO) || 'null');
+        return s && s.expira > Date.now() ? s : null;
+    }
+    catch (e) {
+        return null;
+    }
 }
-function salvarSessao(s) { try { sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(s)); } catch (e) {} }
-function limparSessao() { try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (e) {} }
-
+function salvarSessao(s) { try {
+    sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(s));
+}
+catch (e) { } }
+function limparSessao() { try {
+    sessionStorage.removeItem(CHAVE_SESSAO);
+}
+catch (e) { } }
 async function api(payload) {
-  const r = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!r.ok) throw new Error('http ' + r.status);
-  return r.json();
+    const r = await fetch(ADMIN_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!r.ok)
+        throw new Error('http ' + r.status);
+    return r.json();
 }
-
 // ── Login ──
 $('passToggle').addEventListener('click', () => {
-  const inp = $('senha');
-  const mostrar = inp.type === 'password';
-  inp.type = mostrar ? 'text' : 'password';
-  $('passToggle').textContent = mostrar ? 'Ocultar' : 'Mostrar';
-  $('passToggle').setAttribute('aria-pressed', String(mostrar));
+    const inp = $('senha');
+    const mostrar = inp.type === 'password';
+    inp.type = mostrar ? 'text' : 'password';
+    $('passToggle').textContent = mostrar ? 'Ocultar' : 'Mostrar';
+    $('passToggle').setAttribute('aria-pressed', String(mostrar));
 });
-
-$('usuario').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('senha').focus(); } });
-
-$('loginForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const msg = $('loginMsg');
-  const usuario = $('usuario').value.trim();
-  const senha = $('senha').value;
-  msg.className = 'msg';
-  if (!usuario || !senha) { msg.textContent = 'Informe usuário e senha.'; return; }
-
-  const btn = $('btnLogin');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Entrando...';
-  msg.textContent = '';
-  try {
-    const r = await api({ acao: 'login', usuario, senha });
-    if (r.ok) {
-      salvarSessao({ token: r.token, nome: r.nome, usuario: r.usuario || usuario.toLowerCase(), expira: Date.now() + (r.expiraEm - 60) * 1000 });
-      $('senha').value = '';
-      entrar();
-    } else if (r.erro === 'sem_escopo') {
-      msg.textContent = 'Seu acesso ainda não foi configurado. Fale com a liderança da área.';
-    } else if (r.erro === 'bloqueado') {
-      msg.textContent = 'Muitas tentativas. Aguarde 15 minutos e tente novamente.';
-    } else if (r.erro === 'login_limitado') {
-      msg.textContent = 'Muitas tentativas no painel. Aguarde um minuto e tente novamente.';
-    } else {
-      msg.textContent = 'Usuário ou senha incorretos.';
+$('usuario').addEventListener('keydown', e => { if (e.key === 'Enter') {
+    e.preventDefault();
+    $('senha').focus();
+} });
+$('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('loginMsg');
+    const usuario = $('usuario').value.trim();
+    const senha = $('senha').value;
+    msg.className = 'msg';
+    if (!usuario || !senha) {
+        msg.textContent = 'Informe usuário e senha.';
+        return;
     }
-  } catch (err) {
-    msg.textContent = 'Não foi possível conectar. Verifique a internet.';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
-  }
+    const btn = $('btnLogin');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Entrando...';
+    msg.textContent = '';
+    try {
+        const r = await api({ acao: 'login', usuario, senha });
+        if (r.ok) {
+            salvarSessao({ token: r.token, nome: r.nome, usuario: r.usuario || usuario.toLowerCase(), expira: Date.now() + (r.expiraEm - 60) * 1000 });
+            $('senha').value = '';
+            entrar();
+        }
+        else if (r.erro === 'sem_escopo') {
+            msg.textContent = 'Seu acesso ainda não foi configurado. Fale com a liderança da área.';
+        }
+        else if (r.erro === 'bloqueado') {
+            msg.textContent = 'Muitas tentativas. Aguarde 15 minutos e tente novamente.';
+        }
+        else if (r.erro === 'login_limitado') {
+            msg.textContent = 'Muitas tentativas no painel. Aguarde um minuto e tente novamente.';
+        }
+        else {
+            msg.textContent = 'Usuário ou senha incorretos.';
+        }
+    }
+    catch (err) {
+        msg.textContent = 'Não foi possível conectar. Verifique a internet.';
+    }
+    finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+    }
 });
-
-function mostrarLogin(aviso) {
-  $('appView').classList.add('hidden');
-  $('loginView').classList.remove('hidden');
-  const msg = $('loginMsg');
-  msg.className = aviso ? 'msg info' : 'msg';
-  msg.textContent = aviso || '';
-  setTimeout(() => $('usuario').focus(), 50);
+function mostrarLogin(aviso = '') {
+    $('appView').classList.add('hidden');
+    $('loginView').classList.remove('hidden');
+    const msg = $('loginMsg');
+    msg.className = aviso ? 'msg info' : 'msg';
+    msg.textContent = aviso || '';
+    setTimeout(() => $('usuario').focus(), 50);
 }
-
 function entrar() {
-  const s = lerSessao();
-  if (!s) return mostrarLogin();
-  $('loginView').classList.add('hidden');
-  $('appView').classList.remove('hidden');
-  $('whoami').textContent = 'Olá, ' + s.nome;
-  carregar();
+    const s = lerSessao();
+    if (!s)
+        return mostrarLogin();
+    $('loginView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+    $('whoami').textContent = 'Olá, ' + s.nome;
+    carregar();
 }
-
 $('btnLogout').addEventListener('click', () => {
-  const s = lerSessao();
-  if (s) api({ acao: 'logout', token: s.token }).catch(() => {});
-  limparSessao();
-  estado.regs = [];
-  estado.usuarios = [];
-  estado.usuariosCarregados = false;
-  mostrarAba('cadastros');
-  mostrarLogin('Você saiu do painel.');
+    const s = lerSessao();
+    if (s)
+        api({ acao: 'logout', token: s.token }).catch(() => { });
+    limparSessao();
+    estado.regs = [];
+    estado.usuarios = [];
+    estado.usuariosCarregados = false;
+    mostrarAba('cadastros');
+    mostrarLogin('Você saiu do painel.');
 });
-
 // ── Dados ──
 async function carregar() {
-  const s = lerSessao();
-  if (!s) return mostrarLogin('Sua sessão expirou. Entre novamente.');
-  $('loading').classList.remove('hidden');
-  $('content').classList.add('hidden');
-  $('btnRefresh').disabled = true;
-  try {
-    const r = await api({ acao: 'listar', token: s.token });
-    if (!r.ok) {
-      if (r.erro === 'sessao') { limparSessao(); return mostrarLogin('Sua sessão expirou. Entre novamente.'); }
-      if (r.erro === 'sem_escopo') { limparSessao(); return mostrarLogin('Seu acesso ainda não foi configurado. Fale com a liderança da área.'); }
-      throw new Error(r.erro);
+    const s = lerSessao();
+    if (!s)
+        return mostrarLogin('Sua sessão expirou. Entre novamente.');
+    $('loading').classList.remove('hidden');
+    $('content').classList.add('hidden');
+    $('btnRefresh').disabled = true;
+    try {
+        const r = await api({ acao: 'listar', token: s.token });
+        if (!r.ok) {
+            if (r.erro === 'sessao') {
+                limparSessao();
+                return mostrarLogin('Sua sessão expirou. Entre novamente.');
+            }
+            if (r.erro === 'sem_escopo') {
+                limparSessao();
+                return mostrarLogin('Seu acesso ainda não foi configurado. Fale com a liderança da área.');
+            }
+            throw new Error(r.erro);
+        }
+        estado.escopo = r.escopo || { todos: true, setores: [], celulas: [] };
+        estado.gerencia = !!r.gerencia;
+        $('tabs').classList.toggle('hidden', !estado.gerencia);
+        if (!estado.gerencia && estado.aba === 'usuarios')
+            mostrarAba('cadastros');
+        $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
+        estado.regs = r.registros.map(o => {
+            const x = { ...o };
+            Object.keys(o).forEach(k => { x[k] = typeof o[k] === 'string' ? o[k].trim() : o[k]; });
+            x._nasc = parseData(x.nascimento);
+            x._idade = idade(x._nasc);
+            x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
+            x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
+            return x;
+        }).sort((a, b) => b.linha - a.linha);
+        montarFiltros();
+        renderTudo();
+        $('loading').classList.add('hidden');
+        $('content').classList.remove('hidden');
     }
-    estado.escopo = r.escopo || { todos: true, setores: [], celulas: [] };
-    estado.gerencia = !!r.gerencia;
-    $('tabs').classList.toggle('hidden', !estado.gerencia);
-    if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('cadastros');
-    $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
-    estado.regs = r.registros.map(o => {
-      const x = {};
-      Object.keys(o).forEach(k => { x[k] = typeof o[k] === 'string' ? o[k].trim() : o[k]; });
-      x._nasc = parseData(x.nascimento);
-      x._idade = idade(x._nasc);
-      x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
-      x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
-      return x;
-    }).sort((a, b) => b.linha - a.linha);
-    montarFiltros();
-    renderTudo();
-    $('loading').classList.add('hidden');
-    $('content').classList.remove('hidden');
-  } catch (err) {
-    $('loading').innerHTML = 'Não foi possível carregar os dados. <button class="btn-sec" type="button" onclick="carregar()">Tentar novamente</button>';
-  } finally {
-    $('btnRefresh').disabled = false;
-  }
+    catch (err) {
+        $('loading').innerHTML = 'Não foi possível carregar os dados. <button class="btn-sec" type="button" onclick="carregar()">Tentar novamente</button>';
+    }
+    finally {
+        $('btnRefresh').disabled = false;
+    }
 }
 $('btnRefresh').addEventListener('click', () => {
-  if (estado.aba === 'usuarios') return carregarUsuarios();
-  $('loading').innerHTML = '<span class="spinner"></span>Carregando cadastros...';
-  carregar();
+    if (estado.aba === 'usuarios')
+        return carregarUsuarios();
+    $('loading').innerHTML = '<span class="spinner"></span>Carregando cadastros...';
+    carregar();
 });
-
 function distintos(chave, base) {
-  const set = new Set(base);
-  estado.regs.forEach(r => { if (r[chave]) set.add(r[chave]); });
-  return [...set];
+    const set = new Set(base);
+    estado.regs.forEach(r => {
+        const valor = r[chave];
+        if (typeof valor === 'string' && valor)
+            set.add(valor);
+    });
+    return [...set];
 }
-
 function montarFiltros() {
-  $('fSetor').innerHTML = '<option value="">Todos os setores</option>' + distintos('setor', baseSetores()).map(v => `<option>${esc(v)}</option>`).join('');
-  $('fCelula').innerHTML = '<option value="">Todas as células</option>' + distintos('celula', baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
-  $('fSituacao').innerHTML = Object.entries(SITUACOES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
-  $('fSetor').value = estado.setor;
-  $('fCelula').value = estado.celula;
-  $('fSituacao').value = estado.situacao;
-  $('fSetor').classList.toggle('hidden', $('fSetor').options.length <= 2);
-  $('fCelula').classList.toggle('hidden', $('fCelula').options.length <= 2);
+    $('fSetor').innerHTML = '<option value="">Todos os setores</option>' + distintos('setor', baseSetores()).map(v => `<option>${esc(v)}</option>`).join('');
+    $('fCelula').innerHTML = '<option value="">Todas as células</option>' + distintos('celula', baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
+    $('fSituacao').innerHTML = Object.entries(SITUACOES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    $('fSetor').value = estado.setor;
+    $('fCelula').value = estado.celula;
+    $('fSituacao').value = estado.situacao;
+    $('fSetor').classList.toggle('hidden', $('fSetor').options.length <= 2);
+    $('fCelula').classList.toggle('hidden', $('fCelula').options.length <= 2);
 }
-
 function filtrados() {
-  const b = norm(estado.busca);
-  const sit = SITUACOES[estado.situacao].f;
-  return estado.regs.filter(r =>
-    (!b || r._busca.includes(b)) &&
-    (!estado.setor || r.setor === estado.setor) &&
-    (!estado.celula || r.celula === estado.celula) &&
-    sit(r)
-  );
+    const b = norm(estado.busca);
+    const sit = SITUACOES[estado.situacao].f;
+    return estado.regs.filter(r => (!b || r._busca.includes(b)) &&
+        (!estado.setor || r.setor === estado.setor) &&
+        (!estado.celula || r.celula === estado.celula) &&
+        sit(r));
 }
-
 // ── Render ──
 function renderTudo() { renderResumo(); renderCelulas(); renderLista(); }
-
 function renderResumo() {
-  const base = estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
-  $('stats').innerHTML = RESUMO.map(([k, label, fn]) => {
-    const n = fn ? fn(base) : base.filter(SITUACOES[k].f).length;
-    return `<button type="button" class="stat ${estado.situacao === k ? 'active' : ''}" data-sit="${k}" aria-pressed="${estado.situacao === k}"><b>${n}</b><span>${label}</span></button>`;
-  }).join('');
-  $('stats').querySelectorAll('.stat').forEach(b => b.addEventListener('click', () => {
-    estado.situacao = estado.situacao === b.dataset.sit ? 'todos' : b.dataset.sit;
-    $('fSituacao').value = estado.situacao;
-    renderTudo();
-  }));
+    const base = estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
+    $('stats').innerHTML = RESUMO.map(([k, label, fn]) => {
+        const n = fn ? fn(base) : base.filter(SITUACOES[k].f).length;
+        return `<button type="button" class="stat ${estado.situacao === k ? 'active' : ''}" data-sit="${k}" aria-pressed="${estado.situacao === k}"><b>${n}</b><span>${label}</span></button>`;
+    }).join('');
+    $('stats').querySelectorAll('.stat').forEach(b => b.addEventListener('click', () => {
+        const situacao = b.dataset.sit || 'todos';
+        estado.situacao = estado.situacao === situacao ? 'todos' : situacao;
+        $('fSituacao').value = estado.situacao;
+        renderTudo();
+    }));
 }
-
 function renderCelulas() {
-  const base = estado.regs.filter(r => !estado.setor || r.setor === estado.setor);
-  const cont = {};
-  base.forEach(r => { const c = r.celula || 'Sem célula'; cont[c] = (cont[c] || 0) + 1; });
-  const nomes = distintos('celula', baseCelulas()).filter(c => !estado.setor || cont[c]);
-  if (cont['Sem célula']) nomes.push('Sem célula');
-  const poucas = nomes.length <= 1;
-  $('cellsTitle').classList.toggle('hidden', poucas);
-  $('cells').classList.toggle('hidden', poucas);
-  const max = Math.max(1, ...Object.values(cont));
-  $('cells').innerHTML = nomes.map(c => {
-    const n = cont[c] || 0;
-    const ativo = estado.celula === c;
-    return `<button type="button" class="cell-row ${ativo ? 'active' : ''}" data-cel="${esc(c)}" aria-pressed="${ativo}">
+    const base = estado.regs.filter(r => !estado.setor || r.setor === estado.setor);
+    const cont = {};
+    base.forEach(r => { const c = r.celula || 'Sem célula'; cont[c] = (cont[c] || 0) + 1; });
+    const nomes = distintos('celula', baseCelulas()).filter(c => !estado.setor || cont[c]);
+    if (cont['Sem célula'])
+        nomes.push('Sem célula');
+    const poucas = nomes.length <= 1;
+    $('cellsTitle').classList.toggle('hidden', poucas);
+    $('cells').classList.toggle('hidden', poucas);
+    const max = Math.max(1, ...Object.values(cont));
+    $('cells').innerHTML = nomes.map(c => {
+        const n = cont[c] || 0;
+        const ativo = estado.celula === c;
+        return `<button type="button" class="cell-row ${ativo ? 'active' : ''}" data-cel="${esc(c)}" aria-pressed="${ativo}">
       <span class="cell-name">${esc(c)}</span>
       <span class="cell-bar"><i style="width:${(n / max) * 100}%"></i></span>
       <span class="cell-n">${n}</span>
     </button>`;
-  }).join('') || '<p class="empty">Nenhum cadastro ainda.</p>';
-  $('cells').querySelectorAll('.cell-row').forEach(b => b.addEventListener('click', () => {
-    const c = b.dataset.cel === 'Sem célula' ? '' : b.dataset.cel;
-    estado.celula = estado.celula === c ? '' : c;
-    $('fCelula').value = estado.celula;
-    renderTudo();
-  }));
+    }).join('') || '<p class="empty">Nenhum cadastro ainda.</p>';
+    $('cells').querySelectorAll('.cell-row').forEach(b => b.addEventListener('click', () => {
+        const nomeCelula = b.dataset.cel || '';
+        const c = nomeCelula === 'Sem célula' ? '' : nomeCelula;
+        estado.celula = estado.celula === c ? '' : c;
+        $('fCelula').value = estado.celula;
+        renderTudo();
+    }));
 }
-
 function renderLista() {
-  const lista = filtrados();
-  const total = estado.regs.length;
-  const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
-  $('countTxt').innerHTML = filtrando ? `<b>${lista.length}</b> de ${total} cadastros` : `<b>${total}</b> cadastros`;
-  $('btnClear').classList.toggle('hidden', !filtrando);
-
-  if (!lista.length) {
-    $('list').innerHTML = `<div class="empty">${total ? 'Nenhum cadastro encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
-    return;
-  }
-
-  const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Idade</span><span>Célula</span><span>Setor</span><span>Jornada</span><span>Enviado em</span></div>';
-  $('list').innerHTML = head + lista.map((r, i) => `
+    const lista = filtrados();
+    const total = estado.regs.length;
+    const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
+    $('countTxt').innerHTML = filtrando ? `<b>${lista.length}</b> de ${total} cadastros` : `<b>${total}</b> cadastros`;
+    $('btnClear').classList.toggle('hidden', !filtrando);
+    if (!lista.length) {
+        $('list').innerHTML = `<div class="empty">${total ? 'Nenhum cadastro encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
+        return;
+    }
+    const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Idade</span><span>Célula</span><span>Setor</span><span>Jornada</span><span>Enviado em</span></div>';
+    $('list').innerHTML = head + lista.map((r, i) => `
     <button type="button" class="item" data-i="${estado.regs.indexOf(r)}">
       <span class="it-name">${esc(r.nome)}</span>
       <span class="it-age">${r._idade != null ? `${r._idade}<span class="lbl"> anos</span>` : '—'}</span>
@@ -307,9 +336,12 @@ function renderLista() {
       </span>
       <span class="it-date">${esc((r.dataHora || '').split(/[ ,]/)[0])}</span>
     </button>`).join('');
-  $('list').querySelectorAll('.item').forEach(b => b.addEventListener('click', () => abrirDetalhe(estado.regs[+b.dataset.i])));
+    $('list').querySelectorAll('.item').forEach(b => b.addEventListener('click', () => {
+        const registro = estado.regs[Number(b.dataset.i)];
+        if (registro)
+            abrirDetalhe(registro);
+    }));
 }
-
 // ── Filtros ──
 let tBusca;
 $('fBusca').addEventListener('input', e => { clearTimeout(tBusca); tBusca = setTimeout(() => { estado.busca = e.target.value; renderLista(); }, 150); });
@@ -317,62 +349,65 @@ $('fSetor').addEventListener('change', e => { estado.setor = e.target.value; ren
 $('fCelula').addEventListener('change', e => { estado.celula = e.target.value; renderTudo(); });
 $('fSituacao').addEventListener('change', e => { estado.situacao = e.target.value; renderTudo(); });
 $('btnClear').addEventListener('click', () => {
-  Object.assign(estado, { busca: '', setor: '', celula: '', situacao: 'todos' });
-  $('fBusca').value = '';
-  montarFiltros();
-  renderTudo();
+    Object.assign(estado, { busca: '', setor: '', celula: '', situacao: 'todos' });
+    $('fBusca').value = '';
+    montarFiltros();
+    renderTudo();
 });
-
 // ── Detalhe ──
 function secao(titulo, linhas) {
-  return `<div class="det-sec"><h4>${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
+    return `<div class="det-sec"><h4>${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
-
 function abrirDetalhe(r) {
-  $('detNome').textContent = r.nome;
-  $('detSub').textContent = [r.celula, r.setor].filter(Boolean).join(' · ') || 'Sem célula informada';
-  const txt = v => v ? esc(v) : '<span class="pill x">—</span>';
-  $('detBody').innerHTML =
-    secao('Dados pessoais', [
-      ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
-      ['Recebeu Jesus', pill(r.recebeuJesus)]
-    ]) +
-    secao('Etapas da jornada', JORNADA.map(([k, l]) => [l, pill(r[k])])) +
-    secao('Célula e serviço', [
-      ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
-      ['Congrega com frequência', pill(r.frequentaCultos)],
-      ['Serve em ministério', pill(r.serveMinisterio)],
-      ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
-    ]) +
-    secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
-    secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
-    (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
-    secao('Registro', [['Enviado em', txt(r.dataHora)], ['Nº do cadastro', String(r.linha)]]);
-  const d = $('det');
-  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
-  $('detBody').scrollTop = 0;
-  d.scrollTop = 0;
+    $('detNome').textContent = r.nome;
+    $('detSub').textContent = [r.celula, r.setor].filter(Boolean).join(' · ') || 'Sem célula informada';
+    const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
+    $('detBody').innerHTML =
+        secao('Dados pessoais', [
+            ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
+            ['Recebeu Jesus', pill(r.recebeuJesus)]
+        ]) +
+            secao('Etapas da jornada', JORNADA.map(([k, l]) => [l, pill(r[k])])) +
+            secao('Célula e serviço', [
+                ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
+                ['Congrega com frequência', pill(r.frequentaCultos)],
+                ['Serve em ministério', pill(r.serveMinisterio)],
+                ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
+            ]) +
+            secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
+            secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
+            (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
+            secao('Registro', [['Enviado em', txt(r.dataHora)], ['Nº do cadastro', String(r.linha)]]);
+    const d = $('det');
+    if (typeof d.showModal === 'function')
+        d.showModal();
+    else
+        d.setAttribute('open', '');
+    $('detBody').scrollTop = 0;
+    d.scrollTop = 0;
 }
 $('detClose').addEventListener('click', () => $('det').close());
-$('det').addEventListener('click', e => { if (e.target === $('det')) $('det').close(); });
-
+$('det').addEventListener('click', e => { if (e.target === $('det'))
+    $('det').close(); });
 // ── Exportar CSV (respeita os filtros) ──
 $('btnCsv').addEventListener('click', () => {
-  const lista = filtrados();
-  if (!lista.length) return;
-  const cel = v => {
-    let s = v === 'S' ? 'Sim' : v === 'N' ? 'Não' : String(v ?? '');
-    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // evita que o Excel execute o texto como fórmula
-    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const linhas = [CSV_COLS.map(c => cel(c[1])).join(';'), ...lista.map(r => CSV_COLS.map(([k]) => cel(r[k])).join(';'))];
-  const blob = new Blob(['\uFEFF' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `membros-vec-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const lista = filtrados();
+    if (!lista.length)
+        return;
+    const cel = (v) => {
+        let s = v === 'S' ? 'Sim' : v === 'N' ? 'Não' : String(v ?? '');
+        if (/^[=+\-@\t\r]/.test(s))
+            s = "'" + s; // evita que o Excel execute o texto como fórmula
+        return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const linhas = [CSV_COLS.map(c => cel(c[1])).join(';'), ...lista.map(r => CSV_COLS.map(([k]) => cel(r[k])).join(';'))];
+    const blob = new Blob(['\uFEFF' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `membros-vec-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
