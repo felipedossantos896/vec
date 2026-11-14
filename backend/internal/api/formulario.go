@@ -53,6 +53,17 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return failReply("requisicao_invalida")
 	}
+	now := s.Now()
+	requestID := ""
+	if rawID, ok := raw["_requestId"]; ok {
+		if err := json.Unmarshal(rawID, &requestID); err != nil {
+			return failReply("dados_invalidos")
+		}
+		requestID = strings.ToLower(requestID)
+		if !validRequestID(requestID) {
+			return failReply("dados_invalidos")
+		}
+	}
 	v := make(map[string]string, len(store.Campos))
 	for _, c := range store.Campos {
 		var texto string
@@ -78,8 +89,10 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 		return failReply("nome_invalido")
 	}
 	nasc, err := time.Parse("2006-01-02", v["nascimento"])
+	hoje := now.In(fusoBR)
+	dataHoje := time.Date(hoje.Year(), hoje.Month(), hoje.Day(), 0, 0, 0, 0, time.UTC)
 	if err != nil || nasc.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) ||
-		nasc.After(s.Now().In(fusoBR).Add(24*time.Hour)) {
+		nasc.After(dataHoje) {
 		return failReply("nascimento_invalido")
 	}
 
@@ -105,9 +118,17 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 		v["ministerioNome"] = ""
 	}
 
+	if requestID == "" {
+		requestID, err = newRequestID()
+		if err != nil {
+			return s.internal("formulario", err)
+		}
+	}
+
 	err = s.Store.InsertResposta(ctx, store.Resposta{
-		CriadoEm: s.Now().UTC().Format(time.RFC3339),
-		V:        v,
+		CriadoEm:  now.UTC().Format(time.RFC3339),
+		RequestID: requestID,
+		V:         v,
 	})
 	if err != nil {
 		return s.internal("formulario", err)

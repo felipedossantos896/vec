@@ -8,7 +8,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/csv"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -126,6 +128,7 @@ func ler(r io.Reader) ([]store.Resposta, []string, error) {
 
 	var out []store.Resposta
 	var avisos []string
+	ocorrencias := map[string]int{}
 	for n, linha := range todas[1:] {
 		get := func(k string) string {
 			i, ok := col[k]
@@ -157,9 +160,26 @@ func ler(r io.Reader) ([]store.Resposta, []string, error) {
 			avisos = append(avisos, fmt.Sprintf("linha %d (%s): nascimento %q não reconhecido, importado em branco", n+2, nome, get("nascimento")))
 		}
 		v["nascimento"] = nasc
-		out = append(out, store.Resposta{CriadoEm: quando.UTC().Format(time.RFC3339), V: v})
+		r := store.Resposta{CriadoEm: quando.UTC().Format(time.RFC3339), V: v}
+		r.ImportKey = chaveImportacao(r, ocorrencias)
+		out = append(out, r)
 	}
 	return out, avisos, nil
+}
+
+func chaveImportacao(r store.Resposta, ocorrencias map[string]int) string {
+	var conteudo strings.Builder
+	conteudo.WriteString(r.CriadoEm)
+	for _, c := range store.Campos {
+		valor := r.V[c.Chave]
+		fmt.Fprintf(&conteudo, "%d:", len(valor))
+		conteudo.WriteString(valor)
+	}
+	hash := sha256.Sum256([]byte(conteudo.String()))
+	base := hex.EncodeToString(hash[:])
+	n := ocorrencias[base]
+	ocorrencias[base] = n + 1
+	return fmt.Sprintf("%s:%d", base, n)
 }
 
 func tiraApostrofo(s string) string {

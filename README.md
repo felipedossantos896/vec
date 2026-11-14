@@ -25,7 +25,8 @@ frontend/      formulário (index.html), painel (admin/index.html) e empacotamen
 go.mod         módulo Go compartilhado pelo backend e pelo pacote de frontend
 fly.toml       configuração do Fly.io
 Dockerfile     imagem do servidor
-docs/          guias: NOTEBOOK.md (trabalhar no seu computador) e DEPLOY.md (colocar no ar)
+docs/          guias: NOTEBOOK.md (trabalhar no computador), DEPLOY.md (deploy) e
+               ROADMAP-REFATORACAO.md (diagnóstico e fases)
 ```
 
 ## Versionamento do banco
@@ -127,8 +128,9 @@ gcloud run deploy vec --source . --region southamerica-east1 --allow-unauthentic
 
 Já tem: senhas com PBKDF2-SHA256 (600 mil iterações) e sal individual; sessões
 assinadas que caem quando a senha muda ou o usuário é desativado; bloqueio de 15
-minutos após 5 senhas erradas; permissões aplicadas no servidor; textos validados
-e limitados; proteção contra fórmulas em CSV; painel sem cache e fora do Google.
+minutos após 5 senhas erradas; limite de 10 tentativas de login por minuto no
+processo; permissões aplicadas no servidor; textos validados e limitados;
+proteção contra fórmulas em CSV; painel sem cache e fora do Google.
 
 Ainda falta (ideias para as próximas etapas): proteção contra robôs no formulário
 público (por exemplo Cloudflare Turnstile), política de CSP, paginação do painel

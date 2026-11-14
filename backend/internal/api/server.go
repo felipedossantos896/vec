@@ -25,6 +25,7 @@ const (
 	senhaMinima    = 6
 	sessaoDuracao  = 6 * time.Hour
 	limiteCorpoAPI = 64 << 10
+	maxLoginMinuto = 10
 )
 
 // Server atende as chamadas de /api.
@@ -37,6 +38,7 @@ type Server struct {
 
 	dummyHash string
 	cache     listasCache
+	loginRate loginRate
 }
 
 // New cria o servidor. Calcula um hash fictício para igualar o tempo de resposta
@@ -100,6 +102,27 @@ type timing struct {
 	mu    sync.Mutex
 	db    time.Duration
 	calls int
+}
+
+type loginRate struct {
+	mu         sync.Mutex
+	inicio     time.Time
+	tentativas int
+}
+
+// shortcut: limite local a este processo; use limite compartilhado no ingresso antes de escalar horizontalmente.
+func (l *loginRate) allow(now time.Time) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.inicio.IsZero() || now.Before(l.inicio) || now.Sub(l.inicio) >= time.Minute {
+		l.inicio = now
+		l.tentativas = 0
+	}
+	if l.tentativas >= maxLoginMinuto {
+		return false
+	}
+	l.tentativas++
+	return true
 }
 
 func (t *timing) add(d time.Duration) {
@@ -260,11 +283,14 @@ func (s *Server) authenticate(ctx context.Context, token string) (*session, stri
 }
 
 func (s *Server) login(ctx context.Context, req adminReq) reply {
-	usuario := normUser(req.Usuario)
-	if !validUser(usuario) || req.Senha == "" || len(req.Senha) > 256 {
+	usuario := NormUser(req.Usuario)
+	if !ValidUser(usuario) || req.Senha == "" || len(req.Senha) > 256 {
 		return failReply("credenciais")
 	}
 	now := s.Now()
+	if !s.loginRate.allow(now) {
+		return failReply("login_limitado")
+	}
 
 	u, bloqueio, err := s.Store.LoginState(ctx, usuario)
 	if err != nil {
@@ -283,7 +309,12 @@ func (s *Server) login(ctx context.Context, req adminReq) reply {
 		auth.VerifyPassword(req.Senha, s.dummyHash) // gasta o mesmo tempo
 	}
 	if !ok {
-		if err := s.Store.RegisterFailure(ctx, usuario, maxTentativas, now.Add(bloqueioDur)); err != nil {
+		chaveFalha := usuario
+		if u == nil {
+			// Nomes inexistentes compartilham uma linha para não crescerem sem limite.
+			chaveFalha = ""
+		}
+		if err := s.Store.RegisterFailure(ctx, chaveFalha, maxTentativas, now.Add(bloqueioDur)); err != nil {
 			s.Log.Error("registrando falha de login", "erro", err.Error())
 		}
 		return failReply("credenciais")
@@ -387,7 +418,7 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("sem_permissao")
 	}
 
-	usuario := normUser(req.Usuario)
+	usuario := NormUser(req.Usuario)
 	nome := cleanLine(req.Nome, 80)
 	perfil := strings.ToUpper(strings.TrimSpace(req.Perfil))
 	ativo := req.Ativo == nil || *req.Ativo
@@ -395,7 +426,7 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 	celulas := cleanList(req.Celulas)
 
 	switch {
-	case !validUser(usuario):
+	case !ValidUser(usuario):
 		return failReply("usuario_invalido")
 	case nome == "":
 		return failReply("nome_obrigatorio")

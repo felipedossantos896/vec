@@ -43,6 +43,27 @@ func TestLerCSVPontoEVirgula(t *testing.T) {
 	}
 }
 
+func TestChavesImportacaoEstaveisERepeticoesDistinguidas(t *testing.T) {
+	csv := "Data/Hora,Nome Completo,Data de Nascimento\n" +
+		"01/10/2026 10:00:00,Ana Silva,02/01/1990\n" +
+		"01/10/2026 10:00:00,Ana Silva,02/01/1990\n"
+
+	primeira, _, err := ler(strings.NewReader(csv))
+	if err != nil {
+		t.Fatal(err)
+	}
+	segunda, _, err := ler(strings.NewReader(csv))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(primeira) != 2 || primeira[0].ImportKey == primeira[1].ImportKey {
+		t.Fatalf("repetições idênticas devem ter chaves distintas: %#v", primeira)
+	}
+	if primeira[0].ImportKey != segunda[0].ImportKey || primeira[1].ImportKey != segunda[1].ImportKey {
+		t.Fatalf("chaves mudaram ao reimportar: %#v / %#v", primeira, segunda)
+	}
+}
+
 func TestLerCSVSemCabecalhoObrigatorio(t *testing.T) {
 	if _, _, err := ler(strings.NewReader("a,b\n1,2\n")); err == nil {
 		t.Error("deveria reclamar da falta das colunas")

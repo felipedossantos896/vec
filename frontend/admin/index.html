@@ -552,6 +552,8 @@ $('loginForm').addEventListener('submit', async e => {
       msg.textContent = 'Seu acesso ainda não foi configurado. Fale com a liderança da área.';
     } else if (r.erro === 'bloqueado') {
       msg.textContent = 'Muitas tentativas. Aguarde 15 minutos e tente novamente.';
+    } else if (r.erro === 'login_limitado') {
+      msg.textContent = 'Muitas tentativas no painel. Aguarde um minuto e tente novamente.';
     } else {
       msg.textContent = 'Usuário ou senha incorretos.';
     }

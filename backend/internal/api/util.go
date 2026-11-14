@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"regexp"
 	"strings"
 	"time"
@@ -13,14 +15,25 @@ var fusoBR = time.FixedZone("-03", -3*60*60)
 
 var reUsuario = regexp.MustCompile(`^[a-z0-9._-]{3,30}$`)
 
-func normUser(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
+func NormUser(s string) string { return strings.ToLower(strings.TrimSpace(s)) }
 
-func validUser(s string) bool { return reUsuario.MatchString(s) }
+func ValidUser(s string) bool { return reUsuario.MatchString(s) }
 
-// NormUser e ValidUser são usados também pelos comandos de linha (backend/cmd/usuario).
-func NormUser(s string) string { return normUser(s) }
+func validRequestID(s string) bool {
+	if len(s) != 32 {
+		return false
+	}
+	_, err := hex.DecodeString(s)
+	return err == nil
+}
 
-func ValidUser(s string) bool { return validUser(s) }
+func newRequestID() (string, error) {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b[:]), nil
+}
 
 // fmtLocal converte um instante ISO (UTC) para "dd/MM/yyyy HH:mm:ss" em Fortaleza.
 func fmtLocal(iso string) string {

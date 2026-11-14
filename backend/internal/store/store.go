@@ -280,9 +280,11 @@ var Campos = []Campo{
 }
 
 type Resposta struct {
-	ID       int64
-	CriadoEm string            // ISO UTC
-	V        map[string]string // chave do Campo -> valor
+	ID        int64
+	CriadoEm  string            // ISO UTC
+	RequestID string            // chave de reenvio do formulário público
+	ImportKey string            // chave estável de importação
+	V         map[string]string // chave do Campo -> valor
 }
 
 func colunas() string {
@@ -293,30 +295,40 @@ func colunas() string {
 	return strings.Join(cs, ", ")
 }
 
-// InsertResposta grava uma resposta. Se for uma duplicata exata (mesmo nome no
-// mesmo segundo, ex.: toque duplo no botão), considera como já gravada.
+// InsertResposta grava uma resposta. Reenvios com o mesmo RequestID são ignorados.
 func (s *Store) InsertResposta(ctx context.Context, r Resposta) error {
-	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+1), ", ")
-	args := make([]any, 0, len(Campos)+1)
+	if r.RequestID == "" {
+		return errors.New("id de envio vazio")
+	}
+	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+2), ", ")
+	args := make([]any, 0, len(Campos)+2)
+	args = append(args, r.RequestID)
 	args = append(args, r.CriadoEm)
 	for _, c := range Campos {
 		args = append(args, r.V[c.Chave])
 	}
 	_, err := s.DB.Do(ctx, turso.Stmt{
-		SQL:  `INSERT INTO respostas (criado_em, ` + colunas() + `) VALUES (` + marks + `)`,
+		SQL:  `INSERT INTO respostas (request_id, criado_em, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
 		Args: args,
 	})
-	if err != nil && turso.IsConstraint(err) && strings.Contains(err.Error(), "respostas.criado_em") {
-		return nil
-	}
 	return err
 }
 
-// ImportarRespostas grava várias respostas em lotes, ignorando as que já existem.
+// ImportarRespostas grava várias respostas em lotes, ignorando chaves já importadas.
+// Também associa chaves às linhas antigas idênticas antes de inserir, preservando
+// a segurança de reimportar CSVs existentes após a migration de idempotência.
 // Devolve quantas linhas novas entraram.
 func (s *Store) ImportarRespostas(ctx context.Context, rs []Resposta) (int, error) {
-	const lote = 40
-	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+1), ", ")
+	const lote = 20
+	if len(rs) == 0 {
+		return 0, nil
+	}
+	for _, r := range rs {
+		if r.ImportKey == "" {
+			return 0, errors.New("chave de importação vazia")
+		}
+	}
+	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+2), ", ")
 	novas := 0
 	for i := 0; i < len(rs); i += lote {
 		fim := i + lote
@@ -325,13 +337,27 @@ func (s *Store) ImportarRespostas(ctx context.Context, rs []Resposta) (int, erro
 		}
 		var stmts []turso.Stmt
 		for _, r := range rs[i:fim] {
-			args := make([]any, 0, len(Campos)+1)
-			args = append(args, r.CriadoEm)
+			where := `import_key IS NULL AND criado_em = ?`
+			legacyArgs := make([]any, 0, len(Campos)+3)
+			for _, c := range Campos {
+				where += ` AND ` + c.Coluna + ` = ?`
+				legacyArgs = append(legacyArgs, r.V[c.Chave])
+			}
+			legacyArgs = append([]any{r.ImportKey, r.CriadoEm}, legacyArgs...)
+			where += ` AND NOT EXISTS (SELECT 1 FROM respostas WHERE import_key = ?)`
+			legacyArgs = append(legacyArgs, r.ImportKey)
+			stmts = append(stmts, turso.Stmt{
+				SQL:  `UPDATE respostas SET import_key = ? WHERE ` + where,
+				Args: legacyArgs,
+			})
+
+			args := make([]any, 0, len(Campos)+2)
+			args = append(args, r.ImportKey, r.CriadoEm)
 			for _, c := range Campos {
 				args = append(args, r.V[c.Chave])
 			}
 			stmts = append(stmts, turso.Stmt{
-				SQL:  `INSERT OR IGNORE INTO respostas (criado_em, ` + colunas() + `) VALUES (` + marks + `)`,
+				SQL:  `INSERT INTO respostas (import_key, criado_em, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(import_key) DO NOTHING`,
 				Args: args,
 			})
 		}
@@ -339,8 +365,16 @@ func (s *Store) ImportarRespostas(ctx context.Context, rs []Resposta) (int, erro
 		if err != nil {
 			return novas, err
 		}
-		for _, r := range res {
-			novas += int(r.Affected)
+		if len(res) != len(stmts) {
+			return novas, errors.New("resultado de importação incompleto")
+		}
+		for _, result := range res {
+			if result == nil {
+				return novas, errors.New("resultado de importação vazio")
+			}
+		}
+		for j := 1; j < len(res); j += 2 {
+			novas += int(res[j].Affected)
 		}
 	}
 	return novas, nil

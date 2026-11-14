@@ -17,12 +17,12 @@ func TestFmtLocal(t *testing.T) {
 
 func TestValidUser(t *testing.T) {
 	for _, ok := range []string{"admin", "ana.silva", "joao-2", "a_b"} {
-		if !validUser(ok) {
+		if !ValidUser(ok) {
 			t.Errorf("%q deveria ser válido", ok)
 		}
 	}
 	for _, ruim := range []string{"", "ab", "Ana", "com espaço", "acentuação", strings.Repeat("a", 31), "a'b"} {
-		if validUser(ruim) {
+		if ValidUser(ruim) {
 			t.Errorf("%q deveria ser inválido", ruim)
 		}
 	}
