@@ -173,6 +173,15 @@ Repetir a importação é seguro: o que já existe é ignorado.
 
 ## 8. Deploy automático a cada merge (CI/CD)
 
+### Pré-validação obrigatória
+
+Antes de cada deploy, valide o fluxo de dados localmente usando o banco `vec-dev`
+(configurado em `.env`, nunca em `.env.prod`). Confirme que a API/painel consegue
+consultar os dados esperados; se só precisar conferir a conexão, use consultas
+somente de leitura, como `turso db shell vec-dev "SELECT COUNT(*) FROM respostas;"`.
+Não imprima tokens nem registros pessoais. Se o banco de desenvolvimento estiver
+indisponível ou a validação falhar, corrija isso antes de publicar.
+
 Depois que o deploy manual funcionou:
 
 1. Gere um token de deploy **restrito a este app** e com validade:

@@ -36,3 +36,14 @@ Never cut: validation at trust boundaries, error handling that prevents data los
 - Files over 500 lines must be refactored or have a clear reason to remain intact.
 - This applies to code, tests, pages, and documentation. Generated files,
   dependencies/lockfiles, datasets, and SQL migrations are exempt and stay intact.
+
+## Turso and deployment
+
+- Before any deployment or deploy-triggering push, verify the affected data flow
+  against the local `vec-dev` database. Confirm the database target is `vec-dev`;
+  never use `.env.prod` or production data for routine validation.
+- Use read-only checks and counts when inspecting database contents. Never print
+  credentials, tokens, or member records. If dev access or validation is unavailable,
+  stop before deploying and report the blocker.
+- After changing embedded frontend assets, confirm they are listed in
+  `frontend/embed.go` and served successfully by the Go app.
