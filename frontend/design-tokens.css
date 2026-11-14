@@ -1,0 +1,27 @@
+:root {
+  color-scheme: light;
+  --navy: #1a2340;
+  --navy-2: #253058;
+  --gold: #c9a84c;
+  --gold-soft: #f3e6bd;
+  --cream: #fdf8f0;
+  --page: #f4efe4;
+  --white: #ffffff;
+  --ink: #1a2340;
+  --muted: #5a6080;
+  --line: #e6dcc3;
+  --nao-bg: #ece6f3;
+  --nao-line: #b8aad0;
+  --nao-ink: #4a3d6a;
+  --danger: #b3261e;
+  --danger-bg: #fdecea;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --tap: 48px;
+  --r-lg: 18px;
+  --r-md: 12px;
+  --r-sm: 10px;
+  --shadow-card: 0 2px 8px rgba(26, 35, 64, 0.05), 0 14px 32px rgba(26, 35, 64, 0.08);
+  --shadow-float: 0 8px 24px rgba(10, 14, 28, 0.18);
+  --focus-ring: 0 0 0 3px rgba(201, 168, 76, 0.3);
+}
