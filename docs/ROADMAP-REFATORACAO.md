@@ -65,9 +65,9 @@ teste contra um banco de produção.
      aleatório estável durante as tentativas; importações usam hash da linha e
      distinguem cópias idênticas pelo número da ocorrência. A migration remove
      o índice antigo e associa linhas antigas idênticas antes de reimportar.
-     A migration foi aplicada em `vec-dev`; versão, colunas e índices foram
-     verificados. Os cenários de idempotência foram testados em SQLite local,
-     mas não foi feita uma importação de teste com dados no Turso.
+     A migration foi aplicada em `vec-dev` e `vec-prod`; versão, colunas e
+     índices foram verificados. Os cenários de idempotência foram testados em
+     SQLite local, mas não foi feita uma importação de teste com dados no Turso.
    - **Se deixarmos:** Respostas válidas podem sumir sem aviso.
 
 2. **O servidor aceitava nascimento no dia seguinte**
@@ -167,8 +167,10 @@ teste contra um banco de produção.
 - [x] Preservar o JSON existente; o ID de envio é opcional para clientes antigos.
 - [x] Aplicar a migration `0003_respostas_chaves_idempotencia.sql` em `vec-dev`
   e verificar o registro, as colunas e os índices criados.
+- [x] Aplicar a migration em `vec-prod` pelo deploy de 2026-11-14 e verificar
+  o registro e os índices criados.
 - Idempotência/reimportação testada em SQLite local; não foi executada uma
-  importação de teste com dados no Turso nem aplicada a produção.
+  importação de teste com dados no Turso.
 
 ### Fase 1 — Testar contratos do backend
 
