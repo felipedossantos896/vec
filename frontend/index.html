@@ -10,11 +10,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="tailwind.css">
 </head>
-<body>
+<body class="min-h-[100dvh] bg-vec-navy font-sans text-[17px] leading-[1.5] text-vec-ink">
 
-<header class="topbar" id="topbar">
-  <div class="topbar-inner">
+<header class="topbar sticky top-0 z-10 border-b border-[rgba(201,168,76,0.25)] bg-vec-navy px-[max(16px,env(safe-area-inset-right,0px))] pb-2 pt-[calc(10px+env(safe-area-inset-top,0px))] pl-[max(16px,env(safe-area-inset-left,0px))] [@media(max-height:480px)_and_(orientation:landscape)]:pb-1 [@media(max-height:480px)_and_(orientation:landscape)]:pt-[calc(6px+env(safe-area-inset-top,0px))]" id="topbar">
+  <div class="topbar-inner mx-auto max-w-[760px]">
     <div class="topbar-row">
       <span class="topbar-title">Formulário Membro · Área VEC</span>
       <span class="topbar-count" id="progressText" aria-live="polite">0 de 0</span>
@@ -25,7 +26,7 @@
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap mx-auto max-w-[760px] px-[max(12px,env(safe-area-inset-right,0px))] pb-10 pt-5 pl-[max(12px,env(safe-area-inset-left,0px))] sm:pt-7 max-[359px]:px-2">
 
   <div class="intro">
     <div class="intro-mark" aria-hidden="true">✝</div>
@@ -36,7 +37,7 @@
   <form id="vecForm" novalidate>
 
     <!-- 1. Dados pessoais -->
-    <section class="card" aria-labelledby="s1">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s1">
       <div class="card-head">
         <span class="step" aria-hidden="true">1</span>
         <div><h2 id="s1">Dados pessoais</h2></div>
@@ -58,7 +59,7 @@
     </section>
 
     <!-- 2. Jornada -->
-    <section class="card" aria-labelledby="s2">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s2">
       <div class="card-head">
         <span class="step" aria-hidden="true">2</span>
         <div><h2 id="s2">Etapas da jornada</h2><p>Você já participou de:</p></div>
@@ -67,7 +68,7 @@
     </section>
 
     <!-- 3. Setor e célula -->
-    <section class="card" aria-labelledby="s3">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s3">
       <div class="card-head">
         <span class="step" aria-hidden="true">3</span>
         <div><h2 id="s3">Setor, célula e serviço</h2></div>
@@ -103,7 +104,7 @@
     </section>
 
     <!-- 4. Treinamentos -->
-    <section class="card" aria-labelledby="s4">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s4">
       <div class="card-head">
         <span class="step" aria-hidden="true">4</span>
         <div><h2 id="s4">Treinamentos</h2><p>Você já fez ou participa de:</p></div>
@@ -112,7 +113,7 @@
     </section>
 
     <!-- 5. Discipulado e interesses -->
-    <section class="card" aria-labelledby="s5">
+    <section class="card mb-[14px] rounded-2xl bg-vec-cream p-[clamp(16px,4.5vw,28px)] sm:p-7 min-[900px]:p-8 max-[359px]:rounded-[14px] max-[359px]:p-[14px]" aria-labelledby="s5">
       <div class="card-head">
         <span class="step" aria-hidden="true">5</span>
         <div><h2 id="s5">Discipulado e interesses</h2></div>

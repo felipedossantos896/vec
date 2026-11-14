@@ -3,5 +3,5 @@ package frontend
 
 import "embed"
 
-//go:embed index.html style.css app.js admin/index.html admin/admin.css admin/admin.js admin/users.js
+//go:embed index.html style.css tailwind.css app.js admin/index.html admin/admin.css admin/admin.js admin/users.js
 var FS embed.FS

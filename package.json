@@ -2,10 +2,12 @@
   "name": "vec",
   "private": true,
   "scripts": {
-    "build": "tsc --project frontend/tsconfig.json",
+    "build": "npm run build:css && tsc --project frontend/tsconfig.json",
+    "build:css": "tailwindcss -i frontend/tailwind.input.css -o frontend/tailwind.css --minify",
     "typecheck": "tsc --project frontend/tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.19",
     "typescript": "^7.0.2"
   }
 }

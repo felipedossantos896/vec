@@ -26,12 +26,12 @@ jobs:
       - name: Instalar ferramentas do frontend
         run: npm ci
 
-      - name: Verificar e compilar TypeScript
+      - name: Verificar e compilar frontend
         run: |
           npm run typecheck
           npm run build
-          git diff --exit-code -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js
-          test -z "$(git status --short --untracked-files=all -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js)"
+          git diff --exit-code -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js frontend/tailwind.css
+          test -z "$(git status --short --untracked-files=all -- frontend/app.js frontend/admin/admin.js frontend/admin/users.js frontend/tailwind.css)"
 
       - uses: actions/setup-go@v5
         with:

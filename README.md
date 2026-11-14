@@ -1,8 +1,8 @@
 # ✝ Sistema da Área VEC
 
 Formulário de cadastro de membros e painel da liderança, com permissões por
-**área, setor e célula**. Escrito em Go, **sem dependências externas**, com banco
-de dados no [Turso](https://turso.tech) (SQLite na nuvem).
+**área, setor e célula**. Backend escrito em Go, sem dependências externas;
+frontend em TypeScript com Tailwind CSS; banco no [Turso](https://turso.tech) (SQLite na nuvem).
 
 ```
 Navegador ──►  Servidor Go  ──►  Turso (SQLite)
@@ -21,7 +21,7 @@ backend/
   cmd/         servidor, migrations, usuários, importação e geração do SESSION_SECRET
   internal/    API, SQL, cliente Turso, autenticação e configuração
   migrations/  versões do banco: 0001_inicial.sql, 0002_... (VERSIONADAS NO GIT)
-frontend/      fontes TypeScript em src/; HTML/CSS e JavaScript compilado embutido pelo Go
+frontend/      fontes TypeScript em src/; HTML/CSS, Tailwind e JavaScript compilado embutido pelo Go
 go.mod         módulo Go compartilhado pelo backend e pelo pacote de frontend
 fly.toml       configuração do Fly.io
 Dockerfile     imagem do servidor
@@ -63,7 +63,7 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 
 | Para quê | Comando |
 |---|---|
-| Compilar o frontend após editar TypeScript | `npm run build` |
+| Compilar o frontend após editar TypeScript ou estilos | `npm run build` |
 | Verificar tipos do frontend | `npm run typecheck` |
 | Rodar o sistema | `go run ./backend/cmd/server` |
 | Rodar os testes | `go test ./...` |
@@ -73,8 +73,9 @@ Formulário: `http://localhost:8080/` · Painel: `http://localhost:8080/admin/`
 | Importar a planilha | `go run ./backend/cmd/importar -arquivo dados/respostas.csv` (use `-simular` antes) |
 | Agir no banco de produção | `ENV_FILE=.env.prod go run ./backend/cmd/usuario ...` (todo comando mostra `Banco: ...` na primeira linha) |
 
-As fontes do frontend ficam em `frontend/src/`. Após editá-las, rode
-`npm run build`: os arquivos JavaScript gerados são mantidos nos caminhos
+As fontes TypeScript do frontend ficam em `frontend/src/`; as classes do Tailwind
+são geradas a partir do HTML e do TypeScript. Após editar fontes ou estilos, rode
+`npm run build`: os arquivos JavaScript e CSS gerados são mantidos nos caminhos
 embutidos pelo Go, e o CI verifica que estão sincronizados.
 
 ## Permissões
