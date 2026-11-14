@@ -6,21 +6,38 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#1a2340">
 <title>Painel da liderança · Área VEC</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231a2340'/%3E%3Cpath d='M16 7v18M10 13h12' stroke='%23c9a84c' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../design-tokens.css">
-<link rel="stylesheet" href="admin.css">
 <link rel="stylesheet" href="../tailwind.css">
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="users.css">
 </head>
-<body class="min-h-[100dvh] bg-vec-page font-sans text-[17px] leading-[1.5] text-vec-ink">
+<body class="admin-page">
 
 <!-- ═══════ LOGIN ═══════ -->
-<section class="login-view flex min-h-[100dvh] items-center justify-center bg-vec-navy px-4 py-[calc(24px+env(safe-area-inset-top,0px))] pb-[calc(24px+env(safe-area-inset-bottom,0px))]" id="loginView">
-  <form class="login-card w-full max-w-[420px] rounded-[18px] bg-vec-cream p-[clamp(24px,6vw,36px)]" id="loginForm" novalidate>
-    <div class="mark" aria-hidden="true">✝</div>
-    <h1>Painel da liderança</h1>
-    <p>Área VEC · acesso restrito</p>
+<section class="login-view" id="loginView">
+  <div class="login-brand">
+    <div class="brand-lockup">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M7 9h10"/></svg></span>
+      <strong>Área VEC</strong>
+    </div>
+    <div class="login-pitch">
+      <p class="eyebrow">Painel da liderança</p>
+      <h2>Cuidar de cada pessoa, em cada etapa da jornada.</h2>
+      <p class="login-description">Acompanhe pessoas, células e acessos da sua área em um só lugar.</p>
+    </div>
+    <ol class="login-path" aria-hidden="true">
+      <li>Café com Pastor</li><li>Estação DNA</li><li>Acompanhamento Inicial</li><li>Nova Criatura</li><li>Batismo</li><li>Batismo no Espírito</li>
+    </ol>
+  </div>
+  <form class="login-card" id="loginForm" novalidate>
+    <p class="eyebrow">Acesso restrito</p>
+    <h1>Entrar no painel</h1>
+    <p class="login-intro">Use suas credenciais de liderança para continuar.</p>
     <div class="field">
       <label class="label" for="usuario">Usuário</label>
       <input class="input" id="usuario" name="usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">
@@ -32,91 +49,118 @@
         <button type="button" class="pass-toggle" id="passToggle" aria-pressed="false">Mostrar</button>
       </div>
     </div>
+    <p class="msg" id="loginMsg" role="alert"></p>
     <button type="submit" class="btn-primary" id="btnLogin">Entrar</button>
     <p class="deploy-version" id="deployVersion" aria-live="polite">version: carregando</p>
-    <p class="msg" id="loginMsg" role="alert"></p>
   </form>
 </section>
 
 <!-- ═══════ PAINEL ═══════ -->
 <section class="hidden" id="appView">
-  <header class="topbar sticky top-0 z-10 bg-vec-navy px-[max(16px,env(safe-area-inset-right,0px))] pb-2 pt-[calc(10px+env(safe-area-inset-top,0px))] pl-[max(16px,env(safe-area-inset-left,0px))] text-white">
-    <div class="topbar-inner mx-auto flex max-w-[1180px] items-center gap-3">
-      <div class="topbar-title">
-        <strong>Painel · Área VEC</strong>
-        <span id="whoami"></span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M7 9h10"/></svg></span>
+        <div class="topbar-title">
+          <strong>Área VEC</strong>
+          <span id="whoami"></span>
+        </div>
       </div>
-      <button class="icon-btn" id="btnRefresh" type="button" aria-label="Atualizar dados">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-        <span class="txt">Atualizar</span>
-      </button>
-      <button class="icon-btn" id="btnLogout" type="button" aria-label="Sair">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-        <span class="txt">Sair</span>
-      </button>
+      <nav class="tabs hidden" id="tabs" role="tablist" aria-label="Seções do painel">
+        <button type="button" role="tab" data-aba="cadastros" aria-selected="true" tabindex="0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Cadastros
+        </button>
+        <button type="button" role="tab" data-aba="usuarios" aria-selected="false" tabindex="-1">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/></svg>
+          Usuários
+        </button>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="icon-btn" id="btnRefresh" type="button" aria-label="Atualizar dados">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          <span class="txt">Atualizar</span>
+        </button>
+        <button class="icon-btn" id="btnLogout" type="button" aria-label="Sair">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          <span class="txt">Sair</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="wrap mx-auto max-w-[1180px] px-[max(12px,env(safe-area-inset-right,0px))] pb-[calc(40px+env(safe-area-inset-bottom,0px))] pt-5 pl-[max(12px,env(safe-area-inset-left,0px))]">
-    <nav class="tabs hidden" id="tabs" role="tablist" aria-label="Seções do painel">
-      <button type="button" role="tab" data-aba="cadastros" aria-selected="true" tabindex="0">Cadastros</button>
-      <button type="button" role="tab" data-aba="usuarios" aria-selected="false" tabindex="-1">Usuários</button>
-    </nav>
-
+  <main class="wrap">
     <div id="cadastrosView">
     <div id="loading" class="loading"><span class="spinner"></span>Carregando cadastros...</div>
 
     <div id="content" class="hidden">
       <header class="page-heading">
-        <p class="page-eyebrow">Painel de gestão</p>
-        <h1>Acompanhamento da área</h1>
-        <p>Indicadores, células e cadastros reunidos em um só lugar.</p>
+        <h1>Visão geral</h1>
+        <p>Indicadores e cadastros para acompanhar cada etapa da jornada.</p>
       </header>
-      <h2 class="sec">Resumo</h2>
-      <div class="stats" id="stats"></div>
 
-      <h2 class="sec" id="cellsTitle">Membros por célula</h2>
-      <div class="cells" id="cells"></div>
+      <section aria-labelledby="summaryTitle">
+        <h2 class="sr-only" id="summaryTitle">Resumo</h2>
+        <div class="stats" id="stats"></div>
+      </section>
 
-      <h2 class="sec">Cadastros</h2>
-      <div class="filters">
-        <div class="search">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input class="input" id="fBusca" type="search" placeholder="Buscar por nome, discipulador ou ministério" aria-label="Buscar" autocomplete="off">
-        </div>
-        <div class="selects">
+      <div class="panels">
+        <section class="panel" aria-labelledby="journeyTitle">
+          <header class="panel-head">
+            <h2 id="journeyTitle">Jornada da área</h2>
+            <p>Quantas pessoas já passaram por cada etapa.</p>
+          </header>
+          <ol class="journey" id="journey"></ol>
+        </section>
+
+        <section class="panel" id="cellsSection" aria-labelledby="cellsTitle">
+          <header class="panel-head">
+            <h2 id="cellsTitle">Membros por célula</h2>
+            <p>Selecione uma célula para filtrar os cadastros.</p>
+          </header>
+          <div class="cells" id="cells"></div>
+        </section>
+      </div>
+
+      <section class="registrations" aria-labelledby="registrationsTitle">
+        <header class="section-heading">
+          <div>
+            <h2 id="registrationsTitle">Cadastros</h2>
+            <p id="countTxt"></p>
+          </div>
+          <div class="list-actions">
+            <button class="btn-link hidden" id="btnClear" type="button">Limpar filtros</button>
+            <button class="btn-sec" id="btnCsv" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+              Exportar CSV
+            </button>
+          </div>
+        </header>
+        <div class="filters">
+          <div class="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input class="input" id="fBusca" type="search" placeholder="Buscar por nome, discipulador ou ministério" aria-label="Buscar" autocomplete="off">
+          </div>
           <select class="input" id="fSetor" aria-label="Filtrar por setor"></select>
           <select class="input" id="fCelula" aria-label="Filtrar por célula"></select>
-          <select class="input sel-full" id="fSituacao" aria-label="Filtrar por situação"></select>
+          <select class="input" id="fSituacao" aria-label="Filtrar por situação"></select>
         </div>
-      </div>
-
-      <div class="list-head">
-        <p id="countTxt"></p>
-        <div class="list-actions">
-          <button class="btn-link hidden" id="btnClear" type="button">Limpar filtros</button>
-          <button class="btn-sec" id="btnCsv" type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
-            Exportar CSV
-          </button>
-        </div>
-      </div>
-
-      <div class="list" id="list"></div>
+        <div class="list" id="list"></div>
+      </section>
     </div>
     </div>
 
     <div id="usersView" class="hidden">
-      <div class="users-head">
+      <header class="page-heading with-action">
         <div>
-          <h2 class="sec">Usuários do painel</h2>
-          <p id="userCount"></p>
+          <h1>Usuários do painel</h1>
+          <p id="userCount">Quem pode entrar e o que cada pessoa vê.</p>
         </div>
         <button class="btn-sec solid" id="btnNovoUsuario" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Novo usuário
         </button>
-      </div>
+      </header>
       <div class="ulist" id="userList"></div>
     </div>
   </main>

@@ -17,7 +17,7 @@ const abas = [...document.querySelectorAll<HTMLButtonElement>('#tabs button')];
 abas.forEach((b, i) => {
   b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'cadastros'));
   b.addEventListener('keydown', e => {
-    const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
     if (!delta) return;
     e.preventDefault();
     const proxima = abas[(i + delta + abas.length) % abas.length];
@@ -57,7 +57,7 @@ async function carregarUsuarios() {
     estado.usuariosCarregados = true;
     renderUsuarios();
   } catch (e) {
-    $('userList').innerHTML = '<div class="empty">Não foi possível carregar os usuários. <button class="btn-sec" type="button" onclick="carregarUsuarios()">Tentar novamente</button></div>';
+    $('userList').innerHTML = '<div class="empty"><span>Não foi possível carregar os usuários.</span><button class="btn-sec" type="button" onclick="carregarUsuarios()">Tentar novamente</button></div>';
   } finally {
     $<HTMLButtonElement>('btnRefresh').disabled = false;
   }

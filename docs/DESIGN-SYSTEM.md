@@ -1,20 +1,25 @@
 # Design system VEC
 
-**Versão vigente:** 1.3
+**Versão vigente:** 3.0
 **Atualizado em:** 2026-11-14
 
 ## Fonte da verdade
 
 Os tokens compartilhados ficam em [`frontend/design-tokens.css`](../frontend/design-tokens.css).
-As regras específicas do formulário e do painel ficam em
-[`frontend/style.css`](../frontend/style.css) e
-[`frontend/admin/admin.css`](../frontend/admin/admin.css).
-As páginas devem carregar os tokens antes dos estilos locais.
+As regras específicas ficam em [`frontend/style.css`](../frontend/style.css)
+(formulário) e em [`frontend/admin/`](../frontend/admin/): `admin.css` (base,
+login, navegação e diálogos), `dashboard.css` (visão geral, cadastros e detalhe)
+e `users.css` (usuários). As páginas carregam, nesta ordem: tokens, `tailwind.css`
+(reset) e estilos locais.
 
-Esta versão mantém a identidade azul-marinho, dourado e creme e acrescenta
-fundos suaves, hierarquia de superfícies e sombras discretas. O código e os
-tokens no Git são a referência principal; imagens de tela são opcionais e só
-devem ser guardadas quando ajudarem a comparar uma mudança visual.
+Formulário e painel compartilham uma só identidade: azul-marinho, dourado e
+papel claro, com Fraunces nos títulos e Source Sans 3 no restante. O marinho
+marca ação e seleção; o dourado marca progresso e destaque, e nunca é usado
+como texto sobre fundo claro (para isso existe `--gold-ink`). A jornada é o
+elemento de assinatura: aparece como caminho numerado no formulário, no login
+e no painel, e como trechos preenchidos em cada cadastro. O código e os tokens
+no Git são a referência principal; imagens de tela são opcionais e só devem ser
+guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Princípios de interface
 
@@ -40,6 +45,9 @@ devem ser guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.0 — 2026-11-14:** identidade única para formulário e painel; perguntas
+  Sim/Não em linhas compactas, jornada como caminho numerado, painel com
+  indicadores, jornada da área, navegação lateral e detalhe em painel lateral.
 - **1.3 — 2026-11-14:** foco com contraste reforçado e abas do painel operáveis
   por setas do teclado.
 - **1.2 — 2026-11-14:** painel com título de contexto e hierarquia reforçada
