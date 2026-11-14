@@ -102,6 +102,7 @@ function mostrarEtapa(focar = false) {
     btnBack.classList.toggle('hidden', etapaAtual === 0);
     btnNext.classList.toggle('hidden', etapaAtual === etapas.length - 1);
     btnSend.classList.toggle('hidden', etapaAtual !== etapas.length - 1);
+    byId('intro').hidden = etapaAtual !== 0;
     atualizarProgresso();
     if (focar)
         etapas[etapaAtual].querySelector('h2')?.focus();
@@ -252,6 +253,7 @@ form.addEventListener('submit', async (e) => {
         form.style.display = 'none';
         byId('done').classList.add('show');
         byId('topbar').style.display = 'none';
+        byId('intro').hidden = true;
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     catch (err) {

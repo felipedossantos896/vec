@@ -33,7 +33,7 @@ async function carregar() {
     $('loading').classList.add('hidden');
     $('content').classList.remove('hidden');
   } catch (err) {
-    $('loading').innerHTML = 'Não foi possível carregar os dados. <button class="btn-sec" type="button" onclick="carregar()">Tentar novamente</button>';
+    $('loading').innerHTML = '<span>Não foi possível carregar os dados.</span><button class="btn-sec" type="button" onclick="carregar()">Tentar novamente</button>';
   } finally {
     $<HTMLButtonElement>('btnRefresh').disabled = false;
   }
@@ -76,13 +76,18 @@ function filtrados() {
 }
 
 // ── Render ──
-function renderTudo() { renderResumo(); renderCelulas(); renderLista(); }
+function renderTudo() { renderResumo(); renderJornada(); renderCelulas(); renderLista(); }
+
+const pips = (r: Registro): string => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
+// Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
+const baseIndicadores = () => estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
 
 function renderResumo() {
-  const base = estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
+  const base = baseIndicadores();
   $('stats').innerHTML = RESUMO.map(([k, label, fn]) => {
     const n = fn ? fn(base) : base.filter(SITUACOES[k].f).length;
-    return `<button type="button" class="stat ${estado.situacao === k ? 'active' : ''}" data-sit="${k}" aria-pressed="${estado.situacao === k}"><b>${n}</b><span>${label}</span></button>`;
+    const nota = fn ? 'na sua visão' : base.length ? `${Math.round((n / base.length) * 100)}% dos cadastros` : 'sem cadastros';
+    return `<button type="button" class="stat ${estado.situacao === k ? 'active' : ''}" data-sit="${k}" aria-pressed="${estado.situacao === k}"><span>${label}</span><b>${n}</b><small>${nota}</small></button>`;
   }).join('');
   $('stats').querySelectorAll<HTMLButtonElement>('.stat').forEach(b => b.addEventListener('click', () => {
     const situacao = b.dataset.sit || 'todos';
@@ -92,6 +97,15 @@ function renderResumo() {
   }));
 }
 
+function renderJornada() {
+  const base = baseIndicadores();
+  $('journey').innerHTML = JORNADA.map(([k, label]) => {
+    const n = base.filter(r => r[k] === 'S').length;
+    const pct = base.length ? Math.round((n / base.length) * 100) : 0;
+    return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
+  }).join('');
+}
+
 function renderCelulas() {
   const base = estado.regs.filter(r => !estado.setor || r.setor === estado.setor);
   const cont: Record<string, number> = {};
@@ -99,8 +113,7 @@ function renderCelulas() {
   const nomes = distintos('celula', baseCelulas()).filter(c => !estado.setor || cont[c]);
   if (cont['Sem célula']) nomes.push('Sem célula');
   const poucas = nomes.length <= 1;
-  $('cellsTitle').classList.toggle('hidden', poucas);
-  $('cells').classList.toggle('hidden', poucas);
+  $('cellsSection').classList.toggle('hidden', poucas);
   const max = Math.max(1, ...Object.values(cont));
   $('cells').innerHTML = nomes.map(c => {
     const n = cont[c] || 0;
@@ -124,7 +137,7 @@ function renderLista() {
   const lista = filtrados();
   const total = estado.regs.length;
   const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
-  $('countTxt').innerHTML = filtrando ? `<b>${lista.length}</b> de ${total} cadastros` : `<b>${total}</b> cadastros`;
+  $('countTxt').innerHTML = filtrando ? `Mostrando <b>${lista.length}</b> de ${total}` : `<b>${total}</b> ${total === 1 ? 'pessoa' : 'pessoas'} na sua visão`;
   $('btnClear').classList.toggle('hidden', !filtrando);
 
   if (!lista.length) {
@@ -140,8 +153,8 @@ function renderLista() {
       <span class="it-cell"><span class="lbl">Célula </span><b>${esc(r.celula || '—')}</b></span>
       <span class="it-setor">${esc(r.setor || '—')}</span>
       <span class="it-jornada">
-        <span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>
-        <span class="jlabel">${r._jornada} de ${JORNADA.length} etapas</span>
+        ${pips(r)}
+        <span class="jlabel">${r._jornada} de ${JORNADA.length}<span class="lbl"> etapas</span></span>
       </span>
       <span class="it-date">${esc((r.dataHora || '').split(/[ ,]/)[0])}</span>
     </button>`).join('');
@@ -174,6 +187,7 @@ function abrirDetalhe(r: Registro) {
   $('detSub').textContent = [r.celula, r.setor].filter(Boolean).join(' · ') || 'Sem célula informada';
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   $('detBody').innerHTML =
+    `<p class="det-journey">${pips(r)}<span><b>${r._jornada} de ${JORNADA.length}</b> etapas da jornada</span></p>` +
     secao('Dados pessoais', [
       ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
       ['Recebeu Jesus', pill(r.recebeuJesus)]
