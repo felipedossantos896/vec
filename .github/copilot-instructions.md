@@ -28,3 +28,11 @@ Take the first option that fully works:
 - A shortcut with a known limit gets a code comment in this form: `shortcut: <the limit>, <when to upgrade>`.
 
 Never cut: validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs, anything the user asked for.
+
+## File size
+
+- Aim for at most 300 lines in hand-maintained files. Above that, consider splitting
+  along cohesive responsibilities; never split only to satisfy the count.
+- Files over 500 lines must be refactored or have a clear reason to remain intact.
+- This applies to code, tests, pages, and documentation. Generated files,
+  dependencies/lockfiles, datasets, and SQL migrations are exempt and stay intact.
