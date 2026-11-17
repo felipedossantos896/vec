@@ -14,6 +14,7 @@ type Registro = {
   _idade: number | null;
   _jornada: number;
   _busca: string;
+  _dup: number; // quantos cadastros têm o mesmo nome e nascimento (1 = só este)
   recebeuJesus?: string;
   cafePastor?: string;
   estacaoDNA?: string;
@@ -89,6 +90,7 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   batizar:        { label: 'Receberam Jesus, ainda sem batismo', f: r => r.recebeuJesus === 'S' && r.batismo !== 'S' },
   quaseLa:        { label: 'Falta uma etapa da jornada', f: r => r._jornada === JORNADA.length - 1 },
   semCelula:      { label: 'Sem célula', f: r => !r.celula },
+  duplicados:     { label: 'Possíveis duplicados', f: r => r._dup > 1 },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });

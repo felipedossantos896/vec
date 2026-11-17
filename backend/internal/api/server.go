@@ -186,6 +186,9 @@ type adminReq struct {
 	Celulas  []string `json:"celulas"`
 	Ativo    *bool    `json:"ativo"`
 	Gerencia bool     `json:"gerencia"`
+	// Edição de cadastro: número do cadastro e os campos do formulário
+	Linha int64                      `json:"linha"`
+	Dados map[string]json.RawMessage `json:"dados"`
 }
 
 func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
@@ -239,6 +242,10 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = okReply(nil) // sessões são assinadas e expiram sozinhas
 		case "listar":
 			rep = s.listar(ctx, req)
+		case "registro_salvar":
+			rep = s.registroSalvar(ctx, req)
+		case "registro_excluir":
+			rep = s.registroExcluir(ctx, req)
 		case "usuarios_listar":
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":

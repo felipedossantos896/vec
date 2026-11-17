@@ -90,6 +90,11 @@ O filtro é aplicado **no servidor**, na própria consulta SQL: quem não tem
 permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê a aba
 **Usuários** no painel e cria/edita acessos, troca senhas e desativa pessoas.
 
+Cada líder também **edita e exclui cadastros** que enxerga, pelo detalhe da pessoa.
+A exclusão só marca a linha no banco (`excluido_em`), então pode ser desfeita por
+SQL. Cadastros com o mesmo nome e a mesma data de nascimento aparecem no filtro
+**Possíveis duplicados**.
+
 ## Hospedagem (onde o servidor roda)
 
 O servidor é um container comum (`Dockerfile`, binário único de ~7 MB), então roda em

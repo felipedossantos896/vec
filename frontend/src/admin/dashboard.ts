@@ -22,12 +22,9 @@ async function carregar() {
     estado.regs = r.registros.map(o => {
       const x: Registro = { ...o };
       Object.keys(o).forEach(k => { x[k] = typeof o[k] === 'string' ? o[k].trim() : o[k]; });
-      x._nasc = parseData(x.nascimento);
-      x._idade = idade(x._nasc);
-      x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
-      x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
-      return x;
+      return derivar(x);
     }).sort((a, b) => b.linha - a.linha);
+    marcarDuplicados();
     montarFiltros();
     renderTudo();
     $('loading').classList.add('hidden');
@@ -43,6 +40,15 @@ $('btnRefresh').addEventListener('click', () => {
   $('loading').innerHTML = '<span class="spinner"></span>Carregando cadastros...';
   carregar();
 });
+
+// Campos calculados a partir das respostas; refeitos quando o cadastro é editado
+function derivar(x: Registro): Registro {
+  x._nasc = parseData(x.nascimento);
+  x._idade = idade(x._nasc);
+  x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
+  x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
+  return x;
+}
 
 function distintos(chave: string, base: string[]): string[] {
   const set = new Set(base);
@@ -206,9 +212,11 @@ function abrirDetalhe(r: Registro) {
     secao('Treinamentos', TREINOS.map(([k, l]): [string, string] => [l, pill(r[k])])) +
     secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador)], ...INTERESSES.map(([k, l]): [string, string] => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
     (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
-    secao('Registro', [['Enviado em', txt(r.dataHora)], ['Nº do cadastro', String(r.linha)]]);
+    secao('Registro', [['Enviado em', txt(r.dataHora)], ...(r.editadoEm ? ([['Editado em', `${esc(r.editadoEm)} · ${esc(r.editadoPor)}`]] as [string, string][]) : []), ['Nº do cadastro', String(r.linha)]]) +
+    acoesDetalhe(r);
   const d = $<HTMLDialogElement>('det');
-  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+  d.dataset.linha = String(r.linha);
+  if (d.open) { /* já aberto: só troca o conteúdo */ } else if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
   $('detBody').scrollTop = 0;
   d.scrollTop = 0;
 }

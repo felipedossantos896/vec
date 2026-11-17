@@ -27,12 +27,14 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	}
 	registros := make([]map[string]any, 0, len(rs))
 	for _, r := range rs {
-		m := make(map[string]any, len(r.V)+2)
+		m := make(map[string]any, len(r.V)+4)
 		for k, v := range r.V {
 			m[k] = v
 		}
 		m["linha"] = r.ID
 		m["dataHora"] = fmtLocal(r.CriadoEm)
+		m["editadoEm"] = fmtLocal(r.EditadoEm)
+		m["editadoPor"] = r.EditadoPor
 		registros = append(registros, m)
 	}
 	return okReply(map[string]any{
