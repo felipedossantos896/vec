@@ -45,18 +45,36 @@ function grupo(id, titulo, resumo, corpo, classe = '') {
     const aberto = abertos[id] ?? matchMedia('(min-width: 720px)').matches;
     return `<details class="grupo" id="ag-${id}"${aberto ? ' open' : ''}><summary><h2 class="group-title">${titulo}</h2><span class="grupo-n">${resumo}</span></summary><div class="panels ${classe}">${corpo}</div></details>`;
 }
+// Um toque num cuidado abre a lista ali mesmo, logo abaixo; outro toque fecha. Ir para Pessoas
+// fica como opção, para quem quiser buscar e filtrar.
+let verSit = '';
+function notaCuidado(k, r) {
+    const cel = esc(r.celula || 'Sem célula');
+    if (k === 'semContato')
+        return `${cel} · ${r._contato ? `último contato ${contato(r)}` : 'nenhum contato registrado'}`;
+    if (k === 'quaseLa')
+        return `${cel} · falta ${JORNADA.filter(([e]) => r[e] !== 'S').map(([, etapa]) => etapa.toLowerCase()).join(', ')}`;
+    return cel;
+}
+function listaAberta(k, titulo, g) {
+    return `<li class="cuidado-aberto" id="cuidadoAberto"><div class="ca-head"><h3>${titulo}</h3>
+    <button type="button" class="btn-link" data-sit="${k}">Abrir em Pessoas</button>
+    <button type="button" class="icon-btn ca-fechar" data-ver="${k}" aria-label="Fechar a lista">×</button></div>
+    <ul class="pessoas ca-lista">${g.map(r => pessoa(r, notaCuidado(k, r))).join('')}</ul></li>`;
+}
+const attrsVer = (k) => `data-ver="${k}" aria-expanded="${verSit === k}"${verSit === k ? ' aria-controls="cuidadoAberto"' : ''}`;
 function cuidar(base) {
     const cards = CUIDAR.map(([k, titulo]) => {
         const g = base.filter(SITUACOES[k].f);
-        return g.length ? `<li><button type="button" class="cuidado" data-sit="${k}"><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="cuidado-pes">${rostos(g)}<span class="passo-n">${nomes(g)}</span></span></button></li>` : '';
+        return g.length ? `<li><button type="button" class="cuidado" ${attrsVer(k)}><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="cuidado-pes">${rostos(g)}<span class="passo-n">${nomes(g)}</span></span></button></li>${verSit === k ? listaAberta(k, titulo, g) : ''}` : '';
     }).join('');
-    return `<section class="cuidar" id="ag-cuidar"><header class="cuidar-head"><h2 class="group-title">Cuidar das pessoas</h2><p>Quem precisa de um cuidado agora. Toque para abrir a lista.</p></header>${cards ? `<ul class="cuidados">${cards}</ul>` : `<p class="em-dia">${ICONE_OK}<span><b>Tudo em dia.</b> Ninguém precisando de cuidado agora.</span></p>`}</section>`;
+    return `<section class="cuidar" id="ag-cuidar"><header class="cuidar-head"><h2 class="group-title">Cuidar das pessoas</h2><p>Quem precisa de um cuidado agora. Toque para ver quem é.</p></header>${cards ? `<ul class="cuidados">${cards}</ul>` : `<p class="em-dia">${ICONE_OK}<span><b>Tudo em dia.</b> Ninguém precisando de cuidado agora.</span></p>`}</section>`;
 }
 function arrumar(base) {
     const itens = ARRUMAR.map(([k, titulo]) => [k, titulo, base.filter(SITUACOES[k].f)]).filter(([, , g]) => g.length);
     if (!itens.length)
         return '';
-    const linhas = itens.map(([k, titulo, g]) => `<li><button type="button" class="passo" data-sit="${k}"><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="passo-n">${nomes(g)}</span></button></li>`).join('');
+    const linhas = itens.map(([k, titulo, g]) => `<li><button type="button" class="passo" ${attrsVer(k)}><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="passo-n">${nomes(g)}</span></button></li>${verSit === k ? listaAberta(k, titulo, g) : ''}`).join('');
     const n = itens.reduce((s, [, , g]) => s + g.length, 0);
     return grupo('arrumar', 'Arrumar cadastros', plural(n, 'pendência', 'pendências'), painel('Dados para conferir', 'Não é cuidado com a pessoa: são ajustes no cadastro.', `<ul class="passos">${linhas}</ul>`));
 }
@@ -196,6 +214,16 @@ const aoTocar = (e) => {
     $('registrationsTitle').scrollIntoView({ block: 'start' });
 };
 ['gConteudo', 'aConteudo'].forEach(id => $(id).addEventListener('click', aoTocar));
+$('aConteudo').addEventListener('click', e => {
+    const b = e.target instanceof Element ? e.target.closest('[data-ver]') : null;
+    if (!b)
+        return;
+    const k = b.dataset.ver || '';
+    verSit = verSit === k ? '' : k;
+    renderAcompanhar();
+    document.querySelector(`#aConteudo [data-ver="${k}"]:not(.ca-fechar)`)?.focus({ preventScroll: true });
+    document.getElementById('cuidadoAberto')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
 // Atalhos do resumo abrem o grupo e rolam até ele; o estado aberto/fechado sobrevive aos filtros
 $('aConteudo').addEventListener('click', e => {
     const b = e.target instanceof Element ? e.target.closest('[data-ir]') : null;
