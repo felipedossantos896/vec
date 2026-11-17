@@ -16,7 +16,7 @@ async function carregar() {
     }
     estado.escopo = r.escopo || { todos: true, setores: [], celulas: [] };
     estado.gerencia = !!r.gerencia;
-    $('tabs').classList.toggle('hidden', !estado.gerencia);
+    $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
     if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('cadastros');
     $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
     estado.regs = r.registros.map(o => {
@@ -53,15 +53,16 @@ function distintos(chave: string, base: string[]): string[] {
   return [...set];
 }
 
+// Setor e célula valem para Cadastros e Indicadores: cada aba tem seus seletores (f… e g…), com o mesmo estado
+const SELETORES: [string, 'setor' | 'celula', string][] = [['fSetor', 'setor', 'Todos os setores'], ['gSetor', 'setor', 'Todos os setores'], ['fCelula', 'celula', 'Todas as células'], ['gCelula', 'celula', 'Todas as células']];
+
 function montarFiltros() {
-  $<HTMLSelectElement>('fSetor').innerHTML = '<option value="">Todos os setores</option>' + distintos('setor', baseSetores()).map(v => `<option>${esc(v)}</option>`).join('');
-  $<HTMLSelectElement>('fCelula').innerHTML = '<option value="">Todas as células</option>' + distintos('celula', baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
+  SELETORES.forEach(([id, chave, todos]) => {
+    const sel = $<HTMLSelectElement>(id);
+    sel.innerHTML = `<option value="">${todos}</option>` + distintos(chave, chave === 'setor' ? baseSetores() : baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
+    sel.classList.toggle('hidden', sel.options.length <= 2);
+  });
   $<HTMLSelectElement>('fSituacao').innerHTML = Object.entries(SITUACOES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
-  $<HTMLSelectElement>('fSetor').value = estado.setor;
-  $<HTMLSelectElement>('fCelula').value = estado.celula;
-  $<HTMLSelectElement>('fSituacao').value = estado.situacao;
-  $<HTMLSelectElement>('fSetor').classList.toggle('hidden', $<HTMLSelectElement>('fSetor').options.length <= 2);
-  $<HTMLSelectElement>('fCelula').classList.toggle('hidden', $<HTMLSelectElement>('fCelula').options.length <= 2);
 }
 
 function filtrados() {
@@ -76,7 +77,17 @@ function filtrados() {
 }
 
 // ── Render ──
-function renderTudo() { renderResumo(); renderJornada(); renderCelulas(); renderLista(); }
+function renderTudo() {
+  SELETORES.forEach(([id, chave]) => { $<HTMLSelectElement>(id).value = estado[chave]; });
+  $<HTMLSelectElement>('fSituacao').value = estado.situacao;
+  renderResumo(); renderJornada(); renderCelulas(); renderLista(); renderIndicadores();
+}
+
+// Uma linha de medidor: nome, quantidade, percentual e barra
+function medidor(label: string, n: number, total: number): string {
+  const pct = total ? Math.round((n / total) * 100) : 0;
+  return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
+}
 
 const pips = (r: Registro): string => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
@@ -92,18 +103,13 @@ function renderResumo() {
   $('stats').querySelectorAll<HTMLButtonElement>('.stat').forEach(b => b.addEventListener('click', () => {
     const situacao = b.dataset.sit || 'todos';
     estado.situacao = estado.situacao === situacao ? 'todos' : situacao;
-    $<HTMLSelectElement>('fSituacao').value = estado.situacao;
     renderTudo();
   }));
 }
 
 function renderJornada() {
   const base = baseIndicadores();
-  $('journey').innerHTML = JORNADA.map(([k, label]) => {
-    const n = base.filter(r => r[k] === 'S').length;
-    const pct = base.length ? Math.round((n / base.length) * 100) : 0;
-    return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
-  }).join('');
+  $('journey').innerHTML = JORNADA.map(([k, label]) => medidor(label, base.filter(r => r[k] === 'S').length, base.length)).join('');
 }
 
 function renderCelulas() {
@@ -128,7 +134,6 @@ function renderCelulas() {
     const nomeCelula = b.dataset.cel || '';
     const c = nomeCelula === 'Sem célula' ? '' : nomeCelula;
     estado.celula = estado.celula === c ? '' : c;
-    $<HTMLSelectElement>('fCelula').value = estado.celula;
     renderTudo();
   }));
 }
@@ -167,8 +172,7 @@ function renderLista() {
 // ── Filtros ──
 let tBusca: ReturnType<typeof setTimeout>;
 $<HTMLInputElement>('fBusca').addEventListener('input', e => { clearTimeout(tBusca); tBusca = setTimeout(() => { estado.busca = (e.target as HTMLInputElement).value; renderLista(); }, 150); });
-$<HTMLSelectElement>('fSetor').addEventListener('change', e => { estado.setor = (e.target as HTMLSelectElement).value; renderTudo(); });
-$<HTMLSelectElement>('fCelula').addEventListener('change', e => { estado.celula = (e.target as HTMLSelectElement).value; renderTudo(); });
+SELETORES.forEach(([id, chave]) => $<HTMLSelectElement>(id).addEventListener('change', e => { estado[chave] = (e.target as HTMLSelectElement).value; renderTudo(); }));
 $<HTMLSelectElement>('fSituacao').addEventListener('change', e => { estado.situacao = (e.target as HTMLSelectElement).value; renderTudo(); });
 $('btnClear').addEventListener('click', () => {
   Object.assign(estado, { busca: '', setor: '', celula: '', situacao: 'todos' });

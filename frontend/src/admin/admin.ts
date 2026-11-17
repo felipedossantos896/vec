@@ -72,6 +72,8 @@ const TREINOS: [string, string][] = [['expresso01', 'Expresso 01 · Discipulador
 const INTERESSES: [string, string][] = [['interesseDiscipulado', 'Ser discipulado(a)'], ['interesseCuidar', 'Cuidar de pessoas'], ['interesseLider', 'Ser líder de célula'], ['interesseAnfitrao', 'Ser anfitrião']];
 const SETORES = ['Fogo no Altar', 'Tabernáculo de Deus'];
 const CELULAS = ['Hope', 'Ramos da Videira', 'Ashrei', 'Betânia', 'Vencedores em Cristo', 'Despertar', 'Pi-Hairote'];
+// A que setor cada célula pertence (mesma lista da migração 0004)
+const SETOR_DA_CELULA: Record<string, string> = { 'Hope': SETORES[0], 'Ramos da Videira': SETORES[0], 'Ashrei': SETORES[0], 'Betânia': SETORES[1], 'Despertar': SETORES[1], 'Pi-Hairote': SETORES[1], 'Vencedores em Cristo': SETORES[1] };
 
 const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> = {
   todos:          { label: 'Todas as situações', f: () => true },
@@ -84,7 +86,12 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   querLiderar:    { label: 'Querem liderar célula', f: r => r.interesseLider === 'S' },
   querAnfitriao:  { label: 'Querem ser anfitriões', f: r => r.interesseAnfitrao === 'S' },
   servem:         { label: 'Servem em ministério', f: r => r.serveMinisterio === 'S' },
+  batizar:        { label: 'Receberam Jesus, ainda sem batismo', f: r => r.recebeuJesus === 'S' && r.batismo !== 'S' },
+  quaseLa:        { label: 'Falta uma etapa da jornada', f: r => r._jornada === JORNADA.length - 1 },
+  semCelula:      { label: 'Sem célula', f: r => !r.celula },
 };
+// Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
+JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
 
 const RESUMO: [string, string, ((rs: Registro[]) => number) | null][] = [
   ['todos', 'cadastros', rs => rs.length],

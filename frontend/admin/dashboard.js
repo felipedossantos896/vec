@@ -23,7 +23,7 @@ async function carregar() {
         }
         estado.escopo = r.escopo || { todos: true, setores: [], celulas: [] };
         estado.gerencia = !!r.gerencia;
-        $('tabs').classList.toggle('hidden', !estado.gerencia);
+        $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
         if (!estado.gerencia && estado.aba === 'usuarios')
             mostrarAba('cadastros');
         $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
@@ -63,15 +63,15 @@ function distintos(chave, base) {
     });
     return [...set];
 }
+// Setor e célula valem para Cadastros e Indicadores: cada aba tem seus seletores (f… e g…), com o mesmo estado
+const SELETORES = [['fSetor', 'setor', 'Todos os setores'], ['gSetor', 'setor', 'Todos os setores'], ['fCelula', 'celula', 'Todas as células'], ['gCelula', 'celula', 'Todas as células']];
 function montarFiltros() {
-    $('fSetor').innerHTML = '<option value="">Todos os setores</option>' + distintos('setor', baseSetores()).map(v => `<option>${esc(v)}</option>`).join('');
-    $('fCelula').innerHTML = '<option value="">Todas as células</option>' + distintos('celula', baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
+    SELETORES.forEach(([id, chave, todos]) => {
+        const sel = $(id);
+        sel.innerHTML = `<option value="">${todos}</option>` + distintos(chave, chave === 'setor' ? baseSetores() : baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
+        sel.classList.toggle('hidden', sel.options.length <= 2);
+    });
     $('fSituacao').innerHTML = Object.entries(SITUACOES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
-    $('fSetor').value = estado.setor;
-    $('fCelula').value = estado.celula;
-    $('fSituacao').value = estado.situacao;
-    $('fSetor').classList.toggle('hidden', $('fSetor').options.length <= 2);
-    $('fCelula').classList.toggle('hidden', $('fCelula').options.length <= 2);
 }
 function filtrados() {
     const b = norm(estado.busca);
@@ -82,7 +82,20 @@ function filtrados() {
         sit(r));
 }
 // ── Render ──
-function renderTudo() { renderResumo(); renderJornada(); renderCelulas(); renderLista(); }
+function renderTudo() {
+    SELETORES.forEach(([id, chave]) => { $(id).value = estado[chave]; });
+    $('fSituacao').value = estado.situacao;
+    renderResumo();
+    renderJornada();
+    renderCelulas();
+    renderLista();
+    renderIndicadores();
+}
+// Uma linha de medidor: nome, quantidade, percentual e barra
+function medidor(label, n, total) {
+    const pct = total ? Math.round((n / total) * 100) : 0;
+    return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
+}
 const pips = (r) => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
 const baseIndicadores = () => estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
@@ -96,17 +109,12 @@ function renderResumo() {
     $('stats').querySelectorAll('.stat').forEach(b => b.addEventListener('click', () => {
         const situacao = b.dataset.sit || 'todos';
         estado.situacao = estado.situacao === situacao ? 'todos' : situacao;
-        $('fSituacao').value = estado.situacao;
         renderTudo();
     }));
 }
 function renderJornada() {
     const base = baseIndicadores();
-    $('journey').innerHTML = JORNADA.map(([k, label]) => {
-        const n = base.filter(r => r[k] === 'S').length;
-        const pct = base.length ? Math.round((n / base.length) * 100) : 0;
-        return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
-    }).join('');
+    $('journey').innerHTML = JORNADA.map(([k, label]) => medidor(label, base.filter(r => r[k] === 'S').length, base.length)).join('');
 }
 function renderCelulas() {
     const base = estado.regs.filter(r => !estado.setor || r.setor === estado.setor);
@@ -131,7 +139,6 @@ function renderCelulas() {
         const nomeCelula = b.dataset.cel || '';
         const c = nomeCelula === 'Sem célula' ? '' : nomeCelula;
         estado.celula = estado.celula === c ? '' : c;
-        $('fCelula').value = estado.celula;
         renderTudo();
     }));
 }
@@ -167,8 +174,7 @@ function renderLista() {
 // ── Filtros ──
 let tBusca;
 $('fBusca').addEventListener('input', e => { clearTimeout(tBusca); tBusca = setTimeout(() => { estado.busca = e.target.value; renderLista(); }, 150); });
-$('fSetor').addEventListener('change', e => { estado.setor = e.target.value; renderTudo(); });
-$('fCelula').addEventListener('change', e => { estado.celula = e.target.value; renderTudo(); });
+SELETORES.forEach(([id, chave]) => $(id).addEventListener('change', e => { estado[chave] = e.target.value; renderTudo(); }));
 $('fSituacao').addEventListener('change', e => { estado.situacao = e.target.value; renderTudo(); });
 $('btnClear').addEventListener('click', () => {
     Object.assign(estado, { busca: '', setor: '', celula: '', situacao: 'todos' });

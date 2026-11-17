@@ -14,14 +14,15 @@ const MSG_USUARIO = {
 };
 let editando = null;
 const abas = [...document.querySelectorAll('#tabs button')];
-abas.forEach((b, i) => {
+abas.forEach(b => {
     b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'cadastros'));
     b.addEventListener('keydown', e => {
         const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
         if (!delta)
             return;
         e.preventDefault();
-        const proxima = abas[(i + delta + abas.length) % abas.length];
+        const visiveis = abas.filter(a => !a.classList.contains('hidden'));
+        const proxima = visiveis[(visiveis.indexOf(b) + delta + visiveis.length) % visiveis.length];
         proxima.focus();
         proxima.click();
     });
@@ -34,6 +35,7 @@ function mostrarAba(aba) {
         b.tabIndex = selecionada ? 0 : -1;
     });
     $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
+    $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
     $('usersView').classList.toggle('hidden', aba !== 'usuarios');
     if (aba === 'usuarios' && !estado.usuariosCarregados)
         carregarUsuarios();
@@ -51,7 +53,7 @@ function sessaoInvalida(r) {
     }
     if (r.erro === 'sem_permissao') {
         estado.gerencia = false;
-        $('tabs').classList.add('hidden');
+        $('tabUsuarios').classList.add('hidden');
         mostrarAba('cadastros');
         return true;
     }

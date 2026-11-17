@@ -1,14 +1,14 @@
 # Design system VEC
 
-**Versão vigente:** 3.0
-**Atualizado em:** 2026-11-14
+**Versão vigente:** 3.1
+**Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
 
 Os tokens compartilhados ficam em [`frontend/design-tokens.css`](../frontend/design-tokens.css).
 As regras específicas ficam em [`frontend/style.css`](../frontend/style.css)
 (formulário) e em [`frontend/admin/`](../frontend/admin/): `admin.css` (base,
-login, navegação e diálogos), `dashboard.css` (visão geral, cadastros e detalhe)
+login, navegação e diálogos), `dashboard.css` (visão geral, indicadores, cadastros e detalhe)
 e `users.css` (usuários). As páginas carregam, nesta ordem: tokens, `tailwind.css`
 (reset) e estilos locais.
 
@@ -45,6 +45,13 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.1 — 2026-11-17:** aba Indicadores no painel, voltada ao acompanhamento:
+  próximos passos com nomes, mapa da jornada por setor e célula (cinco tons de
+  `--navy-2`, texto branco a partir do quarto), quem quer servir cruzado com os
+  treinamentos, aniversariantes e sugestões. Todo número leva à lista de
+  pessoas. No fim, o retrato da área: colunas de novos cadastros por mês e de
+  faixa etária e medidores, em uma só cor, com valor no topo e dica ao passar o
+  mouse ou focar.
 - **3.0 — 2026-11-14:** identidade única para formulário e painel; perguntas
   Sim/Não em linhas compactas, jornada como caminho numerado, painel com
   indicadores, jornada da área, navegação lateral e detalhe em painel lateral.

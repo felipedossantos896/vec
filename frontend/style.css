@@ -115,6 +115,8 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 .opt input:checked + span { border-color: var(--navy); background: var(--gold-wash); font-weight: 700; }
 .opt input:checked + span::before { border: 6px solid var(--navy); }
 .sub-block { margin-top: 24px; }
+.opt-group { margin: 16px 2px 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.field-label + .opt-group { margin-top: 4px; }
 #ministerioWrap { display: none; margin-top: 16px; padding: 16px; border-radius: var(--r-md); background: var(--sunken); }
 #ministerioWrap.show { display: block; }
 

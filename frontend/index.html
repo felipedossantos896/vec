@@ -78,27 +78,23 @@
     <section class="card" aria-labelledby="s3" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">3</span>
-        <div><h2 id="s3" tabindex="-1">Setor, célula e serviço</h2><p>Onde você caminha e serve.</p></div>
+        <div><h2 id="s3" tabindex="-1">Célula e serviço</h2><p>Onde você caminha e serve.</p></div>
       </div>
 
-      <div role="radiogroup" aria-labelledby="l-setor">
-        <p class="field-label" id="l-setor">Setor</p>
-        <div class="opts two">
-          <label class="opt"><input type="radio" name="setor" value="Fogo no Altar"><span>Fogo no Altar</span></label>
-          <label class="opt"><input type="radio" name="setor" value="Tabernáculo de Deus"><span>Tabernáculo de Deus</span></label>
-        </div>
-      </div>
-
-      <div class="sub-block" role="radiogroup" aria-labelledby="l-celula">
-        <p class="field-label" id="l-celula">Célula</p>
-        <div class="opts cols">
+      <div role="radiogroup" aria-labelledby="l-celula">
+        <p class="field-label" id="l-celula">Qual é a sua célula?</p>
+        <p class="opt-group" id="g-fogo">Setor Fogo no Altar</p>
+        <div class="opts cols" data-setor="Fogo no Altar" role="group" aria-labelledby="g-fogo">
           <label class="opt"><input type="radio" name="celula" value="Hope"><span>Hope</span></label>
           <label class="opt"><input type="radio" name="celula" value="Ramos da Videira"><span>Ramos da Videira</span></label>
           <label class="opt"><input type="radio" name="celula" value="Ashrei"><span>Ashrei</span></label>
+        </div>
+        <p class="opt-group" id="g-tabernaculo">Setor Tabernáculo de Deus</p>
+        <div class="opts cols" data-setor="Tabernáculo de Deus" role="group" aria-labelledby="g-tabernaculo">
           <label class="opt"><input type="radio" name="celula" value="Betânia"><span>Betânia</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span>Vencedores em Cristo</span></label>
           <label class="opt"><input type="radio" name="celula" value="Despertar"><span>Despertar</span></label>
           <label class="opt"><input type="radio" name="celula" value="Pi-Hairote"><span>Pi-Hairote</span></label>
+          <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span>Vencedores em Cristo</span></label>
         </div>
       </div>
 
