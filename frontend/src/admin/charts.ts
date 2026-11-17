@@ -43,6 +43,22 @@ function porMes(base: Registro[]): Coluna[] {
   });
 }
 
+// Etapas da jornada marcadas como concluídas em cada um dos últimos 12 meses
+function jornadaPorMes(base: Registro[]): Coluna[] {
+  return porMes(base).map((col, i) => {
+    const hoje = new Date();
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - 11 + i, 1);
+    const cont = JORNADA.map(([k, etapa]): [string, number] => [etapa, base.filter(r => {
+      const e = r[k] === 'S' ? parseData(r.jornadaDatas?.[k]) : null;
+      return !!e && e.getFullYear() === d.getFullYear() && e.getMonth() === d.getMonth();
+    }).length]);
+    const n = cont.reduce((a, [, c]) => a + c, 0);
+    const detalhe = cont.filter(([, c]) => c).map(([etapa, c]) => `${c} ${etapa}`).join(', ');
+    const mes = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return { ...col, n, titulo: `${mes}: ${plural(n, 'etapa concluída', 'etapas concluídas')}${detalhe ? ` (${detalhe})` : ''}` };
+  });
+}
+
 function renderIndicadores() {
   const base = baseIndicadores();
   const total = base.length;
@@ -79,6 +95,7 @@ function renderIndicadores() {
     <h2 class="group-title">Retrato da área</h2>
     <div class="panels">${
       painel('Novos cadastros', 'Formulários recebidos por mês, nos últimos 12 meses.', colunas(porMes(base))) +
+      painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base))) +
       painel('Faixa etária', semIdade ? `Idade de ${idades.length} pessoas; ${plural(semIdade, 'cadastro', 'cadastros')} sem data válida.` : 'Idade de quem está cadastrado.', colunas(faixas)) +
       painel('Vida na igreja', 'Quem já vive cada prática.', lista(VIDA.map(([l, f]): [string, number] => [l, base.filter(f).length]))) +
       painel('Treinamentos', 'Quem já fez ou participa.', sim(TREINOS))

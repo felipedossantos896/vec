@@ -38,7 +38,7 @@ func TestInsertRespostaUsesRequestIDForIdempotency(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stmt := db.doCalls[0][0]
+	stmt := db.txCalls[0][0]
 	if !strings.Contains(stmt.SQL, "ON CONFLICT(request_id) DO NOTHING") {
 		t.Fatalf("SQL sem idempotência: %s", stmt.SQL)
 	}

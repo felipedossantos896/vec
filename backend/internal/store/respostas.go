@@ -47,7 +47,13 @@ var Campos = []Campo{
 	{"interesseLider", "interesse_lider", true},
 	{"interesseAnfitrao", "interesse_anfitriao", true},
 	{"sugestao", "sugestao", false},
+	// Campos novos ficam no fim. O importador os deixa fora da chave de importação,
+	// para que reimportar uma planilha antiga não duplique cadastros.
+	{"telefone", "telefone", false},
 }
+
+// CamposLegados é quantos campos existiam quando a chave de importação foi criada.
+const CamposLegados = 25
 
 type Resposta struct {
 	ID         int64
@@ -58,6 +64,9 @@ type Resposta struct {
 	EditadoPor string // usuário do painel que fez a última edição
 	// DiscipuladorID é o cadastro do discipulador (0 = sem vínculo; o nome digitado fica em V).
 	DiscipuladorID int64
+	Consentimento  string            // ISO UTC de quando autorizou o uso dos dados ("" = antes do aceite)
+	UltimoContato  string            // ISO UTC da anotação mais recente ("" = nenhuma)
+	Jornada        map[string]string // etapa -> ISO UTC de quando foi marcada como concluída
 	V              map[string]string // chave do Campo -> valor
 }
 
@@ -74,17 +83,17 @@ func (s *Store) InsertResposta(ctx context.Context, r Resposta) error {
 	if r.RequestID == "" {
 		return errors.New("id de envio vazio")
 	}
-	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+2), ", ")
-	args := make([]any, 0, len(Campos)+2)
-	args = append(args, r.RequestID)
-	args = append(args, r.CriadoEm)
+	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+3), ", ")
+	args := make([]any, 0, len(Campos)+3)
+	args = append(args, r.RequestID, r.CriadoEm, idOuNuloTexto(r.Consentimento))
 	for _, c := range Campos {
 		args = append(args, r.V[c.Chave])
 	}
-	_, err := s.DB.Do(ctx, turso.Stmt{
-		SQL:  `INSERT INTO respostas (request_id, criado_em, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
+	stmts := append([]turso.Stmt{{
+		SQL:  `INSERT INTO respostas (request_id, criado_em, consentimento_em, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
 		Args: args,
-	})
+	}}, jornadaDoEnvio(r.RequestID)...)
+	_, err := s.DB.Tx(ctx, stmts...)
 	return err
 }
 
@@ -151,33 +160,10 @@ func (s *Store) ImportarRespostas(ctx context.Context, rs []Resposta) (int, erro
 			novas += int(res[j].Affected)
 		}
 	}
+	if _, err := s.DB.Tx(ctx, jornadaFaltante()...); err != nil {
+		return novas, err
+	}
 	return novas, nil
-}
-
-// escopoSQL devolve a condição que limita as respostas ao escopo.
-// ok=false quando o escopo é vazio: sem escopo = sem dados (nunca "tudo").
-func escopoSQL(sc Scope) (cond string, args []any, ok bool) {
-	if sc.Todos {
-		return `1 = 1`, nil, true
-	}
-	var conds []string
-	if len(sc.Setores) > 0 {
-		conds = append(conds, `setor IN (`+marks(len(sc.Setores))+`)`)
-		for _, n := range sc.Setores {
-			args = append(args, n)
-		}
-	}
-	if len(sc.Celulas) > 0 {
-		conds = append(conds, `celula IN (`+marks(len(sc.Celulas))+`)`)
-		for _, n := range sc.Celulas {
-			args = append(args, n)
-		}
-	}
-	if sc.Discipulador != 0 {
-		conds = append(conds, `discipulador_id = ?`)
-		args = append(args, sc.Discipulador)
-	}
-	return `(` + strings.Join(conds, ` OR `) + `)`, args, len(conds) > 0
 }
 
 // ListRespostas devolve as respostas dentro do escopo, da mais nova para a mais antiga.
@@ -188,8 +174,12 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 		return nil, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), COALESCE(discipulador_id, 0), ` + colunas() +
+		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), COALESCE(discipulador_id, 0), COALESCE(consentimento_em, ''),
+		      COALESCE((SELECT MAX(a.criado_em) FROM anotacoes a WHERE a.resposta_id = respostas.id), ''), ` + colunas() +
 			` FROM respostas WHERE excluido_em IS NULL AND ` + cond + ` ORDER BY id DESC`,
+		Args: args,
+	}, turso.Stmt{
+		SQL:  `SELECT j.resposta_id, j.etapa, j.em FROM jornada_eventos j JOIN respostas ON respostas.id = j.resposta_id WHERE excluido_em IS NULL AND ` + cond,
 		Args: args,
 	})
 	if err != nil {
@@ -199,13 +189,23 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	for _, row := range res[0].Rows {
 		r := Resposta{
 			ID: turso.Int(row, 0), CriadoEm: turso.Str(row, 1), EditadoEm: turso.Str(row, 2), EditadoPor: turso.Str(row, 3),
-			DiscipuladorID: turso.Int(row, 4),
-			V:              make(map[string]string, len(Campos)),
+			DiscipuladorID: turso.Int(row, 4), Consentimento: turso.Str(row, 5), UltimoContato: turso.Str(row, 6),
+			Jornada: map[string]string{},
+			V:       make(map[string]string, len(Campos)),
 		}
 		for i, c := range Campos {
-			r.V[c.Chave] = turso.Str(row, i+5)
+			r.V[c.Chave] = turso.Str(row, i+7)
 		}
 		out = append(out, r)
+	}
+	porID := make(map[int64]*Resposta, len(out))
+	for i := range out {
+		porID[out[i].ID] = &out[i]
+	}
+	for _, row := range res[1].Rows {
+		if r := porID[turso.Int(row, 0)]; r != nil {
+			r.Jornada[turso.Str(row, 1)] = turso.Str(row, 2)
+		}
 	}
 	return out, nil
 }
@@ -225,18 +225,19 @@ func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[st
 	}
 	args = append(args, idOuNulo(discipulador), iso(now), por, id)
 	args = append(args, escopoArgs...)
-	res, err := s.DB.Do(ctx,
-		turso.Stmt{
+	stmts := []turso.Stmt{
+		{
 			SQL: `UPDATE respostas SET ` + strings.Join(sets, `, `) + `, discipulador_id = ?, atualizado_em = ?, atualizado_por = ?` +
 				` WHERE id = ? AND excluido_em IS NULL AND ` + cond,
 			Args: args,
 		},
 		// Se a pessoa mudou de nome, os discípulos dela passam a mostrar o nome novo.
-		turso.Stmt{
+		{
 			SQL:  `UPDATE respostas SET discipulador = (SELECT nome FROM respostas WHERE id = ?) WHERE discipulador_id = ?`,
 			Args: []any{id, id},
 		},
-	)
+	}
+	res, err := s.DB.Tx(ctx, append(stmts, jornadaDaEdicao(id, v, por, now)...)...)
 	if err != nil {
 		return false, err
 	}
@@ -268,9 +269,3 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 	}
 	return res[0].Affected > 0, nil
 }
-
-func marks(n int) string {
-	return strings.TrimSuffix(strings.Repeat("?, ", n), ", ")
-}
-
-func iso(t time.Time) string { return t.UTC().Format(time.RFC3339) }

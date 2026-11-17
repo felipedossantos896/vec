@@ -53,6 +53,7 @@ function derivar(x: Registro): Registro {
   x._nasc = parseData(x.nascimento);
   x._idade = idade(x._nasc);
   x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
+  x._contato = parseData(x.ultimoContato);
   x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
   return x;
 }
@@ -206,11 +207,13 @@ function abrirDetalhe(r: Registro) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   $('detBody').innerHTML =
     `<p class="det-journey">${pips(r)}<span><b>${r._jornada} de ${JORNADA.length}</b> etapas da jornada</span>${faltam(r)}</p>` +
+    blocoNotas(r) +
     secao('Dados pessoais', [
       ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
+      ...linhasContato(r),
       ['Recebeu Jesus', pill(r.recebeuJesus)]
     ]) +
-    secao('Etapas da jornada', JORNADA.map(([k, l]): [string, string] => [l, pill(r[k])])) +
+    secao('Etapas da jornada', JORNADA.map(([k, l]): [string, string] => [l, dataEtapa(r, k) + pill(r[k])])) +
     secao('Célula e serviço', [
       ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
       ['Congrega com frequência', pill(r.frequentaCultos)],
@@ -227,6 +230,7 @@ function abrirDetalhe(r: Registro) {
   if (d.open) { /* já aberto: só troca o conteúdo */ } else if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
   $('detBody').scrollTop = 0;
   d.scrollTop = 0;
+  carregarNotasDe(r);
 }
 $('detClose').addEventListener('click', () => $<HTMLDialogElement>('det').close());
 $<HTMLDialogElement>('det').addEventListener('click', e => { if (e.target === $<HTMLDialogElement>('det')) $<HTMLDialogElement>('det').close(); });

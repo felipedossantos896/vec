@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.3
+**Versão vigente:** 3.4
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,10 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.4 — 2026-11-17:** WhatsApp opcional e autorização de uso dos dados no
+  formulário (caixa marcada em `--gold-wash`, erro em `--danger-bg`); no detalhe,
+  bloco Acompanhamento com anotações marcadas por um filete `--gold`, datas das
+  etapas em `--muted` ao lado do "Sim" e gráfico de colunas "Jornada mês a mês".
 - **3.3 — 2026-11-17:** aba Células para o líder de área: um cartão por setor
   com as células em linhas tocáveis, célula inativa em texto `--muted` com selo
   "Inativa", e diálogo único para criar, renomear, mudar de setor e desativar.

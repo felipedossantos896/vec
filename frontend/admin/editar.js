@@ -5,6 +5,7 @@
 const ERROS_EDICAO = {
     nome_invalido: 'Informe o nome completo.',
     nascimento_invalido: 'Confira a data de nascimento.',
+    telefone_invalido: 'Confira o WhatsApp: DDD e número, como (85) 99999-9999.',
     nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
     discipulador_invalido: 'Esse discipulador não está mais disponível. Escolha outro.',
     dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
@@ -39,6 +40,7 @@ function abrirEdicao(r) {
     $('detBody').innerHTML = `<form id="eForm" novalidate>
     <div class="det-sec"><h4>Dados pessoais</h4>
       ${campo('eNome', 'Nome completo', `<input class="input" id="eNome" autocapitalize="words" autocomplete="off" value="${esc(r.nome)}">`)}
+      ${campo('eTelefone', 'WhatsApp', `<input class="input" id="eTelefone" type="tel" inputmode="tel" autocomplete="off" placeholder="(85) 99999-9999" value="${esc(fmtTel(r.telefone || ''))}">`)}
       ${campo('eNasc', 'Data de nascimento', `<input class="input" id="eNasc" type="date" min="1900-01-01" max="${isoData(new Date())}" value="${isoData(r._nasc)}">`)}
       <div class="sn-box">${simNao('recebeuJesus', 'Recebeu Jesus', r.recebeuJesus)}</div>
     </div>
@@ -72,7 +74,7 @@ async function salvarEdicao(r) {
     const f = $('eForm');
     const celula = $('eCelula').value;
     const dados = {
-        nome: $('eNome').value.trim(), nascimento: $('eNasc').value,
+        nome: $('eNome').value.trim(), nascimento: $('eNasc').value, telefone: $('eTelefone').value,
         celula, setor: SETOR_DA_CELULA[celula] || $('eSetor').value,
         ministerioNome: $('eMinisterio').value.trim(), ...lerDiscipulador(r),
         sugestao: r.sugestao || ''
@@ -82,6 +84,13 @@ async function salvarEdicao(r) {
     if (!res)
         return;
     Object.assign(r, res.dados, { discipuladorId: res.discipuladorId, editadoEm: res.editadoEm, editadoPor: res.editadoPor });
+    // Mesma regra do servidor: etapa marcada agora ganha a data da edição; desmarcada perde a data
+    const datas = { ...(r.jornadaDatas || {}) };
+    JORNADA.forEach(([k]) => { if (r[k] !== 'S')
+        delete datas[k];
+    else if (!datas[k])
+        datas[k] = res.editadoEm; });
+    r.jornadaDatas = datas;
     derivar(r);
     atualizarVinculos(r);
     atualizarPainel();
@@ -163,6 +172,8 @@ $('detBody').addEventListener('click', e => {
 $('detBody').addEventListener('change', e => { if (e.target.closest('#eForm'))
     ajustarEdicao(); });
 $('detBody').addEventListener('submit', e => {
+    if (e.target.id !== 'eForm')
+        return;
     e.preventDefault();
     const r = registroAberto();
     if (r)

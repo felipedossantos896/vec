@@ -190,7 +190,8 @@ type adminReq struct {
 	// Setores e células
 	Tipo    string `json:"tipo"`
 	ID      int64  `json:"id"`
-	SetorID int64  `json:"setorId"` // cadastro da própria pessoa, ligado ao login
+	SetorID int64  `json:"setorId"`
+	Texto   string `json:"texto"` // anotação de acompanhamento // cadastro da própria pessoa, ligado ao login
 	// Edição de cadastro: número do cadastro e os campos do formulário
 	Linha int64                      `json:"linha"`
 	Dados map[string]json.RawMessage `json:"dados"`
@@ -251,6 +252,12 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.estruturaPublica(ctx) // pública: o formulário monta a lista de células com ela
 		case "estrutura_salvar":
 			rep = s.estruturaSalvar(ctx, req)
+		case "anotacoes":
+			rep = s.anotacoes(ctx, req)
+		case "anotacao_salvar":
+			rep = s.anotacaoSalvar(ctx, req)
+		case "anotacao_excluir":
+			rep = s.anotacaoExcluir(ctx, req)
 		case "registro_salvar":
 			rep = s.registroSalvar(ctx, req)
 		case "registro_excluir":
