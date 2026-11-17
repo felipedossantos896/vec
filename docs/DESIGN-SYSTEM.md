@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.5
+**Versão vigente:** 3.6
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,12 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.6 — 2026-11-17:** Acompanhar com resumo do dia em chips (`--gold-soft` para
+  quem precisa de cuidado, `--ok-bg` quando está tudo em dia), cuidados em blocos com
+  filete `--gold` e iniciais das pessoas em círculos `--navy-2`, grupos recolhíveis
+  (fechados no celular), progresso do treinamento em Quem quer servir, aniversários
+  numa folhinha de calendário (a de hoje em `--gold`) e sugestões como citações em
+  Fraunces com filete `--gold`.
 - **3.5 — 2026-11-17:** painel organizado por tarefa: abas Acompanhar, Pessoas,
   Indicadores e Configurações (Células e Usuários num seletor segmentado). Pessoas
   sem painéis no topo, com etiquetas `--gold-wash` para os filtros ativos e o filtro
