@@ -1,6 +1,6 @@
 "use strict";
 // ══════ USUÁRIOS ══════
-const PERFIL_LABEL = { AREA: 'Líder de área', SETOR: 'Líder de setor', CELULA: 'Líder de célula' };
+const PERFIL_LABEL = { AREA: 'Líder de área', SETOR: 'Líder de setor', CELULA: 'Líder de célula', DISCIPULADOR: 'Discipulador' };
 const MSG_USUARIO = {
     usuario_invalido: 'Usuário inválido: use de 3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado, sem espaços.',
     usuario_existe: 'Já existe alguém com esse usuário. Escolha outro.',
@@ -9,6 +9,8 @@ const MSG_USUARIO = {
     senha_longa: 'A senha pode ter no máximo 256 caracteres.',
     perfil_invalido: 'Escolha um perfil.',
     escopo_obrigatorio: 'Marque pelo menos um item de acesso.',
+    cadastro_obrigatorio: 'Escolha o cadastro desta pessoa: é por ele que ela vê os próprios discípulos.',
+    cadastro_invalido: 'Esse cadastro não está mais disponível. Escolha outro.',
     nao_encontrado: 'Usuário não encontrado. Atualize a lista e tente de novo.',
     auto_bloqueio: 'Você não pode desativar o próprio acesso nem remover sua permissão de gerenciar usuários.'
 };
@@ -91,6 +93,8 @@ function escopoTexto(u) {
         p.push((u.setores.length > 1 ? 'Setores: ' : 'Setor: ') + u.setores.join(', '));
     if (u.celulas.length)
         p.push((u.celulas.length > 1 ? 'Células: ' : 'Célula: ') + u.celulas.join(', '));
+    if (u.cadastro)
+        p.push('Os próprios discípulos');
     return p.join(' · ') || 'Acesso ainda não configurado';
 }
 function renderUsuarios() {
@@ -129,7 +133,8 @@ function atualizarPerfilUI() {
     $('uCelulasLbl').textContent = p === 'SETOR' ? 'Também lidera células de outro setor? (opcional)' : 'Células que lidera';
     $('uPerfilHint').textContent = p === 'AREA' ? 'Vê todos os cadastros da área.'
         : p === 'SETOR' ? 'Vê todos os cadastros dos setores marcados.'
-            : p === 'CELULA' ? 'Vê apenas os cadastros das células marcadas.' : '';
+            : p === 'CELULA' ? 'Vê apenas os cadastros das células marcadas.'
+                : p === 'DISCIPULADOR' ? 'Não lidera célula: vê apenas os próprios discípulos.' : '';
 }
 document.querySelectorAll('input[name="uPerfil"]').forEach(r => r.addEventListener('change', atualizarPerfilUI));
 function abrirUsuario(u) {
@@ -147,6 +152,7 @@ function abrirUsuario(u) {
     $('uSenhaHint').textContent = novo ? 'Mínimo de 6 caracteres. Toque em Gerar para criar uma senha segura.' : 'Deixe em branco para manter a senha atual.';
     const perfil = u && u.perfil ? u.perfil : 'CELULA';
     document.querySelectorAll('input[name="uPerfil"]').forEach(r => { r.checked = r.value === perfil; });
+    $('uCadastro').innerHTML = '<option value="">Sem cadastro ligado</option>' + opcoesPessoas(estado.pessoas, u ? u.cadastro : 0);
     preencherChks('uSetores', 'setores', u ? u.setores : []);
     preencherChks('uCelulas', 'celulas', u ? u.celulas : []);
     $('uAtivo').checked = u ? u.ativo : true;
@@ -186,6 +192,7 @@ $('uForm').addEventListener('submit', async (e) => {
         perfil,
         setores: perfil === 'SETOR' ? marcados('uSetores') : [],
         celulas: perfil === 'SETOR' || perfil === 'CELULA' ? marcados('uCelulas') : [],
+        cadastro: Number($('uCadastro').value) || 0,
         ativo: $('uAtivo').checked,
         gerencia: $('uGerencia').checked
     };
@@ -203,6 +210,8 @@ $('uForm').addEventListener('submit', async (e) => {
         erro = 'escopo_obrigatorio';
     else if (perfil === 'CELULA' && !dados.celulas.length)
         erro = 'escopo_obrigatorio';
+    else if (perfil === 'DISCIPULADOR' && !dados.cadastro)
+        erro = 'cadastro_obrigatorio';
     if (erro) {
         msg.textContent = MSG_USUARIO[erro];
         return;

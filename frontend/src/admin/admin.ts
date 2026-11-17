@@ -3,7 +3,8 @@ const ADMIN_API_URL: string = '/api';
 
 const CHAVE_SESSAO = 'vec_admin_sessao';
 
-type Escopo = { todos: boolean; setores: string[]; celulas: string[] };
+type Escopo = { todos: boolean; setores: string[]; celulas: string[]; perfil?: string };
+type Pessoa = { id: number; nome: string; celula: string };
 type Registro = {
   [key: string]: string | number | Date | null | undefined;
   nome: string;
@@ -37,6 +38,7 @@ type Registro = {
   celula?: string;
   ministerioNome?: string;
   discipulador?: string;
+  discipuladorId?: number; // cadastro do discipulador (0 = só o nome digitado)
   sugestao?: string;
 };
 type UsuarioPainel = {
@@ -47,6 +49,7 @@ type UsuarioPainel = {
   setores: string[];
   celulas: string[];
   gerencia: boolean;
+  cadastro: number; // cadastro da própria pessoa (0 = login não ligado)
   acesso?: string;
 };
 type EstadoPainel = {
@@ -56,6 +59,8 @@ type EstadoPainel = {
   celula: string;
   situacao: string;
   escopo: Escopo;
+  meuCadastro: number;
+  pessoas: Pessoa[];
   gerencia: boolean;
   aba: string;
   usuarios: UsuarioPainel[];
@@ -63,7 +68,7 @@ type EstadoPainel = {
 };
 type ApiResult = { ok: boolean; erro?: string };
 type LoginResult = ApiResult & { token: string; nome: string; usuario: string; expiraEm: number };
-type ListaResult = ApiResult & { nome: string; gerencia: boolean; escopo: Escopo; registros: Registro[] };
+type ListaResult = ApiResult & { nome: string; gerencia: boolean; escopo: Escopo; registros: Registro[]; meuCadastro?: number; pessoas?: Pessoa[] };
 type UsuariosResult = ApiResult & { usuarios: UsuarioPainel[] };
 type SalvarUsuarioResult = ApiResult & { token?: string; expiraEm?: number };
 type Sessao = { token: string; nome: string; usuario: string; expira: number };
@@ -91,6 +96,8 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   quaseLa:        { label: 'Falta uma etapa da jornada', f: r => r._jornada === JORNADA.length - 1 },
   semCelula:      { label: 'Sem célula', f: r => !r.celula },
   duplicados:     { label: 'Possíveis duplicados', f: r => r._dup > 1 },
+  semVinculo:     { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
+  meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
@@ -117,12 +124,13 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 
 const estado: EstadoPainel = {
   regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
-  escopo: { todos: true, setores: [], celulas: [] },
+  escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, pessoas: [],
   gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
 };
 
 function rotulo(e: Escopo | null | undefined): string {
   if (!e || e.todos) return 'Líder de área';
+  if (e.perfil === 'DISCIPULADOR') return 'Discipulador';
   const p = [];
   if (e.setores.length) p.push((e.setores.length > 1 ? 'Setores ' : 'Setor ') + e.setores.join(', '));
   if (e.celulas.length) p.push((e.celulas.length > 1 ? 'Células ' : 'Célula ') + e.celulas.join(', '));

@@ -27,7 +27,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	}
 	registros := make([]map[string]any, 0, len(rs))
 	for _, r := range rs {
-		m := make(map[string]any, len(r.V)+4)
+		m := make(map[string]any, len(r.V)+5)
 		for k, v := range r.V {
 			m[k] = v
 		}
@@ -35,14 +35,27 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 		m["dataHora"] = fmtLocal(r.CriadoEm)
 		m["editadoEm"] = fmtLocal(r.EditadoEm)
 		m["editadoPor"] = r.EditadoPor
+		m["discipuladorId"] = r.DiscipuladorID
 		registros = append(registros, m)
 	}
+	// Nome e célula de toda a área, para escolher o discipulador de alguém: ele pode
+	// ser de outra célula ou líder de setor ou de área.
+	ps, err := s.Store.ListPessoas(ctx)
+	if err != nil {
+		return s.internal("listar", err)
+	}
+	pessoas := make([]map[string]any, 0, len(ps))
+	for _, p := range ps {
+		pessoas = append(pessoas, map[string]any{"id": p.ID, "nome": p.Nome, "celula": p.Celula})
+	}
 	return okReply(map[string]any{
-		"nome":     nomeOuUsuario(a.user),
-		"gerencia": a.user.Gerencia,
+		"nome":        nomeOuUsuario(a.user),
+		"gerencia":    a.user.Gerencia,
+		"meuCadastro": a.user.RespostaID,
+		"pessoas":     pessoas,
 		"escopo": map[string]any{
 			"todos":   a.scope.Todos,
-			"perfil":  a.user.Perfil,
+			"perfil":  perfilPainel(a.user),
 			"setores": nonNil(a.scope.Setores),
 			"celulas": nonNil(a.scope.Celulas),
 		},
@@ -71,7 +84,8 @@ func (s *Server) usuariosListar(ctx context.Context, req adminReq) reply {
 			"usuario":  u.Usuario,
 			"nome":     u.Nome,
 			"ativo":    u.Ativo,
-			"perfil":   u.Perfil,
+			"perfil":   perfilPainel(&u),
+			"cadastro": u.RespostaID,
 			"setores":  nonNil(u.Setores),
 			"celulas":  nonNil(u.Celulas),
 			"gerencia": u.Gerencia,
@@ -107,14 +121,30 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("usuario_invalido")
 	case nome == "":
 		return failReply("nome_obrigatorio")
-	case perfil != "AREA" && perfil != "SETOR" && perfil != "CELULA":
+	case perfil != "AREA" && perfil != "SETOR" && perfil != "CELULA" && perfil != "DISCIPULADOR":
 		return failReply("perfil_invalido")
 	case (req.Novo || req.Senha != "") && len([]rune(req.Senha)) < senhaMinima:
 		return failReply("senha_curta")
 	case len(req.Senha) > 256:
 		return failReply("senha_longa")
 	}
+	if req.Cadastro < 0 {
+		return failReply("cadastro_invalido")
+	}
+	if req.Cadastro != 0 {
+		if _, existe, err := s.Store.NomeDaPessoa(ctx, req.Cadastro); err != nil {
+			return s.internal("usuario_salvar", err)
+		} else if !existe {
+			return failReply("cadastro_invalido")
+		}
+	}
 	switch perfil {
+	case "DISCIPULADOR":
+		// Não lidera nada: guardado como CELULA sem células, só com o cadastro ligado.
+		if req.Cadastro == 0 {
+			return failReply("cadastro_obrigatorio")
+		}
+		perfil, setores, celulas = "CELULA", nil, nil
 	case "AREA":
 		setores, celulas = nil, nil
 	case "CELULA":
@@ -141,7 +171,7 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 	}
 	err = s.Store.SaveUser(ctx, store.User{
 		Usuario: usuario, Nome: nome, Perfil: perfil, Ativo: ativo, Gerencia: req.Gerencia,
-		Setores: setores, Celulas: celulas,
+		Setores: setores, Celulas: celulas, RespostaID: req.Cadastro,
 	}, hash, req.Novo, s.Now())
 	switch {
 	case errors.Is(err, store.ErrUserExists):
@@ -159,4 +189,13 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 		resp["expiraEm"] = int(s.TTL.Seconds())
 	}
 	return okReply(resp)
+}
+
+// perfilPainel é o perfil como o painel mostra: quem não lidera nada e tem um
+// cadastro ligado aparece como DISCIPULADOR.
+func perfilPainel(u *store.User) string {
+	if u.SoDiscipulador() {
+		return "DISCIPULADOR"
+	}
+	return u.Perfil
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 )
 
@@ -31,7 +32,25 @@ func (s *Server) registroSalvar(ctx context.Context, req adminReq) reply {
 	if code != "" {
 		return failReply(code)
 	}
-	ok, err := s.Store.UpdateResposta(ctx, a.scope, req.Linha, v, a.user.Usuario, now)
+	// O discipulador escolhido precisa ser outro cadastro da área; o nome dele passa a
+	// valer no lugar do que a pessoa digitou no formulário.
+	var discipulador int64
+	if bruto, tem := req.Dados["discipuladorId"]; tem {
+		if err := json.Unmarshal(bruto, &discipulador); err != nil || discipulador < 0 || discipulador == req.Linha {
+			return failReply("discipulador_invalido")
+		}
+	}
+	if discipulador != 0 {
+		nome, existe, err := s.Store.NomeDaPessoa(ctx, discipulador)
+		if err != nil {
+			return s.internal("registro_salvar", err)
+		}
+		if !existe {
+			return failReply("discipulador_invalido")
+		}
+		v["discipulador"] = nome
+	}
+	ok, err := s.Store.UpdateResposta(ctx, a.scope, req.Linha, v, discipulador, a.user.Usuario, now)
 	if err != nil {
 		return s.internal("registro_salvar", err)
 	}
@@ -39,7 +58,7 @@ func (s *Server) registroSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("nao_encontrado")
 	}
 	s.Log.Info("cadastro editado", "linha", req.Linha, "por", a.user.Usuario)
-	return okReply(map[string]any{"dados": v, "editadoEm": fmtLocal(now.UTC().Format(time.RFC3339)), "editadoPor": a.user.Usuario})
+	return okReply(map[string]any{"dados": v, "discipuladorId": discipulador, "editadoEm": fmtLocal(now.UTC().Format(time.RFC3339)), "editadoPor": a.user.Usuario})
 }
 
 func (s *Server) registroExcluir(ctx context.Context, req adminReq) reply {

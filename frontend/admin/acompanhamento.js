@@ -7,6 +7,7 @@ const PASSOS = [
     ['quaseLa', 'Falta uma etapa para concluir a jornada'],
     ['naoFrequenta', 'Não congregam com frequência'],
     ['semCelula', 'Sem célula'],
+    ['semVinculo', 'Informaram um discipulador que ainda não foi vinculado'],
     ['duplicados', 'Cadastros possivelmente duplicados']
 ];
 // Interesse, título, treinamento que prepara para ele e nome curto do treinamento

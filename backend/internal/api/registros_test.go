@@ -13,6 +13,8 @@ import (
 // painelDB responde como o banco para um usuário de célula e para as listas.
 type painelDB struct {
 	hash     string
+	cadastro int64 // cadastro ligado ao login (0 = nenhum)
+	escopos  [][]any
 	afetadas int64
 	escritas []turso.Stmt
 }
@@ -23,13 +25,18 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		out[i] = &turso.Result{}
 		switch {
 		case strings.Contains(st.SQL, "FROM usuarios WHERE"):
-			out[i].Rows = [][]any{{"lider", "Líder", d.hash, "CELULA", int64(1), int64(0), "2026-01-01T00:00:00Z", ""}}
+			out[i].Rows = [][]any{{"lider", "Líder", d.hash, "CELULA", int64(1), int64(0), "2026-01-01T00:00:00Z", "", d.cadastro}}
 		case strings.Contains(st.SQL, "FROM usuario_escopos"):
-			out[i].Rows = [][]any{{"lider", "CELULA", "Hope"}}
+			out[i].Rows = d.escopos
 		case strings.Contains(st.SQL, "FROM setores"):
 			out[i].Rows = [][]any{{"Fogo no Altar"}, {"Tabernáculo de Deus"}}
 		case strings.Contains(st.SQL, "FROM celulas"):
 			out[i].Rows = [][]any{{"Hope", "Fogo no Altar"}, {"Betânia", "Tabernáculo de Deus"}}
+		case strings.HasPrefix(st.SQL, "SELECT nome FROM respostas"):
+			if st.Args[0] == int64(5) {
+				out[i].Rows = [][]any{{"Bia Souza"}}
+			}
+		case strings.HasPrefix(st.SQL, "UPDATE respostas SET discipulador_id = NULL"), strings.HasPrefix(st.SQL, "UPDATE respostas SET discipulador = ("):
 		case strings.HasPrefix(st.SQL, "UPDATE respostas"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
@@ -48,7 +55,7 @@ func painelServer(t *testing.T, afetadas int64) (*Server, *painelDB, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	db := &painelDB{hash: hash, afetadas: afetadas}
+	db := &painelDB{hash: hash, afetadas: afetadas, escopos: [][]any{{"lider", "CELULA", "Hope"}}}
 	s := testAPIServer(db)
 	s.Secret = []byte(strings.Repeat("s", 32))
 	s.TTL = sessaoDuracao
@@ -139,5 +146,51 @@ func TestRegistroExcluirMarcaSemApagar(t *testing.T) {
 	st := db.escritas[0]
 	if !strings.HasPrefix(st.SQL, "UPDATE respostas SET excluido_em = ?, excluido_por = ? WHERE id = ? AND excluido_em IS NULL AND (celula IN (?))") {
 		t.Errorf("exclusão inesperada: %s", st.SQL)
+	}
+}
+
+func TestRegistroSalvarVinculaDiscipulador(t *testing.T) {
+	s, db, token := painelServer(t, 1)
+	d := dados(t, map[string]string{"nome": "Ana Silva", "discipulador": "bia"})
+	d["discipuladorId"] = json.RawMessage("5")
+	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: d})
+	if rep.body["ok"] != true || rep.body["discipuladorId"] != int64(5) {
+		t.Fatalf("resposta = %#v", rep.body)
+	}
+	if nome := rep.body["dados"].(map[string]string)["discipulador"]; nome != "Bia Souza" {
+		t.Errorf("discipulador = %q, queria o nome do cadastro vinculado", nome)
+	}
+	if !strings.Contains(db.escritas[0].SQL, "discipulador_id = ?") {
+		t.Errorf("vínculo não gravado: %s", db.escritas[0].SQL)
+	}
+
+	for _, id := range []string{"7", "99", "-1", `"x"`} { // a própria pessoa, inexistente, inválidos
+		d["discipuladorId"] = json.RawMessage(id)
+		rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: d})
+		if rep.body["erro"] != "discipulador_invalido" {
+			t.Errorf("id %s: erro = %v, queria discipulador_invalido", id, rep.body["erro"])
+		}
+	}
+	if len(db.escritas) != 1 {
+		t.Fatalf("gravou vínculo inválido: %d escritas", len(db.escritas))
+	}
+}
+
+func TestDiscipuladorSoAlcancaOsSeusDiscipulos(t *testing.T) {
+	s, db, token := painelServer(t, 1)
+	db.escopos, db.cadastro = nil, 5 // não lidera nada; o login está ligado ao cadastro 5
+	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{"nome": "Ana Silva"})})
+	if rep.body["ok"] != true {
+		t.Fatalf("resposta = %#v", rep.body)
+	}
+	st := db.escritas[0]
+	if !strings.Contains(st.SQL, "AND (discipulador_id = ?)") || st.Args[len(st.Args)-1] != int64(5) {
+		t.Errorf("escopo do discipulador ausente: %s %#v", st.SQL, st.Args[len(st.Args)-2:])
+	}
+
+	db.cadastro = 0 // sem célula e sem cadastro ligado: nenhum acesso
+	rep = s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{"nome": "Ana Silva"})})
+	if rep.body["erro"] != "sem_escopo" {
+		t.Errorf("erro = %v, queria sem_escopo", rep.body["erro"])
 	}
 }

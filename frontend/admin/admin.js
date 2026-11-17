@@ -24,6 +24,8 @@ const SITUACOES = {
     quaseLa: { label: 'Falta uma etapa da jornada', f: r => r._jornada === JORNADA.length - 1 },
     semCelula: { label: 'Sem célula', f: r => !r.celula },
     duplicados: { label: 'Possíveis duplicados', f: r => r._dup > 1 },
+    semVinculo: { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
+    meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo')
@@ -48,12 +50,14 @@ function $(id) {
 }
 const estado = {
     regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
-    escopo: { todos: true, setores: [], celulas: [] },
+    escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, pessoas: [],
     gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
 };
 function rotulo(e) {
     if (!e || e.todos)
         return 'Líder de área';
+    if (e.perfil === 'DISCIPULADOR')
+        return 'Discipulador';
     const p = [];
     if (e.setores.length)
         p.push((e.setores.length > 1 ? 'Setores ' : 'Setor ') + e.setores.join(', '));

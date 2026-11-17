@@ -6,6 +6,7 @@ const ERROS_EDICAO = {
     nome_invalido: 'Informe o nome completo.',
     nascimento_invalido: 'Confira a data de nascimento.',
     nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
+    discipulador_invalido: 'Esse discipulador não está mais disponível. Escolha outro.',
     dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
 const registroAberto = () => estado.regs.find(r => String(r.linha) === $('det').dataset.linha);
@@ -50,7 +51,7 @@ function abrirEdicao(r) {
     </div>
     ${grupoSN('Treinamentos', r, TREINOS)}
     <div class="det-sec"><h4>Discipulado e interesses</h4>
-      ${campo('eDiscipulador', 'Nome do discipulador', `<input class="input" id="eDiscipulador" autocapitalize="words" autocomplete="off" placeholder="Deixe em branco se não tiver" value="${esc(r.discipulador)}">`)}
+      ${campoDiscipulador(r)}
       <div class="sn-box">${INTERESSES.map(([k, l]) => simNao(k, l, r[k])).join('')}</div>
     </div>
     <p class="msg" id="eMsg" role="alert"></p>
@@ -73,15 +74,16 @@ async function salvarEdicao(r) {
     const dados = {
         nome: $('eNome').value.trim(), nascimento: $('eNasc').value,
         celula, setor: SETOR_DA_CELULA[celula] || $('eSetor').value,
-        ministerioNome: $('eMinisterio').value.trim(), discipulador: $('eDiscipulador').value.trim(),
+        ministerioNome: $('eMinisterio').value.trim(), ...lerDiscipulador(r),
         sugestao: r.sugestao || ''
     };
     f.querySelectorAll('input[type="radio"]:checked').forEach(i => { dados[i.name.slice(2)] = i.value; });
     const res = await chamarEdicao({ acao: 'registro_salvar', linha: r.linha, dados }, $('eMsg'), $('eSalvar'));
     if (!res)
         return;
-    Object.assign(r, res.dados, { editadoEm: res.editadoEm, editadoPor: res.editadoPor });
+    Object.assign(r, res.dados, { discipuladorId: res.discipuladorId, editadoEm: res.editadoEm, editadoPor: res.editadoPor });
     derivar(r);
+    atualizarVinculos(r);
     atualizarPainel();
     abrirDetalhe(r);
 }
@@ -90,13 +92,14 @@ async function excluirCadastro(r, botao) {
     if (!res)
         return;
     estado.regs = estado.regs.filter(x => x !== r);
+    atualizarVinculos(r);
     $('det').close();
     atualizarPainel();
 }
 function atualizarPainel() {
     marcarDuplicados();
     montarFiltros();
-    if (estado.situacao === 'duplicados' && !estado.regs.some(SITUACOES.duplicados.f))
+    if (['duplicados', 'semVinculo', 'meusDiscipulos'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f))
         Object.assign(estado, { situacao: 'todos', busca: '' });
     $('fBusca').value = estado.busca;
     renderTudo();
