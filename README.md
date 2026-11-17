@@ -88,17 +88,23 @@ embutidos pelo Go, e o CI verifica que estão sincronizados.
 | Discipulador | só os próprios discípulos (guardado como `CELULA` sem células, com o cadastro ligado ao login) |
 
 O filtro é aplicado **no servidor**, na própria consulta SQL: quem não tem
-permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê a aba
-**Usuários** no painel e cria/edita acessos, troca senhas e desativa pessoas.
+permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê
+**Configurações › Usuários do painel** e cria/edita acessos, troca senhas e desativa pessoas.
 
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do
 que o perfil permite, todos os que o têm como discipulador, mesmo de outra célula.
 O vínculo é feito ao editar o cadastro; o formulário público continua pedindo só o nome.
-Na aba Indicadores, o grupo **Discipulado** mostra quantos discípulos cada um
+Na aba Acompanhar, o grupo **Discipulado** mostra quantos discípulos cada um
 acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
 Expresso 01 e ainda não discipula ninguém.
+
+**Abas do painel:** Acompanhar (abre primeiro: quem precisa de cuidado, discipulado,
+quem quer servir, aniversários e sugestões), Pessoas (busca, filtros e lista), Indicadores
+(números e gráficos da área) e Configurações (Células e Usuários, só para quem pode).
+Quem é só discipulador vê Acompanhar e Pessoas. O detalhe de cada pessoa tem três abas:
+Resumo, Acompanhamento e Ficha completa.
 
 **Contato e acompanhamento:** o formulário pede WhatsApp (opcional) e só grava o
 envio com a autorização de uso dos dados marcada; a data do aceite fica em
@@ -109,7 +115,7 @@ A data em que cada etapa da jornada foi concluída fica em `jornada_eventos`: a 
 envio do formulário, ou a da edição no painel. Para cadastros anteriores, a migração
 usou a data do envio.
 
-**Células e setores** são cadastrados pelo líder de área na aba **Células**. O
+**Células e setores** são cadastrados pelo líder de área em **Configurações › Células e setores**. O
 formulário público busca as células ativas no servidor (e usa a lista escrita no
 HTML se o servidor não responder). Renomear uma célula ou mudá-la de setor atualiza,
 na mesma transação, os cadastros e os acessos que guardam o nome dela. Uma célula
@@ -159,7 +165,7 @@ gcloud run deploy vec --source . --region southamerica-east1 --allow-unauthentic
 1. Suba o servidor com o banco de produção vazio e crie o administrador (veja [docs/DEPLOY.md](docs/DEPLOY.md), passos 1 a 6).
 2. Na planilha, aba `Respostas`: **Arquivo → Fazer download → Valores separados por vírgula**. Salve em `dados/respostas.csv`.
 3. `ENV_FILE=.env.prod go run ./backend/cmd/importar -arquivo dados/respostas.csv -simular`, confira, e rode sem `-simular`.
-4. Teste o painel com os dados importados e crie os líderes pela aba **Usuários**. As senhas antigas **não** migram (são guardadas de outro jeito): cada líder recebe uma senha nova.
+4. Teste o painel com os dados importados e crie os líderes em **Configurações › Usuários do painel**. As senhas antigas **não** migram (são guardadas de outro jeito): cada líder recebe uma senha nova.
 5. Troque o link do formulário (ou aponte o Netlify para o novo servidor). A planilha e o Apps Script antigo continuam intactos como plano B.
 6. Depois de alguns dias, importe de novo (é seguro repetir) para pegar quem respondeu no meio do caminho.
 

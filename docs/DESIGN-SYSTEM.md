@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.4
+**Versão vigente:** 3.5
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,11 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.5 — 2026-11-17:** painel organizado por tarefa: abas Acompanhar, Pessoas,
+  Indicadores e Configurações (Células e Usuários num seletor segmentado). Pessoas
+  sem painéis no topo, com etiquetas `--gold-wash` para os filtros ativos e o filtro
+  de situação em grupos. Detalhe com a jornada no topo, botão de WhatsApp no
+  cabeçalho e abas internas no mesmo estilo segmentado de `--sunken`.
 - **3.4 — 2026-11-17:** WhatsApp opcional e autorização de uso dos dados no
   formulário (caixa marcada em `--gold-wash`, erro em `--danger-bg`); no detalhe,
   bloco Acompanhamento com anotações marcadas por um filete `--gold`, datas das

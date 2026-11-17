@@ -17,7 +17,8 @@ const ERROS_EST: Record<string, string> = {
 
 function aplicarEstrutura(e?: Estrutura) {
   $('tabEstrutura').classList.toggle('hidden', !estado.escopo.todos);
-  if (!estado.escopo.todos && estado.aba === 'estrutura') mostrarAba('cadastros');
+  if (!estado.escopo.todos && estado.aba === 'estrutura') mostrarAba('acompanhar');
+  atualizarConfig();
   if (!e || !e.setores.length) return; // sem dados do servidor: ficam as listas do código
   estrutura = e;
   SETORES.splice(0, SETORES.length, ...e.setores.map(s => s.nome));

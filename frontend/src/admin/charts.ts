@@ -1,5 +1,5 @@
 // ══════ INDICADORES ══════
-// Monta a aba Indicadores e seus gráficos de colunas. Os blocos de pessoas ficam em acompanhamento.ts.
+// Monta a aba Indicadores e seus gráficos de colunas. Os blocos sobre pessoas ficam na aba Acompanhar (acompanhamento.ts).
 // A aba usa os mesmos filtros de setor e célula da aba Cadastros.
 
 type Coluna = { rotulo: string; sub?: string; titulo: string; n: number };
@@ -87,15 +87,10 @@ function renderIndicadores() {
       kpi('Jornada completa', String(completa), `${Math.round((completa / total) * 100)}% concluíram as ${JORNADA.length} etapas`) +
       kpi('Etapas por pessoa', etapas, `em média, de ${JORNADA.length}`)
     }</div>
-    <div class="panels">${proximosPassos(base) + mapaJornada(base)}</div>
-    ${painelDiscipulado(base)}
-    <h2 class="group-title">Quem quer servir</h2>
-    <div class="panels three">${potencial(base)}</div>
-    <div class="panels">${aniversarios(base) + sugestoes(base)}</div>
+    <div class="panels">${mapaJornada(base) + painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base)))}</div>
     <h2 class="group-title">Retrato da área</h2>
     <div class="panels">${
       painel('Novos cadastros', 'Formulários recebidos por mês, nos últimos 12 meses.', colunas(porMes(base))) +
-      painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base))) +
       painel('Faixa etária', semIdade ? `Idade de ${idades.length} pessoas; ${plural(semIdade, 'cadastro', 'cadastros')} sem data válida.` : 'Idade de quem está cadastrado.', colunas(faixas)) +
       painel('Vida na igreja', 'Quem já vive cada prática.', lista(VIDA.map(([l, f]): [string, number] => [l, base.filter(f).length]))) +
       painel('Treinamentos', 'Quem já fez ou participa.', sim(TREINOS))
@@ -114,6 +109,8 @@ function mostrarDica(e: Event) {
   tip.style.left = `${meio}px`;
   tip.style.top = `${r.top - 8}px`;
 }
-['pointerover', 'focusin'].forEach(ev => $('gConteudo').addEventListener(ev, mostrarDica));
-['pointerleave', 'focusout'].forEach(ev => $('gConteudo').addEventListener(ev, () => $('tip').classList.add('hidden')));
+['gConteudo', 'aConteudo'].forEach(id => {
+  ['pointerover', 'focusin'].forEach(ev => $(id).addEventListener(ev, mostrarDica));
+  ['pointerleave', 'focusout'].forEach(ev => $(id).addEventListener(ev, () => $('tip').classList.add('hidden')));
+});
 window.addEventListener('scroll', () => $('tip').classList.add('hidden'), { passive: true });

@@ -20,7 +20,7 @@ const dataEtapa = (r: Registro, k: string): string => r[k] === 'S' && r.jornadaD
 
 function blocoNotas(r: Registro): string {
   const ultimo = r._contato ? `Último contato em ${fmtData(r._contato)}.` : 'Nenhum contato registrado ainda.';
-  return `<div class="det-sec" id="nSec"><h4>Acompanhamento</h4>
+  return `<div class="det-sec" id="nSec">
     <form class="nota-form" id="nForm" novalidate><label class="label" for="nTexto">Registrar contato</label>
       <textarea class="input" id="nTexto" rows="3" maxlength="2000" placeholder="Como foi a conversa? O que ficou combinado?"></textarea>
       <p class="msg" id="nMsg" role="alert"></p>

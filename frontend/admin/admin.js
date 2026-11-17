@@ -35,11 +35,13 @@ const SITUACOES = {
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo')
     SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
-const RESUMO = [
-    ['todos', 'cadastros', rs => rs.length],
-    ['naoBatizados', 'ainda não batizados', null],
-    ['querDiscipulado', 'querem ser discipulados', null],
-    ['querLiderar', 'querem liderar célula', null],
+// Grupos do filtro de situação; uma situação fora da lista cai em "Outras"
+const GRUPOS_SITUACAO = [
+    ['Cuidado', ['semContato', 'semDiscipulador', 'naoFrequenta', 'semCelula', 'naoRecebeu']],
+    ['Jornada', ['naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
+    ['Discipulado', ['meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
+    ['Interesses e serviço', ['querLiderar', 'querCuidar', 'querAnfitriao', 'servem']],
+    ['Cadastro', ['duplicados']]
 ];
 const CSV_COLS = [
     ['dataHora', 'Enviado em'], ['nome', 'Nome'], ['nascimento', 'Nascimento'], ['telefone', 'WhatsApp'], ['recebeuJesus', 'Recebeu Jesus'],
@@ -56,7 +58,7 @@ function $(id) {
 const estado = {
     regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
     escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-    gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
+    gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false
 };
 function rotulo(e) {
     if (!e || e.todos)
@@ -204,6 +206,6 @@ $('btnLogout').addEventListener('click', () => {
     estado.regs = [];
     estado.usuarios = [];
     estado.usuariosCarregados = false;
-    mostrarAba('cadastros');
+    mostrarAba('acompanhar');
     mostrarLogin('Você saiu do painel.');
 });

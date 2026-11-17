@@ -48,6 +48,12 @@
 .share pre { margin: 16px 0; padding: 16px; border: 1px solid var(--gold-soft); border-radius: var(--r-md); background: var(--gold-wash); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
 .share-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
+/* ── Configurações: Células e Usuários ── */
+.config-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 24px; padding: 4px; border-radius: var(--r-md); background: var(--sunken); }
+.config-seg button { min-height: 42px; padding: 0 16px; border-radius: 9px; color: var(--muted); font-weight: 700; transition: background 0.15s, color 0.15s; }
+.config-seg button[aria-pressed="true"] { background: var(--navy); color: var(--white); }
+.config-seg button:focus-visible { outline: var(--focus); outline-offset: 2px; }
+
 /* ── Células e setores ── */
 .est-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
 .est-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
@@ -60,6 +66,7 @@
 .est-item.off .est-nome { color: var(--muted); font-weight: 600; }
 
 @media (min-width: 420px) { .chks { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 639px) { .config-seg { display: grid; width: 100%; } }
 @media (max-width: 639px) { .est-acoes { width: 100%; } .est-acoes .btn-sec { flex: 1; } }
 @media (min-width: 520px) { .perfis { grid-template-columns: repeat(4, 1fr); } }
 @media (hover: hover) {

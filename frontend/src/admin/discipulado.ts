@@ -108,7 +108,7 @@ function painelDiscipulado(base: Registro[]): string {
 }
 
 // Um toque num discipulador leva à lista de quem ele acompanha
-$('gConteudo').addEventListener('click', e => {
+$('aConteudo').addEventListener('click', e => {
   const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-disc]') : null;
   if (!b) return;
   Object.assign(estado, { situacao: 'discipulosDe', discipuladorDe: Number(b.dataset.disc) });
