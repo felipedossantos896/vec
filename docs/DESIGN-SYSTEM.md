@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.1
+**Versão vigente:** 3.2
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,10 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.2 — 2026-11-17:** edição de cadastros no detalhe: rodapé fixo com as ações,
+  perguntas Sim/Não como controle de três posições (Sim em `--navy`, sem resposta
+  discreta), exclusão confirmada no próprio rodapé em `--danger` e aviso de
+  possível duplicado em `--gold-wash`.
 - **3.1 — 2026-11-17:** aba Indicadores no painel, voltada ao acompanhamento:
   próximos passos com nomes, mapa da jornada por setor e célula (cinco tons de
   `--navy-2`, texto branco a partir do quarto), quem quer servir cruzado com os

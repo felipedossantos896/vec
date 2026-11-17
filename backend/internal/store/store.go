@@ -222,19 +222,25 @@ func (s *Store) LoginOK(ctx context.Context, usuario string, now time.Time) erro
 // Listas (setores e células)
 // ---------------------------------------------------------------------------
 
-func (s *Store) Listas(ctx context.Context) (setores, celulas []string, err error) {
+// Listas devolve os setores, as células e o setor de cada célula (chave em minúsculas;
+// células ainda sem setor ficam de fora do mapa).
+func (s *Store) Listas(ctx context.Context) (setores, celulas []string, setorDe map[string]string, err error) {
 	res, err := s.DB.Do(ctx,
 		turso.Stmt{SQL: `SELECT nome FROM setores ORDER BY ordem, nome`},
-		turso.Stmt{SQL: `SELECT nome FROM celulas ORDER BY ordem, nome`},
+		turso.Stmt{SQL: `SELECT c.nome, COALESCE(s.nome, '') FROM celulas c LEFT JOIN setores s ON s.id = c.setor_id ORDER BY c.ordem, c.nome`},
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
+	setorDe = map[string]string{}
 	for _, r := range res[0].Rows {
 		setores = append(setores, turso.Str(r, 0))
 	}
 	for _, r := range res[1].Rows {
 		celulas = append(celulas, turso.Str(r, 0))
+		if setor := turso.Str(r, 1); setor != "" {
+			setorDe[strings.ToLower(turso.Str(r, 0))] = setor
+		}
 	}
-	return setores, celulas, nil
+	return setores, celulas, setorDe, nil
 }

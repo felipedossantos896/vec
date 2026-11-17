@@ -50,11 +50,13 @@ var Campos = []Campo{
 }
 
 type Resposta struct {
-	ID        int64
-	CriadoEm  string            // ISO UTC
-	RequestID string            // chave de reenvio do formulário público
-	ImportKey string            // chave estável de importação
-	V         map[string]string // chave do Campo -> valor
+	ID         int64
+	CriadoEm   string            // ISO UTC
+	RequestID  string            // chave de reenvio do formulário público
+	ImportKey  string            // chave estável de importação
+	EditadoEm  string            // ISO UTC ("" se nunca foi editada pelo painel)
+	EditadoPor string            // usuário do painel que fez a última edição
+	V          map[string]string // chave do Campo -> valor
 }
 
 func colunas() string {
@@ -150,33 +152,38 @@ func (s *Store) ImportarRespostas(ctx context.Context, rs []Resposta) (int, erro
 	return novas, nil
 }
 
-// ListRespostas devolve as respostas dentro do escopo, da mais nova para a mais antiga.
-func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error) {
+// escopoSQL devolve a condição que limita as respostas ao escopo.
+// ok=false quando o escopo é vazio: sem escopo = sem dados (nunca "tudo").
+func escopoSQL(sc Scope) (cond string, args []any, ok bool) {
+	if sc.Todos {
+		return `1 = 1`, nil, true
+	}
 	var conds []string
-	var args []any
-	if !sc.Todos {
-		if len(sc.Setores) > 0 {
-			conds = append(conds, `setor IN (`+marks(len(sc.Setores))+`)`)
-			for _, n := range sc.Setores {
-				args = append(args, n)
-			}
-		}
-		if len(sc.Celulas) > 0 {
-			conds = append(conds, `celula IN (`+marks(len(sc.Celulas))+`)`)
-			for _, n := range sc.Celulas {
-				args = append(args, n)
-			}
-		}
-		if len(conds) == 0 {
-			return nil, nil // sem escopo = sem dados (nunca "tudo")
+	if len(sc.Setores) > 0 {
+		conds = append(conds, `setor IN (`+marks(len(sc.Setores))+`)`)
+		for _, n := range sc.Setores {
+			args = append(args, n)
 		}
 	}
-	where := ""
-	if len(conds) > 0 {
-		where = ` WHERE ` + strings.Join(conds, ` OR `)
+	if len(sc.Celulas) > 0 {
+		conds = append(conds, `celula IN (`+marks(len(sc.Celulas))+`)`)
+		for _, n := range sc.Celulas {
+			args = append(args, n)
+		}
+	}
+	return `(` + strings.Join(conds, ` OR `) + `)`, args, len(conds) > 0
+}
+
+// ListRespostas devolve as respostas dentro do escopo, da mais nova para a mais antiga.
+// Cadastros excluídos pelo painel não aparecem.
+func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error) {
+	cond, args, ok := escopoSQL(sc)
+	if !ok {
+		return nil, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL:  `SELECT id, criado_em, ` + colunas() + ` FROM respostas` + where + ` ORDER BY id DESC`,
+		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), ` + colunas() +
+			` FROM respostas WHERE excluido_em IS NULL AND ` + cond + ` ORDER BY id DESC`,
 		Args: args,
 	})
 	if err != nil {
@@ -184,13 +191,60 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	}
 	out := make([]Resposta, 0, len(res[0].Rows))
 	for _, row := range res[0].Rows {
-		r := Resposta{ID: turso.Int(row, 0), CriadoEm: turso.Str(row, 1), V: make(map[string]string, len(Campos))}
+		r := Resposta{
+			ID: turso.Int(row, 0), CriadoEm: turso.Str(row, 1), EditadoEm: turso.Str(row, 2), EditadoPor: turso.Str(row, 3),
+			V: make(map[string]string, len(Campos)),
+		}
 		for i, c := range Campos {
-			r.V[c.Chave] = turso.Str(row, i+2)
+			r.V[c.Chave] = turso.Str(row, i+4)
 		}
 		out = append(out, r)
 	}
 	return out, nil
+}
+
+// UpdateResposta regrava os campos de um cadastro que esteja dentro do escopo e anota
+// quem editou. Devolve false se o cadastro não existe, foi excluído ou está fora do escopo.
+func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[string]string, por string, now time.Time) (bool, error) {
+	cond, escopoArgs, ok := escopoSQL(sc)
+	if !ok {
+		return false, nil
+	}
+	sets := make([]string, 0, len(Campos))
+	args := make([]any, 0, len(Campos)+3+len(escopoArgs))
+	for _, c := range Campos {
+		sets = append(sets, c.Coluna+` = ?`)
+		args = append(args, v[c.Chave])
+	}
+	args = append(args, iso(now), por, id)
+	args = append(args, escopoArgs...)
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `UPDATE respostas SET ` + strings.Join(sets, `, `) + `, atualizado_em = ?, atualizado_por = ?` +
+			` WHERE id = ? AND excluido_em IS NULL AND ` + cond,
+		Args: args,
+	})
+	if err != nil {
+		return false, err
+	}
+	return res[0].Affected > 0, nil
+}
+
+// DeleteResposta tira um cadastro do painel sem apagar a linha: só marca quando e por quem.
+// Devolve false se o cadastro não existe, já foi excluído ou está fora do escopo.
+func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por string, now time.Time) (bool, error) {
+	cond, escopoArgs, ok := escopoSQL(sc)
+	if !ok {
+		return false, nil
+	}
+	args := append([]any{iso(now), por, id}, escopoArgs...)
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL:  `UPDATE respostas SET excluido_em = ?, excluido_por = ? WHERE id = ? AND excluido_em IS NULL AND ` + cond,
+		Args: args,
+	})
+	if err != nil {
+		return false, err
+	}
+	return res[0].Affected > 0, nil
 }
 
 func marks(n int) string {

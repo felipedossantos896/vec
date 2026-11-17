@@ -30,12 +30,9 @@ async function carregar() {
         estado.regs = r.registros.map(o => {
             const x = { ...o };
             Object.keys(o).forEach(k => { x[k] = typeof o[k] === 'string' ? o[k].trim() : o[k]; });
-            x._nasc = parseData(x.nascimento);
-            x._idade = idade(x._nasc);
-            x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
-            x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
-            return x;
+            return derivar(x);
         }).sort((a, b) => b.linha - a.linha);
+        marcarDuplicados();
         montarFiltros();
         renderTudo();
         $('loading').classList.add('hidden');
@@ -54,6 +51,14 @@ $('btnRefresh').addEventListener('click', () => {
     $('loading').innerHTML = '<span class="spinner"></span>Carregando cadastros...';
     carregar();
 });
+// Campos calculados a partir das respostas; refeitos quando o cadastro é editado
+function derivar(x) {
+    x._nasc = parseData(x.nascimento);
+    x._idade = idade(x._nasc);
+    x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
+    x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
+    return x;
+}
 function distintos(chave, base) {
     const set = new Set(base);
     estado.regs.forEach(r => {
@@ -206,9 +211,12 @@ function abrirDetalhe(r) {
             secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
             secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
             (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
-            secao('Registro', [['Enviado em', txt(r.dataHora)], ['Nº do cadastro', String(r.linha)]]);
+            secao('Registro', [['Enviado em', txt(r.dataHora)], ...(r.editadoEm ? [['Editado em', `${esc(r.editadoEm)} · ${esc(r.editadoPor)}`]] : []), ['Nº do cadastro', String(r.linha)]]) +
+            acoesDetalhe(r);
     const d = $('det');
-    if (typeof d.showModal === 'function')
+    d.dataset.linha = String(r.linha);
+    if (d.open) { /* já aberto: só troca o conteúdo */ }
+    else if (typeof d.showModal === 'function')
         d.showModal();
     else
         d.setAttribute('open', '');

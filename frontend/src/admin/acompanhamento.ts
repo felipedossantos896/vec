@@ -6,7 +6,8 @@ const PASSOS: [string, string][] = [
   ['batizar', 'Receberam Jesus e ainda não foram batizados'],
   ['quaseLa', 'Falta uma etapa para concluir a jornada'],
   ['naoFrequenta', 'Não congregam com frequência'],
-  ['semCelula', 'Sem célula']
+  ['semCelula', 'Sem célula'],
+  ['duplicados', 'Cadastros possivelmente duplicados']
 ];
 // Interesse, título, treinamento que prepara para ele e nome curto do treinamento
 const POTENCIAL: [string, string, string, string][] = [
