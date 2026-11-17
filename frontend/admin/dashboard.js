@@ -185,48 +185,6 @@ $('btnClear').addEventListener('click', () => {
     montarFiltros();
     renderTudo();
 });
-// ── Detalhe ──
-function secao(titulo, linhas) {
-    return `<div class="det-sec"><h4>${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
-}
-function abrirDetalhe(r) {
-    $('detNome').textContent = r.nome;
-    $('detSub').textContent = [r.celula, r.setor].filter(Boolean).join(' · ') || 'Sem célula informada';
-    const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
-    $('detBody').innerHTML =
-        `<p class="det-journey">${pips(r)}<span><b>${r._jornada} de ${JORNADA.length}</b> etapas da jornada</span>${faltam(r)}</p>` +
-            blocoNotas(r) +
-            secao('Dados pessoais', [
-                ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
-                ...linhasContato(r),
-                ['Recebeu Jesus', pill(r.recebeuJesus)]
-            ]) +
-            secao('Etapas da jornada', JORNADA.map(([k, l]) => [l, dataEtapa(r, k) + pill(r[k])])) +
-            secao('Célula e serviço', [
-                ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
-                ['Congrega com frequência', pill(r.frequentaCultos)],
-                ['Serve em ministério', pill(r.serveMinisterio)],
-                ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
-            ]) +
-            secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
-            secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
-            (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
-            secao('Registro', [['Enviado em', txt(r.dataHora)], ...(r.editadoEm ? [['Editado em', `${esc(r.editadoEm)} · ${esc(r.editadoPor)}`]] : []), ['Nº do cadastro', String(r.linha)]]) +
-            acoesDetalhe(r);
-    const d = $('det');
-    d.dataset.linha = String(r.linha);
-    if (d.open) { /* já aberto: só troca o conteúdo */ }
-    else if (typeof d.showModal === 'function')
-        d.showModal();
-    else
-        d.setAttribute('open', '');
-    $('detBody').scrollTop = 0;
-    d.scrollTop = 0;
-    carregarNotasDe(r);
-}
-$('detClose').addEventListener('click', () => $('det').close());
-$('det').addEventListener('click', e => { if (e.target === $('det'))
-    $('det').close(); });
 // ── Exportar CSV (respeita os filtros) ──
 $('btnCsv').addEventListener('click', () => {
     const lista = filtrados();
