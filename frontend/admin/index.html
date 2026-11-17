@@ -76,6 +76,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
           Indicadores
         </button>
+        <button type="button" role="tab" class="hidden" id="tabEstrutura" data-aba="estrutura" aria-selected="false" tabindex="-1">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M12 7.5V12M12 12l-5.5 3.8M12 12l5.5 3.8"/></svg>
+          Células
+        </button>
         <button type="button" role="tab" class="hidden" id="tabUsuarios" data-aba="usuarios" aria-selected="false" tabindex="-1">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/></svg>
           Usuários
@@ -168,6 +172,8 @@
       <div id="gConteudo"></div>
       <div class="tip hidden" id="tip" role="status"></div>
     </div>
+
+    <div id="estruturaView" class="hidden"></div>
 
     <div id="usersView" class="hidden">
       <header class="page-heading with-action">
@@ -283,6 +289,7 @@
 <script src="acompanhamento.js" defer></script>
 <script src="editar.js" defer></script>
 <script src="discipulado.js" defer></script>
+<script src="estrutura.js" defer></script>
 <script src="users.js" defer></script>
 
 </body>

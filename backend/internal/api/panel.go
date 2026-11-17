@@ -44,6 +44,10 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	if err != nil {
 		return s.internal("listar", err)
 	}
+	setores, celulas, err := s.Store.Estrutura(ctx)
+	if err != nil {
+		return s.internal("listar", err)
+	}
 	pessoas := make([]map[string]any, 0, len(ps))
 	for _, p := range ps {
 		pessoas = append(pessoas, map[string]any{"id": p.ID, "nome": p.Nome, "celula": p.Celula})
@@ -53,6 +57,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 		"gerencia":    a.user.Gerencia,
 		"meuCadastro": a.user.RespostaID,
 		"pessoas":     pessoas,
+		"estrutura":   estruturaPainel(setores, celulas),
 		"escopo": map[string]any{
 			"todos":   a.scope.Todos,
 			"perfil":  perfilPainel(a.user),

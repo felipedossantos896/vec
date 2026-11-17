@@ -39,6 +39,9 @@ function mostrarAba(aba) {
     $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
     $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
     $('usersView').classList.toggle('hidden', aba !== 'usuarios');
+    $('estruturaView').classList.toggle('hidden', aba !== 'estrutura');
+    if (aba === 'estrutura')
+        renderEstrutura();
     if (aba === 'usuarios' && !estado.usuariosCarregados)
         carregarUsuarios();
 }
@@ -115,7 +118,7 @@ function opcoes(tipo) {
     const vistos = new Map();
     const add = (v) => { const k = norm(v); if (v && !vistos.has(k))
         vistos.set(k, v); };
-    (tipo === 'setores' ? SETORES : CELULAS).forEach(add);
+    (tipo === 'setores' ? SETORES : CELULAS.filter(c => !FECHADAS.has(c))).forEach(add);
     estado.regs.forEach(r => add(tipo === 'setores' ? r.setor : r.celula));
     estado.usuarios.forEach(u => u[tipo].forEach(add));
     return [...vistos.values()];

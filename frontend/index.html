@@ -83,6 +83,8 @@
 
       <div role="radiogroup" aria-labelledby="l-celula">
         <p class="field-label" id="l-celula">Qual é a sua célula?</p>
+        <!-- Lista de reserva: o app.js troca pelas células ativas cadastradas no painel -->
+        <div id="celulasOpcoes">
         <p class="opt-group" id="g-fogo">Setor Fogo no Altar</p>
         <div class="opts cols" data-setor="Fogo no Altar" role="group" aria-labelledby="g-fogo">
           <label class="opt"><input type="radio" name="celula" value="Hope"><span>Hope</span></label>
@@ -95,6 +97,7 @@
           <label class="opt"><input type="radio" name="celula" value="Despertar"><span>Despertar</span></label>
           <label class="opt"><input type="radio" name="celula" value="Pi-Hairote"><span>Pi-Hairote</span></label>
           <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span>Vencedores em Cristo</span></label>
+        </div>
         </div>
       </div>
 
