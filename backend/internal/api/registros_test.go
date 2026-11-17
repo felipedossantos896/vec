@@ -13,6 +13,8 @@ import (
 // painelDB responde como o banco para um usuário de célula e para as listas.
 type painelDB struct {
 	hash     string
+	perfil   string // perfil do usuário ("" = CELULA)
+	tx       []turso.Stmt
 	cadastro int64 // cadastro ligado ao login (0 = nenhum)
 	escopos  [][]any
 	afetadas int64
@@ -25,7 +27,11 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		out[i] = &turso.Result{}
 		switch {
 		case strings.Contains(st.SQL, "FROM usuarios WHERE"):
-			out[i].Rows = [][]any{{"lider", "Líder", d.hash, "CELULA", int64(1), int64(0), "2026-01-01T00:00:00Z", "", d.cadastro}}
+			perfil := d.perfil
+			if perfil == "" {
+				perfil = "CELULA"
+			}
+			out[i].Rows = [][]any{{"lider", "Líder", d.hash, perfil, int64(1), int64(0), "2026-01-01T00:00:00Z", "", d.cadastro}}
 		case strings.Contains(st.SQL, "FROM usuario_escopos"):
 			out[i].Rows = d.escopos
 		case strings.Contains(st.SQL, "FROM setores"):
@@ -46,7 +52,15 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 }
 
 func (d *painelDB) Tx(ctx context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
-	return d.Do(ctx, stmts...)
+	d.tx = append(d.tx, stmts...)
+	out := make([]*turso.Result, len(stmts))
+	for i := range out {
+		out[i] = &turso.Result{Affected: d.afetadas}
+	}
+	if strings.HasPrefix(stmts[0].SQL, "UPDATE respostas SET excluido_em") {
+		return d.Do(ctx, stmts...)
+	}
+	return out, nil
 }
 
 func painelServer(t *testing.T, afetadas int64) (*Server, *painelDB, string) {

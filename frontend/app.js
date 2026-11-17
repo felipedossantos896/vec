@@ -279,4 +279,19 @@ byId('btnAgain').addEventListener('click', () => {
     mostrarEtapa(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+// As células vêm do painel; se o servidor não responder, fica a lista escrita no HTML
+async function carregarCelulas() {
+    try {
+        const r = await (await fetch(FORM_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"acao":"estrutura"}' })).json();
+        const setores = (r.setores || []).filter(s => s.celulas.length);
+        if (!r.ok || !setores.length)
+            return;
+        const marcada = valor('celula');
+        const e = (s) => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+        byId('celulasOpcoes').innerHTML = setores.map((s, i) => `<p class="opt-group" id="g-${i}">Setor ${e(s.nome)}</p>
+      <div class="opts cols" data-setor="${e(s.nome)}" role="group" aria-labelledby="g-${i}">${s.celulas.map(c => `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span>${e(c)}</span></label>`).join('')}</div>`).join('');
+    }
+    catch { /* mantém a lista do HTML */ }
+}
 mostrarEtapa();
+carregarCelulas();

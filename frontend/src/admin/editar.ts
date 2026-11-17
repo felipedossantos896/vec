@@ -41,7 +41,7 @@ const opcoesSel = (lista: string[], atual: unknown): string => lista.map(v => `<
 function abrirEdicao(r: Registro) {
   const soltas = distintos('celula', CELULAS).filter(c => !SETOR_DA_CELULA[c]);
   const celulas = `<option value="">Sem célula</option>` +
-    SETORES.map(s => `<optgroup label="Setor ${esc(s)}">${opcoesSel(CELULAS.filter(c => SETOR_DA_CELULA[c] === s), r.celula)}</optgroup>`).join('') +
+    SETORES.map(s => `<optgroup label="Setor ${esc(s)}">${opcoesSel(CELULAS.filter(c => SETOR_DA_CELULA[c] === s && (!FECHADAS.has(c) || c === r.celula)), r.celula)}</optgroup>`).join('') +
     (soltas.length ? `<optgroup label="Outras">${opcoesSel(soltas, r.celula)}</optgroup>` : '');
   $('detBody').innerHTML = `<form id="eForm" novalidate>
     <div class="det-sec"><h4>Dados pessoais</h4>

@@ -5,9 +5,10 @@ const CHAVE_SESSAO = 'vec_admin_sessao';
 const JORNADA = [['cafePastor', 'Café com Pastor'], ['estacaoDNA', 'Estação DNA'], ['acompInicial', 'Acompanhamento Inicial'], ['novaCriatura', 'Nova Criatura'], ['batismo', 'Batismo'], ['batismoEspirito', 'Batismo no Espírito']];
 const TREINOS = [['expresso01', 'Expresso 01 · Discipuladores'], ['expresso02', 'Expresso 02 · Líderes de Célula'], ['tlc', 'TLC'], ['encontroDeus', 'Encontro com Deus'], ['tadel', 'Participa do TADEL']];
 const INTERESSES = [['interesseDiscipulado', 'Ser discipulado(a)'], ['interesseCuidar', 'Cuidar de pessoas'], ['interesseLider', 'Ser líder de célula'], ['interesseAnfitrao', 'Ser anfitrião']];
+// Listas iniciais; o servidor manda as atuais a cada carga (estrutura.ts)
 const SETORES = ['Fogo no Altar', 'Tabernáculo de Deus'];
 const CELULAS = ['Hope', 'Ramos da Videira', 'Ashrei', 'Betânia', 'Vencedores em Cristo', 'Despertar', 'Pi-Hairote'];
-// A que setor cada célula pertence (mesma lista da migração 0004)
+// A que setor cada célula pertence
 const SETOR_DA_CELULA = { 'Hope': SETORES[0], 'Ramos da Videira': SETORES[0], 'Ashrei': SETORES[0], 'Betânia': SETORES[1], 'Despertar': SETORES[1], 'Pi-Hairote': SETORES[1], 'Vencedores em Cristo': SETORES[1] };
 const SITUACOES = {
     todos: { label: 'Todas as situações', f: () => true },

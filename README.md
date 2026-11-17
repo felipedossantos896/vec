@@ -100,6 +100,12 @@ Na aba Indicadores, o grupo **Discipulado** mostra quantos discípulos cada um
 acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
 Expresso 01 e ainda não discipula ninguém.
 
+**Células e setores** são cadastrados pelo líder de área na aba **Células**. O
+formulário público busca as células ativas no servidor (e usa a lista escrita no
+HTML se o servidor não responder). Renomear uma célula ou mudá-la de setor atualiza,
+na mesma transação, os cadastros e os acessos que guardam o nome dela. Uma célula
+inativa some do formulário, mas os cadastros dela continuam.
+
 Cada líder também **edita e exclui cadastros** que enxerga, pelo detalhe da pessoa.
 A exclusão só marca a linha no banco (`excluido_em`), então pode ser desfeita por
 SQL. Cadastros com o mesmo nome e a mesma data de nascimento aparecem no filtro

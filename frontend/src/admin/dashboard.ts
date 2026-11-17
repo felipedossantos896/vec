@@ -18,6 +18,7 @@ async function carregar() {
     estado.gerencia = !!r.gerencia;
     estado.meuCadastro = r.meuCadastro || 0;
     estado.pessoas = r.pessoas || [];
+    aplicarEstrutura(r.estrutura);
     const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
     $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Visão geral';
     $('journeyTitle').textContent = soDiscipulos ? 'Jornada dos seus discípulos' : 'Jornada da área';
@@ -93,6 +94,7 @@ function renderTudo() {
   SELETORES.forEach(([id, chave]) => { $<HTMLSelectElement>(id).value = estado[chave]; });
   $<HTMLSelectElement>('fSituacao').value = estado.situacao;
   renderResumo(); renderJornada(); renderCelulas(); renderLista(); renderMeus(); renderIndicadores();
+  if (estado.aba === 'estrutura') renderEstrutura(); // depois dos cadastros, para contar as pessoas
 }
 
 // Uma linha de medidor: nome, quantidade, percentual e barra

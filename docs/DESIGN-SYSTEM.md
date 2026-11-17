@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.2
+**Versão vigente:** 3.3
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,9 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.3 — 2026-11-17:** aba Células para o líder de área: um cartão por setor
+  com as células em linhas tocáveis, célula inativa em texto `--muted` com selo
+  "Inativa", e diálogo único para criar, renomear, mudar de setor e desativar.
 - **3.2 — 2026-11-17:** edição de cadastros no detalhe: rodapé fixo com as ações,
   perguntas Sim/Não como controle de três posições (Sim em `--navy`, sem resposta
   discreta), exclusão confirmada no próprio rodapé em `--danger` e aviso de
