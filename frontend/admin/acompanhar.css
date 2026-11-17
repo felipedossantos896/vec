@@ -22,6 +22,17 @@
 .rostos i { display: grid; place-items: center; width: 28px; height: 28px; margin-left: -6px; border: 2px solid var(--cream); border-radius: 50%; background: var(--navy-2); color: var(--white); font-size: 0.66rem; font-style: normal; font-weight: 700; letter-spacing: 0.02em; }
 .rostos i:first-child { margin-left: 0; }
 .rostos i.mais { background: var(--gold-soft); color: var(--gold-ink); }
+/* Lista aberta logo abaixo do cuidado tocado; "dense" deixa os outros cuidados na mesma fileira */
+.cuidados { grid-auto-flow: row dense; }
+.cuidado[aria-expanded="true"] { border-color: var(--gold); background: var(--gold-wash); }
+.cuidado-aberto { grid-column: 1 / -1; padding: 12px 16px 10px 20px; border: 1px solid var(--gold-soft); border-radius: var(--r-md); background: var(--cream); box-shadow: var(--shadow-card); }
+.passos .cuidado-aberto { margin: 2px 8px 8px; box-shadow: none; }
+.ca-head { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.ca-head h3 { flex: 1; min-width: 0; font: 500 1.1rem/1.25 var(--serif); }
+.ca-head .btn-link { flex: none; }
+.ca-fechar { padding: 0; color: var(--muted); font-size: 1.6rem; line-height: 1; }
+.ca-lista { max-height: 360px; overflow-y: auto; }
+@media (min-width: 900px) { .cuidados .ca-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; } }
 .em-dia { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 18px 20px; border-radius: var(--r-md); background: var(--ok-bg); color: var(--ok); }
 .em-dia svg { flex: none; }
 
@@ -77,6 +88,10 @@
   .cuidado b { grid-row: span 2; font-size: 2rem; text-align: center; }
   .cuidado-pes { margin-top: 0; }
   .cuidado-pes .rostos { display: none; }
+  /* O título já está no bloco logo acima; fica só para leitores de tela */
+  .cuidado-aberto { padding-top: 4px; }
+  .ca-head { justify-content: flex-end; margin-bottom: 0; }
+  .ca-head h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (min-width: 720px) { .atalhos { flex-wrap: wrap; margin-inline: 0; padding-inline: 0; overflow: visible; } }
 @media (min-width: 1024px) { .cuidar, .grupo { scroll-margin-top: 24px; } }
