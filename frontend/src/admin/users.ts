@@ -14,13 +14,14 @@ const MSG_USUARIO: Record<string, string> = {
 let editando: UsuarioPainel | null = null;
 
 const abas = [...document.querySelectorAll<HTMLButtonElement>('#tabs button')];
-abas.forEach((b, i) => {
+abas.forEach(b => {
   b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'cadastros'));
   b.addEventListener('keydown', e => {
     const delta = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
     if (!delta) return;
     e.preventDefault();
-    const proxima = abas[(i + delta + abas.length) % abas.length];
+    const visiveis = abas.filter(a => !a.classList.contains('hidden'));
+    const proxima = visiveis[(visiveis.indexOf(b) + delta + visiveis.length) % visiveis.length];
     proxima.focus();
     proxima.click();
   });
@@ -34,6 +35,7 @@ function mostrarAba(aba: string) {
     b.tabIndex = selecionada ? 0 : -1;
   });
   $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
+  $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
   $('usersView').classList.toggle('hidden', aba !== 'usuarios');
   if (aba === 'usuarios' && !estado.usuariosCarregados) carregarUsuarios();
 }
@@ -41,7 +43,7 @@ function mostrarAba(aba: string) {
 function sessaoInvalida(r: ApiResult) {
   if (r.erro === 'sessao') { limparSessao(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return true; }
   if (r.erro === 'sem_escopo') { limparSessao(); mostrarLogin('Seu acesso ainda não foi configurado. Fale com a liderança da área.'); return true; }
-  if (r.erro === 'sem_permissao') { estado.gerencia = false; $('tabs').classList.add('hidden'); mostrarAba('cadastros'); return true; }
+  if (r.erro === 'sem_permissao') { estado.gerencia = false; $('tabUsuarios').classList.add('hidden'); mostrarAba('cadastros'); return true; }
   return false;
 }
 

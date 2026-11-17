@@ -23,7 +23,8 @@
 
 /* Jornada: caminho numerado com a adesão de cada etapa */
 .journey { counter-reset: etapa; }
-.journey li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 12px; padding: 9px 0 9px 42px; counter-increment: etapa; }
+.journey li, .meters li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 12px; padding: 9px 0; }
+.journey li { padding-left: 42px; counter-increment: etapa; }
 .journey li::before { content: counter(etapa); position: absolute; left: 0; top: 50%; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; border: 1.5px solid var(--gold); background: var(--gold-wash); color: var(--gold-ink); font: 600 0.85rem var(--serif); }
 .journey li::after { content: ''; position: absolute; left: 13px; top: 0; bottom: 0; width: 2px; background: var(--gold-soft); }
 .journey li:first-child::after { top: 50%; }
@@ -31,7 +32,7 @@
 .j-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .j-val { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .j-val b { color: var(--ink); font-size: 1rem; }
-.journey .cell-bar { grid-column: 1 / -1; }
+.journey .cell-bar, .meters .cell-bar { grid-column: 1 / -1; }
 
 /* Células */
 .cells { display: grid; margin: 0 -8px; }
@@ -42,6 +43,56 @@
 .cell-row.active .cell-bar { background: rgba(255, 255, 255, 0.18); }
 .cell-row.active .cell-bar i { background: var(--gold); }
 .cells .empty { margin: 0 8px; }
+
+/* ── Indicadores: números e gráficos de colunas ── */
+.panels.three { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); }
+.stat.kpi { cursor: default; }
+.stat.kpi:hover { border-color: var(--line); transform: none; }
+.cols { display: flex; gap: 2px; }
+.cols li { flex: 1 1 0; min-width: 0; border-radius: 6px; text-align: center; }
+.col-plot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 168px; border-bottom: 1px solid var(--line-strong); }
+.col-plot i { width: min(24px, 72%); height: calc((100% - 24px) * var(--h)); border-radius: 4px 4px 0 0; background: var(--navy-2); transition: height 0.3s ease, background 0.15s; }
+.col-v { margin-bottom: 4px; font-weight: 700; font-size: 0.85rem; line-height: 20px; font-variant-numeric: tabular-nums; }
+.col-x { display: block; padding-top: 6px; color: var(--muted); font-size: 0.8rem; line-height: 1.2; white-space: nowrap; }
+.col-x small { display: block; min-height: 1.2em; font-size: 0.72rem; }
+.cols li:hover .col-plot i, .cols li:focus-visible .col-plot i { background: var(--navy-deep); }
+.tip { position: fixed; z-index: 20; max-width: 240px; padding: 6px 10px; border-radius: 8px; background: var(--navy-deep); color: var(--white); font-size: 0.85rem; font-weight: 600; text-align: center; transform: translate(-50%, -100%); pointer-events: none; box-shadow: var(--shadow-card); }
+
+/* ── Acompanhamento: próximos passos, listas de pessoas e mapa da jornada ── */
+.group-title { margin-top: 34px; font: 500 1.45rem/1.2 var(--serif); letter-spacing: -0.01em; }
+.passos, .pessoas { display: grid; margin: 0 -8px; }
+.rolar { max-height: 330px; overflow-y: auto; }
+.passo, .pessoa { display: grid; align-items: center; gap: 0 12px; width: 100%; min-height: 44px; padding: 8px; border-radius: 8px; color: var(--ink); text-align: left; transition: background 0.15s; }
+.passo { grid-template-columns: 46px minmax(0, 1fr); }
+.passo b { grid-row: span 2; font: 500 1.75rem/1 var(--serif); text-align: center; font-variant-numeric: tabular-nums; }
+.passo-t, .pessoa b { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.passo-n, .pessoa span { grid-column: 1; color: var(--muted); font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.passo-n { grid-column: 2; }
+.pessoa { grid-template-columns: minmax(0, 1fr) auto; }
+.pessoa .tag { grid-area: 1 / 2 / 3 / 3; }
+.pessoa.sug b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-weight: 400; }
+.tag { padding: 2px 9px; border-radius: 999px; background: var(--nao-bg); color: var(--nao-ink); font-size: 0.78rem; font-style: normal; font-weight: 700; white-space: nowrap; }
+.tag.ok { background: var(--ok-bg); color: var(--ok); }
+.vazio { color: var(--muted); }
+.panel > .btn-link { margin: 4px 0 -10px -10px; }
+.mapa { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 2px; }
+.mapa thead th { width: 11.3%; padding-bottom: 2px; color: var(--gold-ink); font: 600 0.9rem var(--serif); }
+.mapa th[scope="row"] { padding-right: 4px; font-size: 0.85rem; font-weight: 400; line-height: 1.15; text-align: left; overflow-wrap: break-word; hyphens: auto; }
+.mapa th small { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.mapa .total th, .mapa .setor th { font-weight: 700; }
+.mapa .setor > * { padding-top: 10px; }
+.mapa .cel th { padding-left: 10px; }
+.mc, .escala i { background: color-mix(in srgb, var(--navy-2) var(--t), var(--sunken)); }
+.mc { display: grid; place-items: center; width: 100%; height: 38px; border-radius: 6px; color: var(--ink); font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mc.hi { color: var(--white); }
+.mapa-leg { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 12px; color: var(--muted); font-size: 0.82rem; counter-reset: etapa; }
+.mapa-leg li { counter-increment: etapa; }
+.mapa-leg li::before { content: counter(etapa); margin-right: 5px; color: var(--gold-ink); font: 600 0.9rem var(--serif); }
+.escala { display: flex; align-items: center; gap: 3px; margin-top: 10px; color: var(--muted); font-size: 0.8rem; }
+.escala i { width: 18px; height: 10px; border-radius: 3px; }
+.escala i:first-of-type { margin-left: 4px; }
+.escala i:last-of-type { margin-right: 4px; }
+#registrationsTitle { scroll-margin-top: 130px; }
 
 /* ── Cadastros ── */
 .registrations { margin-top: 36px; }
@@ -96,7 +147,8 @@
 
 @media (hover: hover) {
   .stat:hover { border-color: var(--navy); transform: translateY(-1px); }
-  .cell-row:not(.active):hover, .item:hover { background: var(--gold-wash); }
+  .cell-row:not(.active):hover, .item:hover, .passo:hover, .pessoa:hover { background: var(--gold-wash); }
+  button.mc:hover { outline: 2px solid var(--gold); outline-offset: 1px; }
 }
 @media (min-width: 640px) { .panel { padding: 24px; } }
 @media (min-width: 900px) { .search { flex-basis: 280px; } }
@@ -122,3 +174,4 @@
   .jlabel .lbl { display: none; }
   .jlabel { font-size: 0.88rem; font-variant-numeric: tabular-nums; }
 }
+@media (min-width: 640px) { #indicadoresView .filters select { flex: 0 1 260px; } }
