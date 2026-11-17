@@ -60,6 +60,7 @@ func New(st *store.Store, secret []byte, log *slog.Logger) (*Server, error) {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api", s.handleAPI)
+	mux.HandleFunc("/api/foto", s.handleFoto)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		_, _ = io.WriteString(w, "ok")
@@ -193,8 +194,9 @@ type adminReq struct {
 	SetorID int64  `json:"setorId"`
 	Texto   string `json:"texto"` // anotação de acompanhamento // cadastro da própria pessoa, ligado ao login
 	// Edição de cadastro: número do cadastro e os campos do formulário
-	Linha int64                      `json:"linha"`
-	Dados map[string]json.RawMessage `json:"dados"`
+	Linha  int64                      `json:"linha"`
+	Imagem string                     `json:"imagem"` // foto de perfil em base64
+	Dados  map[string]json.RawMessage `json:"dados"`
 }
 
 func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
@@ -262,6 +264,10 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.registroSalvar(ctx, req)
 		case "registro_excluir":
 			rep = s.registroExcluir(ctx, req)
+		case "foto_salvar":
+			rep = s.fotoSalvar(ctx, req)
+		case "foto_excluir":
+			rep = s.fotoExcluir(ctx, req)
 		case "usuarios_listar":
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":

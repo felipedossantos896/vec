@@ -116,6 +116,14 @@ A data em que cada etapa da jornada foi concluída fica em `jornada_eventos`: a 
 envio do formulário, ou a da edição no painel. Para cadastros anteriores, a migração
 usou a data do envio.
 
+**Fotos de perfil:** quem pode editar a pessoa adiciona, troca ou remove a foto
+pelo cabeçalho do cadastro. O navegador recorta um quadrado de 256 px e reduz para
+JPEG antes de enviar; o servidor só aceita JPEG ou PNG de até 40 KB e 1024 px de lado
+e guarda a imagem na tabela `fotos`. Sem foto, aparecem as iniciais. Para exibir, o
+`listar` devolve um endereço `/api/foto` assinado com o `SESSION_SECRET`, que vale até
+o fim do dia seguinte: a imagem abre sem o token da sessão e só quem enxerga a pessoa
+recebe o endereço. A foto é apagada junto com o cadastro.
+
 **Células e setores** são cadastrados pelo líder de área em **Configurações › Células e setores**. O
 formulário público busca as células ativas no servidor (e usa a lista escrita no
 HTML se o servidor não responder). Renomear uma célula ou mudá-la de setor atualiza,

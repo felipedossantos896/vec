@@ -1,6 +1,6 @@
 # Design system VEC
 
-**Versão vigente:** 3.6
+**Versão vigente:** 3.7
 **Atualizado em:** 2026-11-17
 
 ## Fonte da verdade
@@ -45,6 +45,11 @@ guardadas quando ajudarem a comparar uma mudança visual.
 
 ## Histórico
 
+- **3.7 — 2026-11-17:** foto de perfil (`.av`) ao lado do nome em Pessoas, no
+  Acompanhar e no cabeçalho do cadastro; sem foto, as iniciais em `--navy` sobre
+  `--gold-soft`. No cadastro, a foto grande tem um anel `--gold-soft` e um botão
+  `--navy` com câmera no canto, que abre o menu Trocar/Remover. Nos cartões estreitos
+  de Quem quer servir, a etiqueta do treinamento desce para baixo da célula.
 - **3.6 — 2026-11-17:** Acompanhar com resumo do dia em chips (`--gold-soft` para
   quem precisa de cuidado, `--ok-bg` quando está tudo em dia), cuidados em blocos com
   filete `--gold` e iniciais das pessoas em círculos `--navy-2`, grupos recolhíveis

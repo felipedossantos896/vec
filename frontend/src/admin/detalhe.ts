@@ -12,6 +12,7 @@ function secao(titulo: string, linhas: [string, string][]): string {
 function abrirDetalhe(r: Registro) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   $('detNome').textContent = r.nome;
+  renderFotoDetalhe(r);
   $('detSub').textContent = [r.celula || 'Sem célula', r.setor, r.discipulador ? `discipulado por ${curto(String(r.discipulador))}` : ''].filter(Boolean).join(' · ');
   const w = $<HTMLAnchorElement>('detWhats');
   w.classList.toggle('hidden', !r.telefone);

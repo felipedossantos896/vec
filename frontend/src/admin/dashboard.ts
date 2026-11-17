@@ -155,7 +155,7 @@ function renderLista() {
   const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Célula</span><span>Jornada</span><span>Último contato</span></div>';
   $('list').innerHTML = head + lista.map(r => `
     <button type="button" class="item" data-i="${estado.regs.indexOf(r)}">
-      <span class="it-name">${esc(r.nome)}</span>
+      <span class="it-name">${avatar(r)}<span>${esc(r.nome)}</span></span>
       <span class="it-cell">${esc(r.celula || 'Sem célula')}</span>
       <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada} de ${JORNADA.length}<span class="lbl"> etapas</span></span></span>
       <span class="it-contato ${r._contato ? '' : 'nunca'}"><span class="lbl">Contato: </span>${contato(r)}</span>

@@ -32,15 +32,10 @@ function nomes(rs: Registro[]): string {
   return rs.length > 3 ? `${tres.join(', ')} e mais ${rs.length - 3}` : tres.join(', ');
 }
 
-// Primeira letra do primeiro e do último nome, ignorando símbolos
-function iniciais(nome: string): string {
-  const p = nome.replace(/[^\p{L}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean);
-  return ((p[0]?.[0] || '?') + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
-}
-const rostos = (rs: Registro[]): string => `<span class="rostos" aria-hidden="true">${rs.slice(0, 3).map(r => `<i>${esc(iniciais(r.nome))}</i>`).join('')}${rs.length > 3 ? `<i class="mais">+${rs.length - 3}</i>` : ''}</span>`;
+const rostos = (rs: Registro[]): string => `<span class="rostos" aria-hidden="true">${rs.slice(0, 3).map(r => avatar(r)).join('')}${rs.length > 3 ? `<i class="mais">+${rs.length - 3}</i>` : ''}</span>`;
 
 function pessoa(r: Registro, nota: string, tag = '', classe = ''): string {
-  return `<li><button type="button" class="pessoa ${classe}" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.nome)}</b><span>${nota}</span>${tag}</button></li>`;
+  return `<li><button type="button" class="pessoa av-l ${classe}" data-reg="${estado.regs.indexOf(r)}">${avatar(r)}<b>${esc(r.nome)}</b><span>${nota}</span>${tag}</button></li>`;
 }
 
 // Grupos recolhíveis: no celular começam fechados para a página não ficar comprida demais
@@ -154,12 +149,12 @@ function aniversarios(lista: Aniversario[]): string {
   const quando = (a: Aniversario): string => a.dias === 0 ? 'Hoje' : a.dias === 1 ? 'Amanhã' : `Em ${a.dias} dias`;
   const itens = lista.map(a => `<li><button type="button" class="pessoa aniv${a.dias === 0 ? ' hoje' : ''}" data-reg="${estado.regs.indexOf(a.r)}">
     <i class="cal" aria-hidden="true"><strong>${a.d.getDate()}</strong><small>${a.d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></i>
-    <b>${esc(a.r.nome)}</b><span>${quando(a)} · faz ${a.anos} anos · ${esc(a.r.celula || 'Sem célula')}</span></button></li>`).join('');
+    ${avatar(a.r)}<b>${esc(a.r.nome)}</b><span>${quando(a)} · faz ${a.anos} anos · ${esc(a.r.celula || 'Sem célula')}</span></button></li>`).join('');
   return painel('Aniversariantes', 'Quem faz aniversário nos próximos 30 dias.', itens ? `<ul class="pessoas rolar">${itens}</ul>` : '<p class="vazio">Nenhum aniversário nos próximos 30 dias.</p>');
 }
 
 function sugestoes(g: Registro[]): string {
-  const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span>${esc(curto(r.nome))} · ${esc(r.celula || 'Sem célula')}</span></button></li>`).join('');
+  const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span>${avatar(r, 'av-xs')}${esc(curto(r.nome))} · ${esc(r.celula || 'Sem célula')}</span></button></li>`).join('');
   return painel('Sugestões para as células', g.length ? `${plural(g.length, 'sugestão recebida', 'sugestões recebidas')}, da mais recente para a mais antiga.` : 'O que as pessoas escreveram no formulário.', lista ? `<ul class="pessoas citacoes rolar">${lista}</ul>` : '<p class="vazio">Ninguém deixou sugestão ainda.</p>');
 }
 

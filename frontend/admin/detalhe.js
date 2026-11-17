@@ -10,6 +10,7 @@ function secao(titulo, linhas) {
 function abrirDetalhe(r) {
     const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
     $('detNome').textContent = r.nome;
+    renderFotoDetalhe(r);
     $('detSub').textContent = [r.celula || 'Sem célula', r.setor, r.discipulador ? `discipulado por ${curto(String(r.discipulador))}` : ''].filter(Boolean).join(' · ');
     const w = $('detWhats');
     w.classList.toggle('hidden', !r.telefone);

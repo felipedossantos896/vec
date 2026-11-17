@@ -19,6 +19,7 @@ type painelDB struct {
 	escopos  [][]any
 	afetadas int64
 	escritas []turso.Stmt
+	foto     []byte // foto guardada do cadastro 7 (nil = nenhuma)
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -46,6 +47,13 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		case strings.HasPrefix(st.SQL, "UPDATE respostas"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "INSERT INTO fotos"):
+			d.escritas = append(d.escritas, st)
+			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "SELECT f.imagem"):
+			if d.foto != nil && st.Args[0] == int64(7) {
+				out[i].Rows = [][]any{{d.foto, "image/png", "2026-11-14T10:00:00Z"}}
+			}
 		case strings.HasPrefix(st.SQL, "UPDATE"), strings.HasPrefix(st.SQL, "INSERT INTO anotacoes"), strings.HasPrefix(st.SQL, "DELETE FROM anotacoes"):
 			out[i].Affected = d.afetadas
 		}
