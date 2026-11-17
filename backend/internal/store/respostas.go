@@ -51,12 +51,14 @@ var Campos = []Campo{
 
 type Resposta struct {
 	ID         int64
-	CriadoEm   string            // ISO UTC
-	RequestID  string            // chave de reenvio do formulário público
-	ImportKey  string            // chave estável de importação
-	EditadoEm  string            // ISO UTC ("" se nunca foi editada pelo painel)
-	EditadoPor string            // usuário do painel que fez a última edição
-	V          map[string]string // chave do Campo -> valor
+	CriadoEm   string // ISO UTC
+	RequestID  string // chave de reenvio do formulário público
+	ImportKey  string // chave estável de importação
+	EditadoEm  string // ISO UTC ("" se nunca foi editada pelo painel)
+	EditadoPor string // usuário do painel que fez a última edição
+	// DiscipuladorID é o cadastro do discipulador (0 = sem vínculo; o nome digitado fica em V).
+	DiscipuladorID int64
+	V              map[string]string // chave do Campo -> valor
 }
 
 func colunas() string {
@@ -171,6 +173,10 @@ func escopoSQL(sc Scope) (cond string, args []any, ok bool) {
 			args = append(args, n)
 		}
 	}
+	if sc.Discipulador != 0 {
+		conds = append(conds, `discipulador_id = ?`)
+		args = append(args, sc.Discipulador)
+	}
 	return `(` + strings.Join(conds, ` OR `) + `)`, args, len(conds) > 0
 }
 
@@ -182,7 +188,7 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 		return nil, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), ` + colunas() +
+		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), COALESCE(discipulador_id, 0), ` + colunas() +
 			` FROM respostas WHERE excluido_em IS NULL AND ` + cond + ` ORDER BY id DESC`,
 		Args: args,
 	})
@@ -193,36 +199,44 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	for _, row := range res[0].Rows {
 		r := Resposta{
 			ID: turso.Int(row, 0), CriadoEm: turso.Str(row, 1), EditadoEm: turso.Str(row, 2), EditadoPor: turso.Str(row, 3),
-			V: make(map[string]string, len(Campos)),
+			DiscipuladorID: turso.Int(row, 4),
+			V:              make(map[string]string, len(Campos)),
 		}
 		for i, c := range Campos {
-			r.V[c.Chave] = turso.Str(row, i+4)
+			r.V[c.Chave] = turso.Str(row, i+5)
 		}
 		out = append(out, r)
 	}
 	return out, nil
 }
 
-// UpdateResposta regrava os campos de um cadastro que esteja dentro do escopo e anota
-// quem editou. Devolve false se o cadastro não existe, foi excluído ou está fora do escopo.
-func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[string]string, por string, now time.Time) (bool, error) {
+// UpdateResposta regrava os campos de um cadastro que esteja dentro do escopo, o vínculo
+// com o discipulador (0 = nenhum) e anota quem editou. Devolve false se o cadastro não existe, foi excluído ou está fora do escopo.
+func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[string]string, discipulador int64, por string, now time.Time) (bool, error) {
 	cond, escopoArgs, ok := escopoSQL(sc)
 	if !ok {
 		return false, nil
 	}
 	sets := make([]string, 0, len(Campos))
-	args := make([]any, 0, len(Campos)+3+len(escopoArgs))
+	args := make([]any, 0, len(Campos)+4+len(escopoArgs))
 	for _, c := range Campos {
 		sets = append(sets, c.Coluna+` = ?`)
 		args = append(args, v[c.Chave])
 	}
-	args = append(args, iso(now), por, id)
+	args = append(args, idOuNulo(discipulador), iso(now), por, id)
 	args = append(args, escopoArgs...)
-	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `UPDATE respostas SET ` + strings.Join(sets, `, `) + `, atualizado_em = ?, atualizado_por = ?` +
-			` WHERE id = ? AND excluido_em IS NULL AND ` + cond,
-		Args: args,
-	})
+	res, err := s.DB.Do(ctx,
+		turso.Stmt{
+			SQL: `UPDATE respostas SET ` + strings.Join(sets, `, `) + `, discipulador_id = ?, atualizado_em = ?, atualizado_por = ?` +
+				` WHERE id = ? AND excluido_em IS NULL AND ` + cond,
+			Args: args,
+		},
+		// Se a pessoa mudou de nome, os discípulos dela passam a mostrar o nome novo.
+		turso.Stmt{
+			SQL:  `UPDATE respostas SET discipulador = (SELECT nome FROM respostas WHERE id = ?) WHERE discipulador_id = ?`,
+			Args: []any{id, id},
+		},
+	)
 	if err != nil {
 		return false, err
 	}
@@ -230,17 +244,25 @@ func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[st
 }
 
 // DeleteResposta tira um cadastro do painel sem apagar a linha: só marca quando e por quem.
+// Quem era discipulado por essa pessoa fica sem vínculo (o nome digitado continua).
 // Devolve false se o cadastro não existe, já foi excluído ou está fora do escopo.
 func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por string, now time.Time) (bool, error) {
 	cond, escopoArgs, ok := escopoSQL(sc)
 	if !ok {
 		return false, nil
 	}
-	args := append([]any{iso(now), por, id}, escopoArgs...)
-	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL:  `UPDATE respostas SET excluido_em = ?, excluido_por = ? WHERE id = ? AND excluido_em IS NULL AND ` + cond,
-		Args: args,
-	})
+	quando := iso(now)
+	args := append([]any{quando, por, id}, escopoArgs...)
+	res, err := s.DB.Tx(ctx,
+		turso.Stmt{
+			SQL:  `UPDATE respostas SET excluido_em = ?, excluido_por = ? WHERE id = ? AND excluido_em IS NULL AND ` + cond,
+			Args: args,
+		},
+		turso.Stmt{
+			SQL:  `UPDATE respostas SET discipulador_id = NULL WHERE discipulador_id = ? AND EXISTS (SELECT 1 FROM respostas WHERE id = ? AND excluido_em IS NOT NULL)`,
+			Args: []any{id, id},
+		},
+	)
 	if err != nil {
 		return false, err
 	}

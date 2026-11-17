@@ -85,10 +85,17 @@ embutidos pelo Go, e o CI verifica que estão sincronizados.
 | `AREA` | todos os cadastros |
 | `SETOR` | os cadastros dos setores marcados (e das células extras marcadas) |
 | `CELULA` | os cadastros das células marcadas |
+| Discipulador | só os próprios discípulos (guardado como `CELULA` sem células, com o cadastro ligado ao login) |
 
 O filtro é aplicado **no servidor**, na própria consulta SQL: quem não tem
 permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê a aba
 **Usuários** no painel e cria/edita acessos, troca senhas e desativa pessoas.
+
+**Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
+(`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
+(`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do
+que o perfil permite, todos os que o têm como discipulador, mesmo de outra célula.
+O vínculo é feito ao editar o cadastro; o formulário público continua pedindo só o nome.
 
 Cada líder também **edita e exclui cadastros** que enxerga, pelo detalhe da pessoa.
 A exclusão só marca a linha no banco (`excluido_em`), então pode ser desfeita por

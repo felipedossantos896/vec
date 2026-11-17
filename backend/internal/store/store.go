@@ -29,6 +29,8 @@ type User struct {
 	Celulas   []string
 	CriadoEm  string // ISO UTC
 	Acesso    string // ISO UTC ("" se nunca acessou)
+	// RespostaID é o cadastro da própria pessoa (0 = login ainda não ligado a um cadastro).
+	RespostaID int64
 }
 
 // Scope é o que um usuário pode enxergar.
@@ -36,30 +38,40 @@ type Scope struct {
 	Todos   bool
 	Setores []string
 	Celulas []string
+	// Discipulador é o cadastro do usuário: ele também enxerga quem tem esse cadastro
+	// como discipulador (0 = não se aplica).
+	Discipulador int64
+}
+
+// SoDiscipulador informa se a pessoa não lidera nada e entra só para ver os seus discípulos.
+func (u *User) SoDiscipulador() bool {
+	return u.Perfil == "CELULA" && len(u.Celulas) == 0 && u.RespostaID != 0
 }
 
 // Escopo devolve o que o usuário enxerga e se a configuração é válida:
-// AREA vê tudo; SETOR/CELULA precisam de ao menos um item marcado.
+// AREA vê tudo; os demais precisam de ao menos um item marcado ou de um cadastro
+// ligado ao login (para ver os próprios discípulos).
 func (u *User) Escopo() (Scope, bool) {
 	if u.Perfil == "AREA" {
 		return Scope{Todos: true}, true
 	}
-	sc := Scope{Setores: u.Setores, Celulas: u.Celulas}
-	return sc, len(sc.Setores)+len(sc.Celulas) > 0
+	sc := Scope{Setores: u.Setores, Celulas: u.Celulas, Discipulador: u.RespostaID}
+	return sc, len(sc.Setores)+len(sc.Celulas) > 0 || sc.Discipulador != 0
 }
 
-const userCols = `usuario, nome, senha_hash, perfil, ativo, gerencia, criado_em, COALESCE(ultimo_acesso, '')`
+const userCols = `usuario, nome, senha_hash, perfil, ativo, gerencia, criado_em, COALESCE(ultimo_acesso, ''), COALESCE(resposta_id, 0)`
 
 func userFromRow(r []any) User {
 	return User{
-		Usuario:   turso.Str(r, 0),
-		Nome:      turso.Str(r, 1),
-		SenhaHash: turso.Str(r, 2),
-		Perfil:    turso.Str(r, 3),
-		Ativo:     turso.Int(r, 4) == 1,
-		Gerencia:  turso.Int(r, 5) == 1,
-		CriadoEm:  turso.Str(r, 6),
-		Acesso:    turso.Str(r, 7),
+		Usuario:    turso.Str(r, 0),
+		Nome:       turso.Str(r, 1),
+		SenhaHash:  turso.Str(r, 2),
+		Perfil:     turso.Str(r, 3),
+		Ativo:      turso.Int(r, 4) == 1,
+		Gerencia:   turso.Int(r, 5) == 1,
+		CriadoEm:   turso.Str(r, 6),
+		Acesso:     turso.Str(r, 7),
+		RespostaID: turso.Int(r, 8),
 	}
 }
 
@@ -119,19 +131,27 @@ func (s *Store) ListUsers(ctx context.Context) ([]User, error) {
 var ErrUserExists = errors.New("usuário já existe")
 var ErrUserNotFound = errors.New("usuário não encontrado")
 
+// idOuNulo grava NULL quando não há vínculo.
+func idOuNulo(id int64) any {
+	if id == 0 {
+		return nil
+	}
+	return id
+}
+
 // SaveUser cria (create=true) ou atualiza um usuário e substitui seus escopos,
 // tudo em uma transação. Se newHash for vazio na atualização, a senha é mantida.
 func (s *Store) SaveUser(ctx context.Context, u User, newHash string, create bool, now time.Time) error {
 	var stmts []turso.Stmt
 	if create {
 		stmts = append(stmts, turso.Stmt{
-			SQL: `INSERT INTO usuarios (usuario, nome, senha_hash, perfil, ativo, gerencia, criado_em)
-			      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			Args: []any{u.Usuario, u.Nome, newHash, u.Perfil, u.Ativo, u.Gerencia, iso(now)},
+			SQL: `INSERT INTO usuarios (usuario, nome, senha_hash, perfil, ativo, gerencia, criado_em, resposta_id)
+			      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			Args: []any{u.Usuario, u.Nome, newHash, u.Perfil, u.Ativo, u.Gerencia, iso(now), idOuNulo(u.RespostaID)},
 		})
 	} else {
-		sql := `UPDATE usuarios SET nome = ?, perfil = ?, ativo = ?, gerencia = ?`
-		args := []any{u.Nome, u.Perfil, u.Ativo, u.Gerencia}
+		sql := `UPDATE usuarios SET nome = ?, perfil = ?, ativo = ?, gerencia = ?, resposta_id = ?`
+		args := []any{u.Nome, u.Perfil, u.Ativo, u.Gerencia, idOuNulo(u.RespostaID)}
 		if newHash != "" {
 			sql += `, senha_hash = ?`
 			args = append(args, newHash)

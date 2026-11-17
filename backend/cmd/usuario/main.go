@@ -96,9 +96,13 @@ func main() {
 		}
 	}
 
+	var cadastro int64 // o vínculo com o cadastro é feito pelo painel; aqui só é preservado
+	if existente != nil {
+		cadastro = existente.RespostaID
+	}
 	err = st.SaveUser(ctx, store.User{
 		Usuario: u, Nome: nomeFinal, Perfil: p, Ativo: !*inativo, Gerencia: *gerencia,
-		Setores: setoresL, Celulas: celulasL,
+		Setores: setoresL, Celulas: celulasL, RespostaID: cadastro,
 	}, hash, criar, time.Now())
 	if errors.Is(err, store.ErrUserExists) {
 		die("esse usuário já existe")

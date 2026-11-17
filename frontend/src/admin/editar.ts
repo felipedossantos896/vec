@@ -2,12 +2,13 @@
 // Editar e excluir um cadastro a partir do detalhe, e sinalizar possíveis duplicados.
 // O servidor confere a permissão: cada líder só altera o que enxerga.
 
-type SalvarRegistroResult = ApiResult & { dados: Record<string, string>; editadoEm: string; editadoPor: string };
+type SalvarRegistroResult = ApiResult & { dados: Record<string, string>; discipuladorId: number; editadoEm: string; editadoPor: string };
 
 const ERROS_EDICAO: Record<string, string> = {
   nome_invalido: 'Informe o nome completo.',
   nascimento_invalido: 'Confira a data de nascimento.',
   nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
+  discipulador_invalido: 'Esse discipulador não está mais disponível. Escolha outro.',
   dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
 const registroAberto = (): Registro | undefined => estado.regs.find(r => String(r.linha) === $('det').dataset.linha);
@@ -57,7 +58,7 @@ function abrirEdicao(r: Registro) {
     </div>
     ${grupoSN('Treinamentos', r, TREINOS)}
     <div class="det-sec"><h4>Discipulado e interesses</h4>
-      ${campo('eDiscipulador', 'Nome do discipulador', `<input class="input" id="eDiscipulador" autocapitalize="words" autocomplete="off" placeholder="Deixe em branco se não tiver" value="${esc(r.discipulador)}">`)}
+      ${campoDiscipulador(r)}
       <div class="sn-box">${INTERESSES.map(([k, l]) => simNao(k, l, r[k])).join('')}</div>
     </div>
     <p class="msg" id="eMsg" role="alert"></p>
@@ -79,17 +80,18 @@ function ajustarEdicao() {
 async function salvarEdicao(r: Registro) {
   const f = $<HTMLFormElement>('eForm');
   const celula = $<HTMLSelectElement>('eCelula').value;
-  const dados: Record<string, string> = {
+  const dados: Record<string, string | number> = {
     nome: $<HTMLInputElement>('eNome').value.trim(), nascimento: $<HTMLInputElement>('eNasc').value,
     celula, setor: SETOR_DA_CELULA[celula] || $<HTMLSelectElement>('eSetor').value,
-    ministerioNome: $<HTMLInputElement>('eMinisterio').value.trim(), discipulador: $<HTMLInputElement>('eDiscipulador').value.trim(),
+    ministerioNome: $<HTMLInputElement>('eMinisterio').value.trim(), ...lerDiscipulador(r),
     sugestao: r.sugestao || ''
   };
   f.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked').forEach(i => { dados[i.name.slice(2)] = i.value; });
   const res = await chamarEdicao<SalvarRegistroResult>({ acao: 'registro_salvar', linha: r.linha, dados }, $('eMsg'), $<HTMLButtonElement>('eSalvar'));
   if (!res) return;
-  Object.assign(r, res.dados, { editadoEm: res.editadoEm, editadoPor: res.editadoPor });
+  Object.assign(r, res.dados, { discipuladorId: res.discipuladorId, editadoEm: res.editadoEm, editadoPor: res.editadoPor });
   derivar(r);
+  atualizarVinculos(r);
   atualizarPainel();
   abrirDetalhe(r);
 }
@@ -98,6 +100,7 @@ async function excluirCadastro(r: Registro, botao: HTMLButtonElement) {
   const res = await chamarEdicao<ApiResult>({ acao: 'registro_excluir', linha: r.linha }, $('xMsg'), botao);
   if (!res) return;
   estado.regs = estado.regs.filter(x => x !== r);
+  atualizarVinculos(r);
   $<HTMLDialogElement>('det').close();
   atualizarPainel();
 }
@@ -105,7 +108,7 @@ async function excluirCadastro(r: Registro, botao: HTMLButtonElement) {
 function atualizarPainel() {
   marcarDuplicados();
   montarFiltros();
-  if (estado.situacao === 'duplicados' && !estado.regs.some(SITUACOES.duplicados.f)) Object.assign(estado, { situacao: 'todos', busca: '' });
+  if (['duplicados', 'semVinculo', 'meusDiscipulos'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f)) Object.assign(estado, { situacao: 'todos', busca: '' });
   $<HTMLInputElement>('fBusca').value = estado.busca;
   renderTudo();
 }

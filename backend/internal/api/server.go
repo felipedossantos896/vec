@@ -186,6 +186,7 @@ type adminReq struct {
 	Celulas  []string `json:"celulas"`
 	Ativo    *bool    `json:"ativo"`
 	Gerencia bool     `json:"gerencia"`
+	Cadastro int64    `json:"cadastro"` // cadastro da própria pessoa, ligado ao login
 	// Edição de cadastro: número do cadastro e os campos do formulário
 	Linha int64                      `json:"linha"`
 	Dados map[string]json.RawMessage `json:"dados"`

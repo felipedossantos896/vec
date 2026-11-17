@@ -100,8 +100,8 @@
 
     <div id="content" class="hidden">
       <header class="page-heading">
-        <h1>Visão geral</h1>
-        <p>Indicadores e cadastros para acompanhar cada etapa da jornada.</p>
+        <h1 id="visaoTitulo">Visão geral</h1>
+        <p id="visaoSub">Indicadores e cadastros para acompanhar cada etapa da jornada.</p>
       </header>
 
       <section aria-labelledby="summaryTitle">
@@ -134,6 +134,7 @@
             <p id="countTxt"></p>
           </div>
           <div class="list-actions">
+            <button class="btn-link hidden" id="btnMeus" type="button"></button>
             <button class="btn-link hidden" id="btnClear" type="button">Limpar filtros</button>
             <button class="btn-sec" id="btnCsv" type="button">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
@@ -232,6 +233,7 @@
           <label><input type="radio" name="uPerfil" value="AREA"><span>Área</span></label>
           <label><input type="radio" name="uPerfil" value="SETOR"><span>Setor</span></label>
           <label><input type="radio" name="uPerfil" value="CELULA"><span>Célula</span></label>
+          <label><input type="radio" name="uPerfil" value="DISCIPULADOR"><span>Discipulador</span></label>
         </div>
         <p class="field-hint" id="uPerfilHint"></p>
       </div>
@@ -242,6 +244,11 @@
       <div class="field" id="uCelulasWrap">
         <p class="label" id="uCelulasLbl">Células que lidera</p>
         <div class="chks" id="uCelulas"></div>
+      </div>
+      <div class="field">
+        <label class="label" for="uCadastro">Cadastro desta pessoa</label>
+        <select class="input" id="uCadastro"></select>
+        <p class="field-hint">Liga o login ao cadastro dela. É assim que ela vê os próprios discípulos.</p>
       </div>
       <label class="sw">
         <input type="checkbox" id="uAtivo">
@@ -275,6 +282,7 @@
 <script src="charts.js" defer></script>
 <script src="acompanhamento.js" defer></script>
 <script src="editar.js" defer></script>
+<script src="discipulado.js" defer></script>
 <script src="users.js" defer></script>
 
 </body>

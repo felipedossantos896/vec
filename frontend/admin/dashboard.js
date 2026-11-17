@@ -23,6 +23,12 @@ async function carregar() {
         }
         estado.escopo = r.escopo || { todos: true, setores: [], celulas: [] };
         estado.gerencia = !!r.gerencia;
+        estado.meuCadastro = r.meuCadastro || 0;
+        estado.pessoas = r.pessoas || [];
+        const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
+        $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Visão geral';
+        $('journeyTitle').textContent = soDiscipulos ? 'Jornada dos seus discípulos' : 'Jornada da área';
+        $('visaoSub').textContent = soDiscipulos ? 'A jornada de quem você acompanha e o que falta para cada pessoa seguir.' : 'Indicadores e cadastros para acompanhar cada etapa da jornada.';
         $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
         if (!estado.gerencia && estado.aba === 'usuarios')
             mostrarAba('cadastros');
@@ -76,7 +82,7 @@ function montarFiltros() {
         sel.innerHTML = `<option value="">${todos}</option>` + distintos(chave, chave === 'setor' ? baseSetores() : baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
         sel.classList.toggle('hidden', sel.options.length <= 2);
     });
-    $('fSituacao').innerHTML = Object.entries(SITUACOES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    $('fSituacao').innerHTML = Object.entries(SITUACOES).filter(([k]) => k !== 'meusDiscipulos' || (!!estado.meuCadastro && estado.escopo.perfil !== 'DISCIPULADOR')).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
 }
 function filtrados() {
     const b = norm(estado.busca);
@@ -94,6 +100,7 @@ function renderTudo() {
     renderJornada();
     renderCelulas();
     renderLista();
+    renderMeus();
     renderIndicadores();
 }
 // Uma linha de medidor: nome, quantidade, percentual e barra
@@ -196,7 +203,7 @@ function abrirDetalhe(r) {
     $('detSub').textContent = [r.celula, r.setor].filter(Boolean).join(' · ') || 'Sem célula informada';
     const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
     $('detBody').innerHTML =
-        `<p class="det-journey">${pips(r)}<span><b>${r._jornada} de ${JORNADA.length}</b> etapas da jornada</span></p>` +
+        `<p class="det-journey">${pips(r)}<span><b>${r._jornada} de ${JORNADA.length}</b> etapas da jornada</span>${faltam(r)}</p>` +
             secao('Dados pessoais', [
                 ['Nascimento', r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento)],
                 ['Recebeu Jesus', pill(r.recebeuJesus)]
@@ -209,7 +216,7 @@ function abrirDetalhe(r) {
                 ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
             ]) +
             secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
-            secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
+            secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
             (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
             secao('Registro', [['Enviado em', txt(r.dataHora)], ...(r.editadoEm ? [['Editado em', `${esc(r.editadoEm)} · ${esc(r.editadoPor)}`]] : []), ['Nº do cadastro', String(r.linha)]]) +
             acoesDetalhe(r);
