@@ -96,6 +96,9 @@ permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê a aba
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do
 que o perfil permite, todos os que o têm como discipulador, mesmo de outra célula.
 O vínculo é feito ao editar o cadastro; o formulário público continua pedindo só o nome.
+Na aba Indicadores, o grupo **Discipulado** mostra quantos discípulos cada um
+acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
+Expresso 01 e ainda não discipula ninguém.
 
 Cada líder também **edita e exclui cadastros** que enxerga, pelo detalhe da pessoa.
 A exclusão só marca a linha no banco (`excluido_em`), então pode ser desfeita por

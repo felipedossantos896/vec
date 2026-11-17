@@ -49,6 +49,10 @@ function atualizarVinculos(r) {
         derivar(x);
     });
 }
+// Situações que só fazem sentido em certos casos: a de um discipulador escolhido nos
+// Indicadores e a dos próprios discípulos
+const situacaoVisivel = (k) => k === 'discipulosDe' ? estado.situacao === k : k !== 'meusDiscipulos' || (!!estado.meuCadastro && estado.escopo.perfil !== 'DISCIPULADOR');
+const rotuloSituacao = (k, label) => k === 'discipulosDe' ? `Discípulos de ${curto(estado.pessoas.find(p => p.id === estado.discipuladorDe)?.nome || '…')}` : label;
 // Atalho na lista para quem lidera e também discipula
 function renderMeus() {
     const n = estado.regs.filter(SITUACOES.meusDiscipulos.f).length;
@@ -64,4 +68,45 @@ $('detBody').addEventListener('click', e => {
     const b = e.target instanceof Element ? e.target.closest('[data-vincular]') : null;
     if (b)
         $('eDiscipulador').value = b.dataset.vincular || '';
+});
+// ── Indicadores de discipulado ──
+const MUITOS_DISCIPULOS = 12; // acima disso o discipulador aparece marcado como sobrecarregado
+const discipula = (r) => estado.regs.some(x => x.discipuladorId === r.linha);
+function painelDiscipulado(base) {
+    if (estado.escopo.perfil === 'DISCIPULADOR')
+        return '';
+    const cont = {};
+    base.forEach(r => { if (r.discipuladorId)
+        cont[r.discipuladorId] = (cont[r.discipuladorId] || 0) + 1; });
+    const nomeDe = (id) => estado.pessoas.find(p => p.id === id)?.nome || 'Cadastro removido';
+    const ids = Object.keys(cont).map(Number).sort((a, b) => cont[b] - cont[a] || nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
+    const vinculados = base.filter(r => r.discipuladorId).length;
+    const max = Math.max(1, ...Object.values(cont));
+    const linhas = ids.map(id => {
+        const n = cont[id];
+        const dica = `${nomeDe(id)}: ${plural(n, 'discípulo', 'discípulos')}`;
+        return `<button type="button" class="cell-row" data-disc="${id}" data-tip="${esc(dica)}" aria-label="${esc(dica)}">
+      <span class="cell-name">${esc(curto(nomeDe(id)))}${n > MUITOS_DISCIPULOS ? ` <em class="tag">mais de ${MUITOS_DISCIPULOS}</em>` : ''}</span>
+      <span class="cell-bar"><i style="width:${(n / max) * 100}%"></i></span><span class="cell-n">${n}</span></button>`;
+    }).join('');
+    const resumo = ids.length ? `${plural(ids.length, 'discipulador acompanha', 'discipuladores acompanham')} ${plural(vinculados, 'pessoa', 'pessoas')}; ${base.length - vinculados} sem vínculo.` : 'Nenhum discipulador vinculado ainda.';
+    const celulas = distintos('celula', CELULAS).filter(c => base.some(r => r.celula === c));
+    const cobertura = celulas.map(c => { const rs = base.filter(r => r.celula === c); return medidor(esc(c), rs.filter(r => r.discipuladorId).length, rs.length); }).join('');
+    const prontos = base.filter(SITUACOES.podeDiscipular.f).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const todos = prontos.length > 6 ? `<button type="button" class="btn-link" data-sit="podeDiscipular">Ver todas as ${prontos.length} pessoas</button>` : '';
+    return `<h2 class="group-title">Discipulado</h2><div class="panels three">${painel('Discipuladores', resumo, linhas ? `<div class="cells rolar">${linhas}</div>` : '<p class="vazio">Vincule os discipuladores ao editar os cadastros.</p>') +
+        painel('Cobertura por célula', 'Quem já tem discipulador vinculado.', cobertura ? `<ol class="meters">${cobertura}</ol>` : '<p class="vazio">Nenhum cadastro com célula.</p>') +
+        painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém por aqui.</p>')}</div>`;
+}
+// Um toque num discipulador leva à lista de quem ele acompanha
+$('gConteudo').addEventListener('click', e => {
+    const b = e.target instanceof Element ? e.target.closest('[data-disc]') : null;
+    if (!b)
+        return;
+    Object.assign(estado, { situacao: 'discipulosDe', discipuladorDe: Number(b.dataset.disc) });
+    $('tip').classList.add('hidden');
+    mostrarAba('cadastros');
+    montarFiltros();
+    renderTudo();
+    $('registrationsTitle').scrollIntoView({ block: 'start' });
 });

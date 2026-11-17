@@ -60,6 +60,7 @@ type EstadoPainel = {
   situacao: string;
   escopo: Escopo;
   meuCadastro: number;
+  discipuladorDe: number; // discipulador escolhido nos Indicadores, para a situação discipulosDe
   pessoas: Pessoa[];
   gerencia: boolean;
   aba: string;
@@ -97,6 +98,8 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   semCelula:      { label: 'Sem célula', f: r => !r.celula },
   duplicados:     { label: 'Possíveis duplicados', f: r => r._dup > 1 },
   semVinculo:     { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
+  podeDiscipular: { label: 'Fizeram o Expresso 01 e ainda não discipulam', f: r => r.expresso01 === 'S' && !discipula(r) },
+  discipulosDe:   { label: 'Discípulos de…', f: r => !!estado.discipuladorDe && r.discipuladorId === estado.discipuladorDe },
   meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
@@ -124,7 +127,7 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 
 const estado: EstadoPainel = {
   regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
-  escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, pessoas: [],
+  escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
   gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
 };
 

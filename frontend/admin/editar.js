@@ -99,7 +99,7 @@ async function excluirCadastro(r, botao) {
 function atualizarPainel() {
     marcarDuplicados();
     montarFiltros();
-    if (['duplicados', 'semVinculo', 'meusDiscipulos'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f))
+    if (['duplicados', 'semVinculo', 'meusDiscipulos', 'discipulosDe'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f))
         Object.assign(estado, { situacao: 'todos', busca: '' });
     $('fBusca').value = estado.busca;
     renderTudo();
