@@ -21,8 +21,11 @@ async function carregar() {
     aplicarEstrutura(r.estrutura);
     const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
     $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Pessoas';
+    // Quem é só discipulador fica com Acompanhar e Pessoas
+    $('tabIndicadores').classList.toggle('hidden', soDiscipulos);
+    if (soDiscipulos && estado.aba === 'indicadores') mostrarAba('acompanhar');
     $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
-    if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('cadastros');
+    if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('acompanhar');
     $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
     estado.regs = r.registros.map(o => {
       const x: Registro = { ...o };
@@ -65,8 +68,8 @@ function distintos(chave: string, base: string[]): string[] {
   return [...set];
 }
 
-// Setor e célula valem para Cadastros e Indicadores: cada aba tem seus seletores (f… e g…), com o mesmo estado
-const SELETORES: [string, 'setor' | 'celula', string][] = [['fSetor', 'setor', 'Todos os setores'], ['gSetor', 'setor', 'Todos os setores'], ['fCelula', 'celula', 'Todas as células'], ['gCelula', 'celula', 'Todas as células']];
+// Setor e célula valem para Pessoas, Indicadores e Acompanhar: cada aba tem seus seletores (f…, g… e a…), com o mesmo estado
+const SELETORES: [string, 'setor' | 'celula', string][] = ['f', 'g', 'a'].flatMap((p): [string, 'setor' | 'celula', string][] => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
 
 function montarFiltros() {
   SELETORES.forEach(([id, chave, todos]) => {
@@ -95,7 +98,7 @@ function filtrados() {
 function renderTudo() {
   SELETORES.forEach(([id, chave]) => { $<HTMLSelectElement>(id).value = estado[chave]; });
   $<HTMLSelectElement>('fSituacao').value = estado.situacao;
-  renderMeus(); renderLista(); renderIndicadores();
+  renderMeus(); renderLista(); renderAcompanhar(); renderIndicadores();
   if (estado.aba === 'estrutura') renderEstrutura(); // depois dos cadastros, para contar as pessoas
 }
 

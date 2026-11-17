@@ -106,8 +106,10 @@
 .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; width: 100%; padding: 14px 16px; border-top: 1px solid var(--line); color: var(--ink); text-align: left; font-size: 0.95rem; transition: background 0.15s; }
 .item:first-of-type { border-top: 0; }
 .item:focus-visible { outline-offset: -3px; }
-.it-name { font-weight: 700; font-size: 1.05rem; line-height: 1.25; overflow-wrap: anywhere; }
-.it-jornada { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 4px; }
+.it-name { grid-area: 1 / 1; font-weight: 700; font-size: 1.05rem; line-height: 1.25; overflow-wrap: anywhere; }
+.it-jornada { grid-area: 1 / 2; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 4px; }
+.it-cell { grid-area: 2 / 1; }
+.it-contato { grid-area: 2 / 2; align-self: end; }
 .it-cell, .it-contato { color: var(--muted); }
 .it-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .it-contato { font-size: 0.85rem; text-align: right; white-space: nowrap; }
@@ -155,6 +157,7 @@
   .thead, .item { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) 170px 140px; align-items: center; gap: 16px; padding: 12px 20px; }
   .thead { background: var(--sunken); color: var(--muted); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .item { border-top: 1px solid var(--line); }
+  .it-name, .it-cell, .it-jornada, .it-contato { grid-area: auto; align-self: center; }
   .it-name { font-size: 1rem; }
   .it-cell { color: var(--ink); }
   .it-jornada { flex-direction: row; align-items: center; gap: 10px; padding-top: 0; }
@@ -162,4 +165,4 @@
   .jlabel .lbl { display: none; }
   .jlabel { font-size: 0.88rem; font-variant-numeric: tabular-nums; }
 }
-@media (min-width: 640px) { #indicadoresView .filters select { flex: 0 1 260px; } }
+@media (min-width: 640px) { #indicadoresView .filters select, #acompanharView .filters select { flex: 0 1 260px; } }

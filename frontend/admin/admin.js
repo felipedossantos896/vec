@@ -58,7 +58,7 @@ function $(id) {
 const estado = {
     regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
     escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-    gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
+    gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false
 };
 function rotulo(e) {
     if (!e || e.todos)
@@ -206,6 +206,6 @@ $('btnLogout').addEventListener('click', () => {
     estado.regs = [];
     estado.usuarios = [];
     estado.usuariosCarregados = false;
-    mostrarAba('cadastros');
+    mostrarAba('acompanhar');
     mostrarLogin('Você saiu do painel.');
 });

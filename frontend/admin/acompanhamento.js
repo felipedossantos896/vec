@@ -1,6 +1,7 @@
 "use strict";
 // ══════ ACOMPANHAMENTO ══════
-// Blocos da aba Indicadores que levam do número às pessoas: cada linha abre a lista ou o cadastro.
+// Aba Acompanhar: blocos que levam do número às pessoas; cada linha abre a lista ou o cadastro.
+// O mapa da jornada fica nos Indicadores, mas também leva à lista.
 const PASSOS = [
     ['semDiscipulador', 'Sem discipulador'],
     ['batizar', 'Receberam Jesus e ainda não foram batizados'],
@@ -105,8 +106,18 @@ function sugestoes(base) {
     const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>“${esc(r.sugestao)}”</b><span>${esc(curto(r.nome))} · ${esc(r.celula || 'Sem célula')}</span></button></li>`).join('');
     return painel('Sugestões para as células', g.length ? `${plural(g.length, 'sugestão recebida', 'sugestões recebidas')}, da mais recente para a mais antiga.` : 'O que as pessoas escreveram no formulário.', lista ? `<ul class="pessoas rolar">${lista}</ul>` : '<p class="vazio">Ninguém deixou sugestão ainda.</p>');
 }
-// Um toque num número leva à aba Cadastros já filtrada; num nome, abre o cadastro
-$('gConteudo').addEventListener('click', e => {
+function renderAcompanhar() {
+    const base = baseIndicadores();
+    if (!base.length) {
+        $('aConteudo').innerHTML = `<div class="empty">${estado.regs.length ? 'Ninguém nesse setor ou célula.' : 'Ainda não há cadastros para acompanhar.'}</div>`;
+        return;
+    }
+    $('aConteudo').innerHTML = proximosPassos(base) + painelDiscipulado(base) +
+        `<h2 class="group-title">Quem quer servir</h2><div class="panels three">${potencial(base)}</div>
+    <h2 class="group-title">Para não esquecer</h2><div class="panels">${aniversarios(base) + sugestoes(base)}</div>`;
+}
+// Um toque num número leva à aba Pessoas já filtrada; num nome, abre o cadastro
+const aoTocar = (e) => {
     const alvo = e.target instanceof Element ? e.target.closest('[data-sit], [data-reg]') : null;
     if (!alvo)
         return;
@@ -129,4 +140,5 @@ $('gConteudo').addEventListener('click', e => {
     mostrarAba('cadastros');
     renderTudo();
     $('registrationsTitle').scrollIntoView({ block: 'start' });
-});
+};
+['gConteudo', 'aConteudo'].forEach(id => $(id).addEventListener('click', aoTocar));

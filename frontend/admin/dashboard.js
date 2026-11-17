@@ -28,9 +28,13 @@ async function carregar() {
         aplicarEstrutura(r.estrutura);
         const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
         $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Pessoas';
+        // Quem é só discipulador fica com Acompanhar e Pessoas
+        $('tabIndicadores').classList.toggle('hidden', soDiscipulos);
+        if (soDiscipulos && estado.aba === 'indicadores')
+            mostrarAba('acompanhar');
         $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
         if (!estado.gerencia && estado.aba === 'usuarios')
-            mostrarAba('cadastros');
+            mostrarAba('acompanhar');
         $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
         estado.regs = r.registros.map(o => {
             const x = { ...o };
@@ -74,8 +78,8 @@ function distintos(chave, base) {
     });
     return [...set];
 }
-// Setor e célula valem para Cadastros e Indicadores: cada aba tem seus seletores (f… e g…), com o mesmo estado
-const SELETORES = [['fSetor', 'setor', 'Todos os setores'], ['gSetor', 'setor', 'Todos os setores'], ['fCelula', 'celula', 'Todas as células'], ['gCelula', 'celula', 'Todas as células']];
+// Setor e célula valem para Pessoas, Indicadores e Acompanhar: cada aba tem seus seletores (f…, g… e a…), com o mesmo estado
+const SELETORES = ['f', 'g', 'a'].flatMap((p) => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
 function montarFiltros() {
     SELETORES.forEach(([id, chave, todos]) => {
         const sel = $(id);
@@ -101,6 +105,7 @@ function renderTudo() {
     $('fSituacao').value = estado.situacao;
     renderMeus();
     renderLista();
+    renderAcompanhar();
     renderIndicadores();
     if (estado.aba === 'estrutura')
         renderEstrutura(); // depois dos cadastros, para contar as pessoas

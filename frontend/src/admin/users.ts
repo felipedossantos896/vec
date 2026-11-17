@@ -29,25 +29,44 @@ abas.forEach(b => {
   });
 });
 
+// Células e Usuários ficam juntos em Configurações; cada um é uma sub-aba
+const segs = [...document.querySelectorAll<HTMLButtonElement>('#configSeg button')];
+segs.forEach(b => b.addEventListener('click', () => mostrarAba(b.dataset.aba || 'estrutura')));
+const visivel = (id: string): boolean => !$(id).classList.contains('hidden');
+
 function mostrarAba(aba: string) {
+  if (aba === 'config') aba = visivel('tabEstrutura') ? 'estrutura' : 'usuarios';
   estado.aba = aba;
+  const naNav = aba === 'estrutura' || aba === 'usuarios' ? 'config' : aba;
   abas.forEach(b => {
-    const selecionada = b.dataset.aba === aba;
+    const selecionada = b.dataset.aba === naNav;
     b.setAttribute('aria-selected', String(selecionada));
     b.tabIndex = selecionada ? 0 : -1;
   });
+  segs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.aba === aba)));
+  $('acompanharView').classList.toggle('hidden', aba !== 'acompanhar');
   $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
   $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
+  $('configView').classList.toggle('hidden', naNav !== 'config');
   $('usersView').classList.toggle('hidden', aba !== 'usuarios');
   $('estruturaView').classList.toggle('hidden', aba !== 'estrutura');
+  $('tip').classList.add('hidden');
+  atualizarConfig();
   if (aba === 'estrutura') renderEstrutura();
   if (aba === 'usuarios' && !estado.usuariosCarregados) carregarUsuarios();
+}
+
+// Configurações aparece para quem pode ver ao menos uma das duas partes
+function atualizarConfig() {
+  const est = visivel('tabEstrutura'), us = visivel('tabUsuarios');
+  $('tabConfig').classList.toggle('hidden', !est && !us);
+  $('configSeg').classList.toggle('hidden', !(est && us));
 }
 
 function sessaoInvalida(r: ApiResult) {
   if (r.erro === 'sessao') { limparSessao(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return true; }
   if (r.erro === 'sem_escopo') { limparSessao(); mostrarLogin('Seu acesso ainda não foi configurado. Fale com a liderança da área.'); return true; }
-  if (r.erro === 'sem_permissao') { estado.gerencia = false; $('tabUsuarios').classList.add('hidden'); mostrarAba('cadastros'); return true; }
+  if (r.erro === 'sem_permissao') { estado.gerencia = false; $('tabUsuarios').classList.add('hidden'); mostrarAba('acompanhar'); return true; }
   return false;
 }
 

@@ -139,7 +139,7 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 const estado: EstadoPainel = {
   regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
   escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-  gerencia: false, aba: 'cadastros', usuarios: [], usuariosCarregados: false
+  gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false
 };
 
 function rotulo(e: Escopo | null | undefined): string {
@@ -267,6 +267,6 @@ $('btnLogout').addEventListener('click', () => {
   estado.regs = [];
   estado.usuarios = [];
   estado.usuariosCarregados = false;
-  mostrarAba('cadastros');
+  mostrarAba('acompanhar');
   mostrarLogin('Você saiu do painel.');
 });

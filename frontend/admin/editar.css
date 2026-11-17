@@ -34,6 +34,7 @@
 
 /* ── Abas do detalhe ── */
 .det-whats { flex-shrink: 0; min-height: 40px; padding: 0 12px; }
+@media (max-width: 639px) { .det-whats { width: 44px; padding: 0; } .det-whats span { display: none; } }
 .det-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 0 18px; padding: 3px; border-radius: var(--r-md); background: var(--sunken); }
 .det-tabs button { min-height: 42px; padding: 0 6px; border-radius: 9px; color: var(--muted); font-weight: 700; font-size: 0.92rem; line-height: 1.15; transition: background 0.15s, color 0.15s; }
 .det-tabs button[aria-selected="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(26, 35, 64, 0.16); }

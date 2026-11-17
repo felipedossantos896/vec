@@ -99,7 +99,7 @@ function painelDiscipulado(base) {
         painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém por aqui.</p>')}</div>`;
 }
 // Um toque num discipulador leva à lista de quem ele acompanha
-$('gConteudo').addEventListener('click', e => {
+$('aConteudo').addEventListener('click', e => {
     const b = e.target instanceof Element ? e.target.closest('[data-disc]') : null;
     if (!b)
         return;
