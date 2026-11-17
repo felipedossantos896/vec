@@ -109,6 +109,11 @@ func (s *Server) validar(ctx context.Context, raw map[string]json.RawMessage, no
 	if v["serveMinisterio"] != "S" {
 		v["ministerioNome"] = ""
 	}
+	tel, ok := telefoneBR(v["telefone"])
+	if !ok {
+		return nil, "telefone_invalido", nil
+	}
+	v["telefone"] = tel
 	return v, "", nil
 }
 
@@ -129,6 +134,11 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 			return failReply("dados_invalidos")
 		}
 	}
+	// Sem a autorização de uso dos dados (LGPD), o envio não é gravado.
+	var aceite string
+	if bruto, ok := raw["consentimento"]; !ok || json.Unmarshal(bruto, &aceite) != nil || aceite != "S" {
+		return failReply("consentimento")
+	}
 	v, code, err := s.validar(ctx, raw, now, true)
 	if err != nil {
 		return s.internal("formulario", err)
@@ -145,12 +155,32 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 	}
 
 	err = s.Store.InsertResposta(ctx, store.Resposta{
-		CriadoEm:  now.UTC().Format(time.RFC3339),
-		RequestID: requestID,
-		V:         v,
+		CriadoEm:      now.UTC().Format(time.RFC3339),
+		Consentimento: now.UTC().Format(time.RFC3339),
+		RequestID:     requestID,
+		V:             v,
 	})
 	if err != nil {
 		return s.internal("formulario", err)
 	}
 	return okReply(nil)
+}
+
+// telefoneBR deixa só os dígitos de um telefone brasileiro com DDD (10 ou 11 dígitos),
+// sem o código do país. Vazio é aceito: o campo é opcional.
+func telefoneBR(s string) (string, bool) {
+	var b strings.Builder
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			b.WriteRune(r)
+		}
+	}
+	d := b.String()
+	if (len(d) == 12 || len(d) == 13) && strings.HasPrefix(d, "55") {
+		d = d[2:]
+	}
+	if d == "" || ((len(d) == 10 || len(d) == 11) && d[0] != '0') {
+		return d, true
+	}
+	return "", false
 }

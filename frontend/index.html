@@ -62,6 +62,12 @@
         <p class="err" id="err-nascimento">Digite uma data válida no formato DD/MM/AAAA.</p>
       </div>
 
+      <div class="field" id="f-telefone">
+        <label class="field-label" for="telefone">WhatsApp <span class="opcional">(opcional)</span></label>
+        <input type="tel" id="telefone" name="telefone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="(85) 99999-9999" enterkeyhint="next" aria-describedby="err-telefone">
+        <p class="err" id="err-telefone">Digite o número com DDD, como (85) 99999-9999.</p>
+      </div>
+
       <div class="qgrid" data-group="fe"></div>
     </section>
 
@@ -136,6 +142,11 @@
         <label class="field-label" for="sugestao">Sugestão de melhoria para as células</label>
         <textarea id="sugestao" name="sugestao" autocapitalize="sentences" placeholder="Escreva sua sugestão (opcional)"></textarea>
       </div>
+
+      <div class="field aceite" id="f-consentimento">
+        <label class="aceite-box"><input type="checkbox" id="consentimento" aria-describedby="err-consentimento"><span>Autorizo a liderança da Área VEC a guardar estas informações e usá-las para me acompanhar na caminhada com a igreja. <span class="req" aria-hidden="true">*</span></span></label>
+        <p class="err" id="err-consentimento">Para enviar, marque a autorização.</p>
+      </div>
     </section>
 
     <p class="send-error" id="sendError" role="alert"></p>
@@ -160,6 +171,7 @@
 </main>
 
 <script src="app.js" defer></script>
+<script src="contato.js" defer></script>
 
 </body>
 </html>

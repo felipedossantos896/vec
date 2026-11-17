@@ -46,7 +46,7 @@ func testAPIServer(db turso.DB) *Server {
 
 func TestFormularioRejectsFutureLocalDate(t *testing.T) {
 	s := testAPIServer(nil)
-	rep := s.formulario(context.Background(), []byte(`{"nome":"Ana Silva","nascimento":"2026-11-15"}`))
+	rep := s.formulario(context.Background(), []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-15"}`))
 	if rep.body["erro"] != "nascimento_invalido" {
 		t.Fatalf("erro = %v, queria nascimento_invalido", rep.body["erro"])
 	}
@@ -76,7 +76,7 @@ func TestFormularioBirthDateUsesFortalezaDayBoundary(t *testing.T) {
 			db := &apiTestDB{}
 			s := testAPIServer(db)
 			s.Now = func() time.Time { return tt.now }
-			body := `{"nome":"Ana Silva","nascimento":"` + tt.date + `"}`
+			body := `{"consentimento":"S","nome":"Ana Silva","nascimento":"` + tt.date + `"}`
 			rep := s.formulario(context.Background(), []byte(body))
 			if (rep.body["ok"] == true) != tt.ok {
 				t.Fatalf("resposta = %#v, ok = %v", rep.body, tt.ok)
@@ -89,16 +89,16 @@ func TestFormularioAcceptsTodayAndPassesRequestID(t *testing.T) {
 	db := &apiTestDB{}
 	s := testAPIServer(db)
 	const id = "0123456789abcdef0123456789abcdef"
-	body := `{"_requestId":"` + id + `","nome":"Ana Silva","nascimento":"2026-11-14"}`
+	body := `{"_requestId":"` + id + `","consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-14"}`
 
 	rep := s.formulario(context.Background(), []byte(body))
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
-	if len(db.doCalls) != 2 || len(db.doCalls[1]) != 1 {
+	if len(db.txCalls) != 1 {
 		t.Fatalf("chamadas ao banco: %#v", db.doCalls)
 	}
-	stmt := db.doCalls[1][0]
+	stmt := db.txCalls[0][0]
 	if !strings.Contains(stmt.SQL, "ON CONFLICT(request_id) DO NOTHING") || stmt.Args[0] != id {
 		t.Errorf("gravação não usa id de reenvio: %#v", stmt)
 	}
@@ -107,14 +107,14 @@ func TestFormularioAcceptsTodayAndPassesRequestID(t *testing.T) {
 func TestFormularioGeneratesIDForOlderClients(t *testing.T) {
 	db := &apiTestDB{}
 	s := testAPIServer(db)
-	rep := s.formulario(context.Background(), []byte(`{"nome":"Ana Silva","nascimento":"2026-11-14"}`))
+	rep := s.formulario(context.Background(), []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-14"}`))
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
-	if len(db.doCalls) != 2 || len(db.doCalls[1]) != 1 {
+	if len(db.txCalls) != 1 {
 		t.Fatalf("chamadas ao banco: %#v", db.doCalls)
 	}
-	if id := db.doCalls[1][0].Args[0].(string); !validRequestID(id) {
+	if id := db.txCalls[0][0].Args[0].(string); !validRequestID(id) {
 		t.Errorf("id gerado inválido: %q", id)
 	}
 }
@@ -129,5 +129,31 @@ func TestFormularioRejectsInvalidRequestID(t *testing.T) {
 	rep := s.formulario(context.Background(), body)
 	if rep.body["erro"] != "dados_invalidos" {
 		t.Fatalf("erro = %v, queria dados_invalidos", rep.body["erro"])
+	}
+}
+
+func TestTelefoneBR(t *testing.T) {
+	casos := map[string]string{"": "", "(85) 99876-5432": "85998765432", "+55 85 3212-3456": "8532123456", "085998765432": "-", "1234": "-"}
+	for entrada, quer := range casos {
+		got, ok := telefoneBR(entrada)
+		if quer == "-" {
+			if ok {
+				t.Errorf("%q aceito como %q, devia recusar", entrada, got)
+			}
+		} else if !ok || got != quer {
+			t.Errorf("%q = %q (%v), queria %q", entrada, got, ok, quer)
+		}
+	}
+}
+
+func TestFormularioExigeConsentimento(t *testing.T) {
+	db := &apiTestDB{}
+	s := testAPIServer(db)
+	rep := s.formulario(context.Background(), []byte(`{"nome":"Ana Silva","nascimento":"2026-11-14"}`))
+	if rep.body["erro"] != "consentimento" {
+		t.Fatalf("erro = %v, queria consentimento", rep.body["erro"])
+	}
+	if len(db.txCalls)+len(db.doCalls) != 0 {
+		t.Fatalf("consultou o banco sem consentimento: %#v %#v", db.doCalls, db.txCalls)
 	}
 }

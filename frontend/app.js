@@ -4,6 +4,8 @@ const FORM_API_URL = '/api';
 const MSG_ENVIO = {
     nome_invalido: 'Confira o nome completo.',
     nascimento_invalido: 'Confira a data de nascimento.',
+    telefone_invalido: 'Confira o número de WhatsApp.',
+    consentimento: 'Marque a autorização de uso dos dados para enviar.',
     dados_invalidos: 'Alguma resposta não foi aceita. Atualize a página e tente de novo.'
 };
 const PERGUNTAS = {
@@ -193,7 +195,13 @@ function validar() {
     byId('nascimento').setAttribute('aria-invalid', String(!nascOk));
     if (!nascOk)
         primeiroErro = primeiroErro || byId('nascimento');
+    if (!telefoneOk())
+        primeiroErro = primeiroErro || telInput;
     if (primeiroErro) {
+        if (etapaAtual !== 0) {
+            etapaAtual = 0;
+            mostrarEtapa();
+        } // os três campos estão na primeira etapa
         primeiroErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => primeiroErro.focus({ preventScroll: true }), 300);
         return false;
@@ -213,7 +221,7 @@ function coletar() {
         sugestao: valor('sugestao')
     };
     ynNames.forEach(n => { d[n] = valor(n); });
-    return d;
+    return Object.assign(d, dadosContato());
 }
 function mostrarErro(msg) {
     sendError.textContent = msg;
@@ -232,6 +240,11 @@ form.addEventListener('submit', async (e) => {
     sendError.classList.remove('show');
     if (!validar())
         return;
+    if (!aceiteOk()) {
+        byId('f-consentimento').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        aceiteInput.focus({ preventScroll: true });
+        return;
+    }
     if (!navigator.onLine) {
         mostrarErro('Sem conexão com a internet. Suas respostas continuam aqui; conecte-se e toque em Enviar novamente.');
         return;
@@ -279,19 +292,4 @@ byId('btnAgain').addEventListener('click', () => {
     mostrarEtapa(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
-// As células vêm do painel; se o servidor não responder, fica a lista escrita no HTML
-async function carregarCelulas() {
-    try {
-        const r = await (await fetch(FORM_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"acao":"estrutura"}' })).json();
-        const setores = (r.setores || []).filter(s => s.celulas.length);
-        if (!r.ok || !setores.length)
-            return;
-        const marcada = valor('celula');
-        const e = (s) => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
-        byId('celulasOpcoes').innerHTML = setores.map((s, i) => `<p class="opt-group" id="g-${i}">Setor ${e(s.nome)}</p>
-      <div class="opts cols" data-setor="${e(s.nome)}" role="group" aria-labelledby="g-${i}">${s.celulas.map(c => `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span>${e(c)}</span></label>`).join('')}</div>`).join('');
-    }
-    catch { /* mantém a lista do HTML */ }
-}
 mostrarEtapa();
-carregarCelulas();

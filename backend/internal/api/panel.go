@@ -27,7 +27,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	}
 	registros := make([]map[string]any, 0, len(rs))
 	for _, r := range rs {
-		m := make(map[string]any, len(r.V)+5)
+		m := make(map[string]any, len(r.V)+8)
 		for k, v := range r.V {
 			m[k] = v
 		}
@@ -36,6 +36,13 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 		m["editadoEm"] = fmtLocal(r.EditadoEm)
 		m["editadoPor"] = r.EditadoPor
 		m["discipuladorId"] = r.DiscipuladorID
+		m["consentimentoEm"] = fmtLocal(r.Consentimento)
+		m["ultimoContato"] = fmtLocal(r.UltimoContato)
+		datas := make(map[string]string, len(r.Jornada))
+		for etapa, em := range r.Jornada {
+			datas[etapa] = fmtLocal(em)
+		}
+		m["jornadaDatas"] = datas
 		registros = append(registros, m)
 	}
 	// Nome e célula de toda a área, para escolher o discipulador de alguém: ele pode

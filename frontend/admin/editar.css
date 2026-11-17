@@ -37,6 +37,22 @@
 .sug-vinculo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .sug-vinculo .btn-sec { min-height: 40px; white-space: normal; text-align: left; }
 
+/* ── Contato e acompanhamento ── */
+.whats { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.nota-fraca { color: var(--muted); font-weight: 600; }
+.det-data { margin-right: 8px; color: var(--muted); font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.nota-form { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--cream); }
+.nota-form textarea { min-height: 84px; resize: vertical; }
+.nota-acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.nota-acoes .field-hint { margin: 0; }
+.nota-form .msg:not(:empty) { margin: 10px 0 0; }
+.notas { display: grid; gap: 8px; margin-top: 10px; }
+.notas li { padding: 12px 14px; border-left: 3px solid var(--gold); border-radius: 0 var(--r-sm) var(--r-sm) 0; background: var(--cream); }
+.notas p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.notas span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.86rem; }
+.notas span .btn-link { min-height: 32px; padding: 0 6px; font-size: 0.86rem; }
+.notas .vazio { border-left-color: var(--line-strong); color: var(--muted); }
+
 @media (hover: hover) {
   .btn-sec.perigo:hover { background: #8f1d17; }
   .sn-o input:not(:checked) + span:hover { color: var(--ink); }

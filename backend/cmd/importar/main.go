@@ -170,7 +170,7 @@ func ler(r io.Reader) ([]store.Resposta, []string, error) {
 func chaveImportacao(r store.Resposta, ocorrencias map[string]int) string {
 	var conteudo strings.Builder
 	conteudo.WriteString(r.CriadoEm)
-	for _, c := range store.Campos {
+	for _, c := range store.Campos[:store.CamposLegados] {
 		valor := r.V[c.Chave]
 		fmt.Fprintf(&conteudo, "%d:", len(valor))
 		conteudo.WriteString(valor)

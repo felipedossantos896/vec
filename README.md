@@ -100,6 +100,15 @@ Na aba Indicadores, o grupo **Discipulado** mostra quantos discípulos cada um
 acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
 Expresso 01 e ainda não discipula ninguém.
 
+**Contato e acompanhamento:** o formulário pede WhatsApp (opcional) e só grava o
+envio com a autorização de uso dos dados marcada; a data do aceite fica em
+`respostas.consentimento_em` (vazia para envios anteriores). No detalhe da pessoa,
+quem a enxerga registra anotações de cada conversa (`anotacoes`); cada um apaga só
+as suas. Quem está sem anotação há 60 dias aparece em Próximos passos.
+A data em que cada etapa da jornada foi concluída fica em `jornada_eventos`: a do
+envio do formulário, ou a da edição no painel. Para cadastros anteriores, a migração
+usou a data do envio.
+
 **Células e setores** são cadastrados pelo líder de área na aba **Células**. O
 formulário público busca as células ativas no servidor (e usa a lista escrita no
 HTML se o servidor não responder). Renomear uma célula ou mudá-la de setor atualiza,

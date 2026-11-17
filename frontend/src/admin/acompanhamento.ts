@@ -7,6 +7,7 @@ const PASSOS: [string, string][] = [
   ['quaseLa', 'Falta uma etapa para concluir a jornada'],
   ['naoFrequenta', 'Não congregam com frequência'],
   ['semCelula', 'Sem célula'],
+  ['semContato', `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`],
   ['semVinculo', 'Informaram um discipulador que ainda não foi vinculado'],
   ['duplicados', 'Cadastros possivelmente duplicados']
 ];

@@ -34,9 +34,9 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			out[i].Rows = [][]any{{"lider", "Líder", d.hash, perfil, int64(1), int64(0), "2026-01-01T00:00:00Z", "", d.cadastro}}
 		case strings.Contains(st.SQL, "FROM usuario_escopos"):
 			out[i].Rows = d.escopos
-		case strings.Contains(st.SQL, "FROM setores"):
+		case strings.HasPrefix(st.SQL, "SELECT nome FROM setores"):
 			out[i].Rows = [][]any{{"Fogo no Altar"}, {"Tabernáculo de Deus"}}
-		case strings.Contains(st.SQL, "FROM celulas"):
+		case strings.HasPrefix(st.SQL, "SELECT c.nome"):
 			out[i].Rows = [][]any{{"Hope", "Fogo no Altar"}, {"Betânia", "Tabernáculo de Deus"}}
 		case strings.HasPrefix(st.SQL, "SELECT nome FROM respostas"):
 			if st.Args[0] == int64(5) {
@@ -46,6 +46,8 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		case strings.HasPrefix(st.SQL, "UPDATE respostas"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "UPDATE"), strings.HasPrefix(st.SQL, "INSERT INTO anotacoes"), strings.HasPrefix(st.SQL, "DELETE FROM anotacoes"):
+			out[i].Affected = d.afetadas
 		}
 	}
 	return out, nil
@@ -53,14 +55,7 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 
 func (d *painelDB) Tx(ctx context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
 	d.tx = append(d.tx, stmts...)
-	out := make([]*turso.Result, len(stmts))
-	for i := range out {
-		out[i] = &turso.Result{Affected: d.afetadas}
-	}
-	if strings.HasPrefix(stmts[0].SQL, "UPDATE respostas SET excluido_em") {
-		return d.Do(ctx, stmts...)
-	}
-	return out, nil
+	return d.Do(ctx, stmts...)
 }
 
 func painelServer(t *testing.T, afetadas int64) (*Server, *painelDB, string) {
@@ -206,5 +201,17 @@ func TestDiscipuladorSoAlcancaOsSeusDiscipulos(t *testing.T) {
 	rep = s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{"nome": "Ana Silva"})})
 	if rep.body["erro"] != "sem_escopo" {
 		t.Errorf("erro = %v, queria sem_escopo", rep.body["erro"])
+	}
+}
+
+func TestAnotacaoSoDentroDoEscopo(t *testing.T) {
+	s, _, token := painelServer(t, 0) // o INSERT ... SELECT não acha o cadastro no escopo
+	rep := s.anotacaoSalvar(context.Background(), adminReq{Token: token, Linha: 9, Texto: "Conversamos no culto."})
+	if rep.body["erro"] != "nao_encontrado" {
+		t.Fatalf("erro = %v, queria nao_encontrado", rep.body["erro"])
+	}
+	rep = s.anotacaoSalvar(context.Background(), adminReq{Token: token, Linha: 9, Texto: "   "})
+	if rep.body["erro"] != "texto_vazio" {
+		t.Fatalf("erro = %v, queria texto_vazio", rep.body["erro"])
 	}
 }

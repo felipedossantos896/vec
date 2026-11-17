@@ -6,7 +6,7 @@ const CHAVE_SESSAO = 'vec_admin_sessao';
 type Escopo = { todos: boolean; setores: string[]; celulas: string[]; perfil?: string };
 type Pessoa = { id: number; nome: string; celula: string };
 type Registro = {
-  [key: string]: string | number | Date | null | undefined;
+  [key: string]: string | number | Date | null | undefined | Record<string, string>;
   nome: string;
   nascimento: string;
   dataHora: string;
@@ -15,6 +15,7 @@ type Registro = {
   _idade: number | null;
   _jornada: number;
   _busca: string;
+  _contato: Date | null; // data da anotação mais recente
   _dup: number; // quantos cadastros têm o mesmo nome e nascimento (1 = só este)
   recebeuJesus?: string;
   cafePastor?: string;
@@ -40,6 +41,10 @@ type Registro = {
   discipulador?: string;
   discipuladorId?: number; // cadastro do discipulador (0 = só o nome digitado)
   sugestao?: string;
+  telefone?: string;
+  consentimentoEm?: string;
+  ultimoContato?: string;
+  jornadaDatas?: Record<string, string>; // etapa -> quando foi marcada como concluída
 };
 type UsuarioPainel = {
   usuario: string;
@@ -83,6 +88,8 @@ const CELULAS = ['Hope', 'Ramos da Videira', 'Ashrei', 'Betânia', 'Vencedores e
 // A que setor cada célula pertence
 const SETOR_DA_CELULA: Record<string, string> = { 'Hope': SETORES[0], 'Ramos da Videira': SETORES[0], 'Ashrei': SETORES[0], 'Betânia': SETORES[1], 'Despertar': SETORES[1], 'Pi-Hairote': SETORES[1], 'Vencedores em Cristo': SETORES[1] };
 
+const DIAS_SEM_CONTATO = 60; // sem anotação há mais tempo que isso, a pessoa entra em Próximos passos
+
 const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> = {
   todos:          { label: 'Todas as situações', f: () => true },
   naoBatizados:   { label: 'Ainda não batizados', f: r => r.batismo !== 'S' },
@@ -101,6 +108,7 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   semVinculo:     { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
   podeDiscipular: { label: 'Fizeram o Expresso 01 e ainda não discipulam', f: r => r.expresso01 === 'S' && !discipula(r) },
   discipulosDe:   { label: 'Discípulos de…', f: r => !!estado.discipuladorDe && r.discipuladorId === estado.discipuladorDe },
+  semContato:     { label: `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`, f: r => !r._contato || Date.now() - r._contato.getTime() > DIAS_SEM_CONTATO * 864e5 },
   meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
@@ -114,7 +122,7 @@ const RESUMO: [string, string, ((rs: Registro[]) => number) | null][] = [
 ];
 
 const CSV_COLS: [string, string][] = [
-  ['dataHora', 'Enviado em'], ['nome', 'Nome'], ['nascimento', 'Nascimento'], ['recebeuJesus', 'Recebeu Jesus'],
+  ['dataHora', 'Enviado em'], ['nome', 'Nome'], ['nascimento', 'Nascimento'], ['telefone', 'WhatsApp'], ['recebeuJesus', 'Recebeu Jesus'],
   ...JORNADA, ['setor', 'Setor'], ['celula', 'Célula'], ['frequentaCultos', 'Frequenta cultos'],
   ['serveMinisterio', 'Serve ministério'], ['ministerioNome', 'Qual ministério'], ...TREINOS,
   ['discipulador', 'Discipulador'], ...INTERESSES, ['sugestao', 'Sugestão']

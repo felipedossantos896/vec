@@ -50,7 +50,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 .field:last-child { margin-bottom: 0; }
 .field-label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
 .field-label .req { color: var(--danger); }
-.form-page input[type="text"], .form-page textarea {
+.form-page input[type="text"], .form-page input[type="tel"], .form-page textarea {
   display: block; width: 100%; min-height: 56px; padding: 12px 16px;
   font: 400 1.1rem var(--sans); /* acima de 16px evita zoom automático no iPhone */
   color: var(--ink); background: var(--white);
@@ -58,7 +58,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .form-page textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
-.form-page input[type="text"]:focus, .form-page textarea:focus { border-color: var(--navy); outline: var(--focus); outline-offset: 2px; }
+.form-page input[type="text"]:focus, .form-page input[type="tel"]:focus, .form-page textarea:focus { border-color: var(--navy); outline: var(--focus); outline-offset: 2px; }
 .form-page input::placeholder, .form-page textarea::placeholder { opacity: 1; color: #8a8ea3; }
 .field.invalid input { border-color: var(--danger); background: var(--danger-bg); }
 .err { display: none; margin-top: 6px; color: var(--danger); font-size: 0.95rem; font-weight: 700; }
@@ -176,3 +176,11 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
   *, *::before, *::after { transition: none !important; animation-duration: 0.01ms !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ── WhatsApp e autorização de uso dos dados ── */
+.opcional { color: var(--muted); font-weight: 400; font-size: 0.95rem; }
+.aceite { margin-top: 22px; }
+.aceite-box { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1.5px solid var(--line-strong); border-radius: var(--r-sm); background: var(--white); line-height: 1.4; cursor: pointer; }
+.aceite-box input { flex-shrink: 0; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--navy); cursor: pointer; }
+.aceite-box:has(input:checked) { border-color: var(--navy); background: var(--gold-wash); }
+.field.invalid .aceite-box { border-color: var(--danger); background: var(--danger-bg); }
