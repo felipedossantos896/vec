@@ -72,6 +72,7 @@ function renderIndicadores() {
       kpi('Etapas por pessoa', etapas, `em média, de ${JORNADA.length}`)
     }</div>
     <div class="panels">${proximosPassos(base) + mapaJornada(base)}</div>
+    ${painelDiscipulado(base)}
     <h2 class="group-title">Quem quer servir</h2>
     <div class="panels three">${potencial(base)}</div>
     <div class="panels">${aniversarios(base) + sugestoes(base)}</div>

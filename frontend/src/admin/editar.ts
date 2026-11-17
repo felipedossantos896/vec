@@ -108,7 +108,7 @@ async function excluirCadastro(r: Registro, botao: HTMLButtonElement) {
 function atualizarPainel() {
   marcarDuplicados();
   montarFiltros();
-  if (['duplicados', 'semVinculo', 'meusDiscipulos'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f)) Object.assign(estado, { situacao: 'todos', busca: '' });
+  if (['duplicados', 'semVinculo', 'meusDiscipulos', 'discipulosDe'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f)) Object.assign(estado, { situacao: 'todos', busca: '' });
   $<HTMLInputElement>('fBusca').value = estado.busca;
   renderTudo();
 }

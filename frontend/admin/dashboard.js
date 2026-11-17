@@ -82,7 +82,7 @@ function montarFiltros() {
         sel.innerHTML = `<option value="">${todos}</option>` + distintos(chave, chave === 'setor' ? baseSetores() : baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
         sel.classList.toggle('hidden', sel.options.length <= 2);
     });
-    $('fSituacao').innerHTML = Object.entries(SITUACOES).filter(([k]) => k !== 'meusDiscipulos' || (!!estado.meuCadastro && estado.escopo.perfil !== 'DISCIPULADOR')).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    $('fSituacao').innerHTML = Object.entries(SITUACOES).filter(([k]) => situacaoVisivel(k)).map(([k, v]) => `<option value="${k}">${esc(rotuloSituacao(k, v.label))}</option>`).join('');
 }
 function filtrados() {
     const b = norm(estado.busca);
