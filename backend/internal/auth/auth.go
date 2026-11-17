@@ -128,3 +128,13 @@ func ParseToken(secret []byte, token string, now time.Time) (user, fingerprint s
 	}
 	return c.U, c.F, nil
 }
+
+// AssinarURL assina os dados de um endereço de leitura (como o da foto de perfil), para
+// que o navegador o use numa <img> sem levar o token da sessão. O prefixo separa estas
+// assinaturas das de sessão.
+func AssinarURL(secret []byte, dados string) string { return sign(secret, "url."+dados) }
+
+// ConfereURL diz se a assinatura corresponde aos dados.
+func ConfereURL(secret []byte, dados, assinatura string) bool {
+	return hmac.Equal([]byte(AssinarURL(secret, dados)), []byte(assinatura))
+}

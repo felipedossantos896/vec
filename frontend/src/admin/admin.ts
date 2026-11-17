@@ -44,6 +44,7 @@ type Registro = {
   telefone?: string;
   consentimentoEm?: string;
   ultimoContato?: string;
+  fotoUrl?: string; // endereço assinado da foto de perfil ("" = sem foto)
   jornadaDatas?: Record<string, string>; // etapa -> quando foi marcada como concluída
 };
 type UsuarioPainel = {

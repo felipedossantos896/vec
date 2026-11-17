@@ -59,6 +59,7 @@ func main() {
 	root := http.NewServeMux()
 	apiHandler := srv.Handler()
 	root.Handle("/api", apiHandler)
+	root.Handle("/api/foto", apiHandler)
 	root.Handle("/healthz", apiHandler)
 	root.HandleFunc("/version", versionHandler(version))
 	root.Handle("/", noCacheHTML(http.FileServerFS(frontend.FS)))

@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="users.css">
 <link rel="stylesheet" href="editar.css">
 <link rel="stylesheet" href="acompanhar.css">
+<link rel="stylesheet" href="fotos.css">
 </head>
 <body class="admin-page">
 
@@ -188,9 +189,12 @@
 
 <dialog id="det" aria-labelledby="detNome">
   <div class="det-head">
+    <span class="det-foto" id="detFoto"></span>
+    <input type="file" id="fotoArquivo" accept="image/jpeg,image/png,image/webp,image/heic,image/*" hidden>
     <div>
       <h3 id="detNome"></h3>
       <p id="detSub"></p>
+      <p class="foto-msg" id="fotoMsg" role="status"></p>
     </div>
     <a class="btn-sec det-whats hidden" id="detWhats" target="_blank" rel="noopener" href="#" aria-label="Conversar no WhatsApp">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.6-5.4A8.5 8.5 0 1 1 21 11.5z"/></svg>
@@ -291,6 +295,7 @@
 <script src="discipulado.js" defer></script>
 <script src="estrutura.js" defer></script>
 <script src="anotacoes.js" defer></script>
+<script src="fotos.js" defer></script>
 <script src="users.js" defer></script>
 
 </body>

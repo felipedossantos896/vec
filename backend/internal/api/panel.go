@@ -38,6 +38,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 		m["discipuladorId"] = r.DiscipuladorID
 		m["consentimentoEm"] = fmtLocal(r.Consentimento)
 		m["ultimoContato"] = fmtLocal(r.UltimoContato)
+		m["fotoUrl"] = s.fotoURL(r.ID, r.FotoEm)
 		datas := make(map[string]string, len(r.Jornada))
 		for etapa, em := range r.Jornada {
 			datas[etapa] = fmtLocal(em)
