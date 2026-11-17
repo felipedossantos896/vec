@@ -205,7 +205,8 @@ function coletar() {
         _requestId: requestId,
         nome: valor('nome'),
         nascimento: paraISO(valor('nascimento')),
-        setor: valor('setor'),
+        // O setor vem do grupo em que a célula escolhida está
+        setor: form.querySelector('input[name="celula"]:checked')?.closest('[data-setor]')?.dataset.setor || '',
         celula: valor('celula'),
         ministerioNome: valor('serveMinisterio') === 'S' ? valor('ministerioNome') : '',
         discipulador: valor('discipulador'),
