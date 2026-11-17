@@ -72,9 +72,8 @@ $('detBody').addEventListener('click', e => {
 // ── Indicadores de discipulado ──
 const MUITOS_DISCIPULOS = 12; // acima disso o discipulador aparece marcado como sobrecarregado
 const discipula = (r) => estado.regs.some(x => x.discipuladorId === r.linha);
-function painelDiscipulado(base) {
-    if (estado.escopo.perfil === 'DISCIPULADOR')
-        return '';
+// Discipuladores e cobertura num cartão só, em duas colunas quando há espaço
+function painelDiscipulado(base, resumoGrupo) {
     const cont = {};
     base.forEach(r => { if (r.discipuladorId)
         cont[r.discipuladorId] = (cont[r.discipuladorId] || 0) + 1; });
@@ -94,9 +93,11 @@ function painelDiscipulado(base) {
     const cobertura = celulas.map(c => { const rs = base.filter(r => r.celula === c); return medidor(esc(c), rs.filter(r => r.discipuladorId).length, rs.length); }).join('');
     const prontos = base.filter(SITUACOES.podeDiscipular.f).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     const todos = prontos.length > 6 ? `<button type="button" class="btn-link" data-sit="podeDiscipular">Ver todas as ${prontos.length} pessoas</button>` : '';
-    return `<h2 class="group-title">Discipulado</h2><div class="panels three">${painel('Discipuladores', resumo, linhas ? `<div class="cells rolar">${linhas}</div>` : '<p class="vazio">Vincule os discipuladores ao editar os cadastros.</p>') +
-        painel('Cobertura por célula', 'Quem já tem discipulador vinculado.', cobertura ? `<ol class="meters">${cobertura}</ol>` : '<p class="vazio">Nenhum cadastro com célula.</p>') +
-        painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém por aqui.</p>')}</div>`;
+    const duo = `<section class="panel duo-panel"><header class="panel-head"><h2>Discipuladores</h2><p>${resumo}</p></header><div class="duo">
+    <div><h3 class="mini">Quem discipula</h3>${linhas ? `<div class="cells rolar">${linhas}</div>` : '<p class="vazio">Vincule os discipuladores ao editar os cadastros.</p>'}</div>
+    <div><h3 class="mini">Cobertura por célula</h3>${cobertura ? `<ol class="meters">${cobertura}</ol>` : '<p class="vazio">Nenhum cadastro com célula.</p>'}</div></div></section>`;
+    return grupo('disc', 'Discipulado', resumoGrupo, duo +
+        painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém por aqui.</p>'), 'disc');
 }
 // Um toque num discipulador leva à lista de quem ele acompanha
 $('aConteudo').addEventListener('click', e => {

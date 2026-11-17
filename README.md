@@ -100,8 +100,9 @@ Na aba Acompanhar, o grupo **Discipulado** mostra quantos discípulos cada um
 acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
 Expresso 01 e ainda não discipula ninguém.
 
-**Abas do painel:** Acompanhar (abre primeiro: quem precisa de cuidado, discipulado,
-quem quer servir, aniversários e sugestões), Pessoas (busca, filtros e lista), Indicadores
+**Abas do painel:** Acompanhar (abre primeiro: um resumo do dia, quem precisa de cuidado,
+discipulado, quem quer servir, aniversários e sugestões e, por último, cadastros para
+arrumar; no celular os grupos começam recolhidos), Pessoas (busca, filtros e lista), Indicadores
 (números e gráficos da área) e Configurações (Células e Usuários, só para quem pode).
 Quem é só discipulador vê Acompanhar e Pessoas. O detalhe de cada pessoa tem três abas:
 Resumo, Acompanhamento e Ficha completa.
