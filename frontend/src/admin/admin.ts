@@ -114,11 +114,13 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
 
-const RESUMO: [string, string, ((rs: Registro[]) => number) | null][] = [
-  ['todos', 'cadastros', rs => rs.length],
-  ['naoBatizados', 'ainda não batizados', null],
-  ['querDiscipulado', 'querem ser discipulados', null],
-  ['querLiderar', 'querem liderar célula', null],
+// Grupos do filtro de situação; uma situação fora da lista cai em "Outras"
+const GRUPOS_SITUACAO: [string, string[]][] = [
+  ['Cuidado', ['semContato', 'semDiscipulador', 'naoFrequenta', 'semCelula', 'naoRecebeu']],
+  ['Jornada', ['naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
+  ['Discipulado', ['meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
+  ['Interesses e serviço', ['querLiderar', 'querCuidar', 'querAnfitriao', 'servem']],
+  ['Cadastro', ['duplicados']]
 ];
 
 const CSV_COLS: [string, string][] = [

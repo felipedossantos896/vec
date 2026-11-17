@@ -20,9 +20,7 @@ async function carregar() {
     estado.pessoas = r.pessoas || [];
     aplicarEstrutura(r.estrutura);
     const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
-    $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Visão geral';
-    $('journeyTitle').textContent = soDiscipulos ? 'Jornada dos seus discípulos' : 'Jornada da área';
-    $('visaoSub').textContent = soDiscipulos ? 'A jornada de quem você acompanha e o que falta para cada pessoa seguir.' : 'Indicadores e cadastros para acompanhar cada etapa da jornada.';
+    $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Pessoas';
     $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
     if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('cadastros');
     $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
@@ -76,7 +74,10 @@ function montarFiltros() {
     sel.innerHTML = `<option value="">${todos}</option>` + distintos(chave, chave === 'setor' ? baseSetores() : baseCelulas()).map(v => `<option>${esc(v)}</option>`).join('');
     sel.classList.toggle('hidden', sel.options.length <= 2);
   });
-  $<HTMLSelectElement>('fSituacao').innerHTML = Object.entries(SITUACOES).filter(([k]) => situacaoVisivel(k)).map(([k, v]) => `<option value="${k}">${esc(rotuloSituacao(k, v.label))}</option>`).join('');
+  const opcao = (k: string): string => situacaoVisivel(k) ? `<option value="${k}">${esc(rotuloSituacao(k, SITUACOES[k].label))}</option>` : '';
+  const agrupadas = new Set(GRUPOS_SITUACAO.flatMap(([, ks]) => ks));
+  const grupos: [string, string[]][] = [...GRUPOS_SITUACAO, ['Outras', Object.keys(SITUACOES).filter(k => k !== 'todos' && !agrupadas.has(k))]];
+  $<HTMLSelectElement>('fSituacao').innerHTML = opcao('todos') + grupos.map(([g, ks]) => { const o = ks.filter(k => SITUACOES[k]).map(opcao).join(''); return o ? `<optgroup label="${g}">${o}</optgroup>` : ''; }).join('');
 }
 
 function filtrados() {
@@ -94,7 +95,7 @@ function filtrados() {
 function renderTudo() {
   SELETORES.forEach(([id, chave]) => { $<HTMLSelectElement>(id).value = estado[chave]; });
   $<HTMLSelectElement>('fSituacao').value = estado.situacao;
-  renderResumo(); renderJornada(); renderCelulas(); renderLista(); renderMeus(); renderIndicadores();
+  renderMeus(); renderLista(); renderIndicadores();
   if (estado.aba === 'estrutura') renderEstrutura(); // depois dos cadastros, para contar as pessoas
 }
 
@@ -108,75 +109,53 @@ const pips = (r: Registro): string => `<span class="dots" aria-hidden="true">${J
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
 const baseIndicadores = () => estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
 
-function renderResumo() {
-  const base = baseIndicadores();
-  $('stats').innerHTML = RESUMO.map(([k, label, fn]) => {
-    const n = fn ? fn(base) : base.filter(SITUACOES[k].f).length;
-    const nota = fn ? 'na sua visão' : base.length ? `${Math.round((n / base.length) * 100)}% dos cadastros` : 'sem cadastros';
-    return `<button type="button" class="stat ${estado.situacao === k ? 'active' : ''}" data-sit="${k}" aria-pressed="${estado.situacao === k}"><span>${label}</span><b>${n}</b><small>${nota}</small></button>`;
-  }).join('');
-  $('stats').querySelectorAll<HTMLButtonElement>('.stat').forEach(b => b.addEventListener('click', () => {
-    const situacao = b.dataset.sit || 'todos';
-    estado.situacao = estado.situacao === situacao ? 'todos' : situacao;
-    renderTudo();
-  }));
+// Há quanto tempo foi o último contato registrado
+function contato(r: Registro): string {
+  if (!r._contato) return 'sem contato';
+  const dias = Math.floor((Date.now() - r._contato.getTime()) / 864e5);
+  return dias < 1 ? 'hoje' : dias === 1 ? 'há 1 dia' : `há ${dias} dias`;
 }
 
-function renderJornada() {
-  const base = baseIndicadores();
-  $('journey').innerHTML = JORNADA.map(([k, label]) => medidor(label, base.filter(r => r[k] === 'S').length, base.length)).join('');
+// Etiquetas dos filtros ativos; o × de cada uma tira só aquele filtro
+function renderChips() {
+  const chips: [string, string][] = [];
+  if (estado.busca) chips.push(['busca', `“${estado.busca}”`]);
+  if (estado.setor) chips.push(['setor', estado.setor]);
+  if (estado.celula) chips.push(['celula', estado.celula]);
+  if (estado.situacao !== 'todos') chips.push(['situacao', rotuloSituacao(estado.situacao, SITUACOES[estado.situacao].label)]);
+  $('chipLista').innerHTML = chips.map(([k, t]) => `<button type="button" class="chip" data-tirar="${k}" aria-label="Tirar o filtro ${esc(t)}">${esc(t)}<span aria-hidden="true">×</span></button>`).join('');
+  $('btnClear').classList.toggle('hidden', chips.length < 2);
+  $('chips').querySelector('.chips-lbl')!.classList.toggle('hidden', !chips.length);
+  $('chips').classList.toggle('hidden', !chips.length && $('btnMeus').classList.contains('hidden'));
 }
-
-function renderCelulas() {
-  const base = estado.regs.filter(r => !estado.setor || r.setor === estado.setor);
-  const cont: Record<string, number> = {};
-  base.forEach(r => { const c = r.celula || 'Sem célula'; cont[c] = (cont[c] || 0) + 1; });
-  const nomes = distintos('celula', baseCelulas()).filter(c => !estado.setor || cont[c]);
-  if (cont['Sem célula']) nomes.push('Sem célula');
-  const poucas = nomes.length <= 1;
-  $('cellsSection').classList.toggle('hidden', poucas);
-  const max = Math.max(1, ...Object.values(cont));
-  $('cells').innerHTML = nomes.map(c => {
-    const n = cont[c] || 0;
-    const ativo = estado.celula === c;
-    return `<button type="button" class="cell-row ${ativo ? 'active' : ''}" data-cel="${esc(c)}" aria-pressed="${ativo}">
-      <span class="cell-name">${esc(c)}</span>
-      <span class="cell-bar"><i style="width:${(n / max) * 100}%"></i></span>
-      <span class="cell-n">${n}</span>
-    </button>`;
-  }).join('') || '<p class="empty">Nenhum cadastro ainda.</p>';
-  $('cells').querySelectorAll<HTMLButtonElement>('.cell-row').forEach(b => b.addEventListener('click', () => {
-    const nomeCelula = b.dataset.cel || '';
-    const c = nomeCelula === 'Sem célula' ? '' : nomeCelula;
-    estado.celula = estado.celula === c ? '' : c;
-    renderTudo();
-  }));
-}
+$('chipLista').addEventListener('click', e => {
+  const k = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-tirar]')?.dataset.tirar : '';
+  if (!k) return;
+  if (k === 'busca') { estado.busca = ''; $<HTMLInputElement>('fBusca').value = ''; }
+  if (k === 'setor' || k === 'celula') estado[k] = '';
+  if (k === 'situacao') estado.situacao = 'todos';
+  renderTudo();
+});
 
 function renderLista() {
   const lista = filtrados();
   const total = estado.regs.length;
   const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
   $('countTxt').innerHTML = filtrando ? `Mostrando <b>${lista.length}</b> de ${total}` : `<b>${total}</b> ${total === 1 ? 'pessoa' : 'pessoas'} na sua visão`;
-  $('btnClear').classList.toggle('hidden', !filtrando);
+  renderChips();
 
   if (!lista.length) {
-    $('list').innerHTML = `<div class="empty">${total ? 'Nenhum cadastro encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
+    $('list').innerHTML = `<div class="empty">${total ? 'Ninguém encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
     return;
   }
 
-  const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Idade</span><span>Célula</span><span>Setor</span><span>Jornada</span><span>Enviado em</span></div>';
-  $('list').innerHTML = head + lista.map((r, i) => `
+  const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Célula</span><span>Jornada</span><span>Último contato</span></div>';
+  $('list').innerHTML = head + lista.map(r => `
     <button type="button" class="item" data-i="${estado.regs.indexOf(r)}">
       <span class="it-name">${esc(r.nome)}</span>
-      <span class="it-age">${r._idade != null ? `${r._idade}<span class="lbl"> anos</span>` : '—'}</span>
-      <span class="it-cell"><span class="lbl">Célula </span><b>${esc(r.celula || '—')}</b></span>
-      <span class="it-setor">${esc(r.setor || '—')}</span>
-      <span class="it-jornada">
-        ${pips(r)}
-        <span class="jlabel">${r._jornada} de ${JORNADA.length}<span class="lbl"> etapas</span></span>
-      </span>
-      <span class="it-date">${esc((r.dataHora || '').split(/[ ,]/)[0])}</span>
+      <span class="it-cell">${esc(r.celula || 'Sem célula')}</span>
+      <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada} de ${JORNADA.length}<span class="lbl"> etapas</span></span></span>
+      <span class="it-contato ${r._contato ? '' : 'nunca'}"><span class="lbl">Contato: </span>${contato(r)}</span>
     </button>`).join('');
   $('list').querySelectorAll<HTMLButtonElement>('.item').forEach(b => b.addEventListener('click', () => {
     const registro = estado.regs[Number(b.dataset.i)];
