@@ -3,5 +3,5 @@ package frontend
 
 import "embed"
 
-//go:embed index.html style.css design-tokens.css tailwind.css app.js contato.js admin/index.html admin/admin.css admin/dashboard.css admin/users.css admin/editar.css admin/acompanhar.css admin/fotos.css admin/admin.js admin/dashboard.js admin/detalhe.js admin/charts.js admin/acompanhamento.js admin/editar.js admin/discipulado.js admin/estrutura.js admin/anotacoes.js admin/fotos.js admin/users.js
+//go:embed index.html style.css design-tokens.css tailwind.css app.js contato.js admin/index.html admin/admin.css admin/dashboard.css admin/users.css admin/editar.css admin/acompanhar.css admin/fotos.css admin/admin.js admin/metrics.js admin/dashboard.js admin/detalhe.js admin/charts.js admin/acompanhamento.js admin/editar.js admin/discipulado.js admin/estrutura.js admin/anotacoes.js admin/fotos.js admin/users.js
 var FS embed.FS

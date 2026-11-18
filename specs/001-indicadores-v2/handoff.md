@@ -26,3 +26,14 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Pendências/bloqueios:
 - Próxima ação recomendada:
 - Estado da Issue confirmado em:
+
+### T002 / Issue #14 — 2026-11-18
+- Agente utilizado: Codex
+- Branch/PR e commit: `feat/issue-14-metricas`; implementação em `f07f7e8`; PR ainda pendente.
+- Objetivo e escopo: extrair regras puras dos Indicadores e testar métricas, filtros e escopos sem alterar contratos ou persistência.
+- Arquivos alterados: métricas e testes do frontend, testes de escopo do store, asset embutido, script npm e CI.
+- Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (5 testes), `go vet ./...`, `go test ./...`, `go build ./...`, `gofmt` e `git diff --check`; todos aprovados localmente. CI do PR #25 aprovado antes do último ajuste solicitado na revisão independente. Playwright MCP validou Indicadores com `vec-dev` em 390x844 e 1440x900: KPIs, filtros compartilhados, estado vazio, foco de teclado, movimento reduzido, ausência de overflow e console sem warnings/erros.
+- Decisões e riscos: testes usam `node:test` do Node 24 já presente no CI, sem nova dependência; o JavaScript compilado permanece versionado. O usuário AREA temporário do teste E2E foi removido do `vec-dev` após logout e o servidor local foi encerrado.
+- Pendências/bloqueios: revisão independente antes de considerar a tarefa concluída; nenhum bloqueio técnico conhecido.
+- Próxima ação recomendada: revisar o diff e validar que o commit revisado corresponde ao commit aprovado antes do merge.
+- Estado da Issue confirmado em: aberta em 2026-11-18; T001/#13, sua única dependência, encerrada.
