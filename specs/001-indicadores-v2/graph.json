@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "T001",
+      "issue": 13,
+      "depends_on": []
+    },
+    {
+      "id": "T002",
+      "issue": 14,
+      "depends_on": [
+        "T001"
+      ]
+    },
+    {
+      "id": "T003",
+      "issue": 15,
+      "depends_on": [
+        "T001"
+      ]
+    },
+    {
+      "id": "T004",
+      "issue": 16,
+      "depends_on": [
+        "T002",
+        "T003"
+      ]
+    },
+    {
+      "id": "T005",
+      "issue": 17,
+      "depends_on": [
+        "T002",
+        "T003"
+      ]
+    },
+    {
+      "id": "T006",
+      "issue": 18,
+      "depends_on": [
+        "T004",
+        "T005"
+      ]
+    }
+  ]
+}
