@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, temporary_worktree
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, temporary_worktree, trusted_output_path
 
 
 def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
@@ -63,6 +63,21 @@ class ReviewPRTests(unittest.TestCase):
                 run_agent("codex", 28, "head", "base", Path("/tmp/worktree"), Path("/tmp/review"))
 
         self.assertEqual(calls[0]["env"], {"HOME": "/tmp/home", "PATH": "/bin"})
+
+    def test_review_output_is_outside_untrusted_worktree(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            worktree = root / "worktree"
+            worktree.mkdir()
+            target = root / "local-file"
+            target.write_text("preserve", encoding="utf-8")
+            (worktree / ".review.md").symlink_to(target)
+
+            output = trusted_output_path(root)
+            output.write_text("review", encoding="utf-8")
+
+            self.assertEqual(target.read_text(encoding="utf-8"), "preserve")
+            self.assertEqual(output.parent, root)
 
     def test_worktree_is_removed_after_failure(self):
         calls = []

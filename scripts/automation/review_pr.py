@@ -134,6 +134,10 @@ def confirm_fetched_base(expected, actual):
         raise ReviewError("fetched base does not match the PR base")
 
 
+def trusted_output_path(temp_directory):
+    return Path(temp_directory) / "review.md"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int)
@@ -160,7 +164,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix=f"vec-review-pr-{args.pr}-") as temp:
         worktree = Path(temp) / "worktree"
         with temporary_worktree(repo, initial["headRefOid"], worktree):
-            output = worktree / ".review.md"
+            output = trusted_output_path(temp)
             run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefOid"], worktree, output)
             review = safe_review(output.read_text(encoding="utf-8"))
 
