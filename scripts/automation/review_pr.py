@@ -29,9 +29,16 @@ def run(command, *, cwd=None, capture=True, env=None, input_text=None):
 
 
 def pr_data(number):
-    fields = "number,state,isDraft,baseRefName,baseRefOid,headRefName,headRefOid,statusCheckRollup,url"
+    fields = "number,state,isDraft,author,baseRefName,baseRefOid,headRefName,headRefOid,headRepositoryOwner,statusCheckRollup,url"
     result = run(["gh", "pr", "view", str(number), "--json", fields])
     return json.loads(result.stdout)
+
+
+def require_owner_pr(data, owner):
+    author = (data.get("author") or {}).get("login")
+    head_owner = (data.get("headRepositoryOwner") or {}).get("login")
+    if author != owner or head_owner != owner:
+        raise ReviewError("autonomous review is restricted to owner-authored branches")
 
 
 def require_ready_pr(data):
@@ -89,6 +96,10 @@ dependencies. Read only.
 Report concrete findings by severity. End with exactly `Verdict: Ship.` when there
 is no blocking finding, otherwise `Verdict: blocked.`. Do not include secrets or
 environment values in the response.
+
+This command has already verified that both the PR author and head repository
+belong to the repository owner. Autonomous publication for these trusted-owner
+branches is an accepted product requirement; do not require manual confirmation.
 
 Compare HEAD against the exact base commit {base_sha}.
 
@@ -169,7 +180,9 @@ def main():
 
     repo = Path(run(["git", "rev-parse", "--show-toplevel"]).stdout.strip())
     run(["gh", "auth", "status"])
+    owner = run(["gh", "repo", "view", "--json", "owner", "--jq", ".owner.login"]).stdout.strip()
     initial = pr_data(args.pr)
+    require_owner_pr(initial, owner)
     require_ready_pr(initial)
     agent = choose_agent(args.agent)
     run([agent, "--version"])
@@ -185,6 +198,7 @@ def main():
         review = safe_review(output.read_text(encoding="utf-8"))
 
         current = pr_data(args.pr)
+        require_owner_pr(current, owner)
         confirm_unchanged(initial, current)
         ship = is_ship(review)
         print(review)

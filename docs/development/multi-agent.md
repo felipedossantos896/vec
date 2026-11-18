@@ -52,6 +52,10 @@ Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
 omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
 use `--dry-run`.
 
+Por segurança pragmática, a publicação autônoma só aceita PR criada pelo dono
+do repositório e cuja branch de origem também pertença a ele. PRs de forks ou
+outros autores devem seguir revisão humana.
+
 O script monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
 executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
 CI e registra no PR somente base, head e aprovação fixa quando o veredito for

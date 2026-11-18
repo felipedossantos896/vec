@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, trusted_output_path
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_owner_pr, require_ready_pr, run_agent, safe_review, trusted_output_path
 
 
 def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
@@ -13,11 +13,24 @@ def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status=
         "headRefOid": sha,
         "baseRefName": base,
         "baseRefOid": base_sha,
+        "author": {"login": "owner"},
+        "headRepositoryOwner": {"login": "owner"},
         "statusCheckRollup": [{"name": "testes", "workflowName": "CI", "status": status, "conclusion": conclusion}],
     }
 
 
 class ReviewPRTests(unittest.TestCase):
+    def test_only_owner_authored_branches_are_accepted(self):
+        require_owner_pr(pr(), "owner")
+        external_author = pr()
+        external_author["author"]["login"] = "contributor"
+        with self.assertRaisesRegex(ReviewError, "owner-authored"):
+            require_owner_pr(external_author, "owner")
+        fork = pr()
+        fork["headRepositoryOwner"]["login"] = "contributor"
+        with self.assertRaisesRegex(ReviewError, "owner-authored"):
+            require_owner_pr(fork, "owner")
+
     def test_green_checks_are_required(self):
         require_ready_pr(pr())
         with self.assertRaisesRegex(ReviewError, "not green"):
