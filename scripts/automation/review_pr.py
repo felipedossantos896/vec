@@ -90,8 +90,8 @@ def run_agent(agent, number, sha, base, worktree, output):
     prompt = review_prompt(number, sha)
     if agent == "codex":
         command = [
-            "codex", "exec", "review", "--base", f"origin/{base}",
-            "--ephemeral", "-o", str(output), prompt,
+            "codex", "exec", "--sandbox", "read-only", "--ephemeral",
+            "-o", str(output), prompt + f"\nCompare HEAD against origin/{base}.\n",
         ]
         run(command, cwd=worktree, capture=False)
     else:
