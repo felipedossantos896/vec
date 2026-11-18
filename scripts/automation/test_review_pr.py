@@ -44,6 +44,11 @@ class ReviewPRTests(unittest.TestCase):
         with self.assertRaisesRegex(ReviewError, "required check"):
             require_ready_pr(data)
 
+    def test_successful_legacy_status_is_accepted_with_required_check(self):
+        data = pr()
+        data["statusCheckRollup"].append({"context": "legacy", "state": "SUCCESS"})
+        require_ready_pr(data)
+
     def test_sha_must_stay_unchanged(self):
         with self.assertRaisesRegex(ReviewError, "changed"):
             confirm_unchanged(pr("old"), pr("new"))
@@ -86,6 +91,19 @@ class ReviewPRTests(unittest.TestCase):
         agent_call = calls[-1]
         self.assertEqual(agent_call["env"], {"HOME": "/tmp/home", "PATH": "/bin"})
         self.assertIn("input_text", agent_call)
+
+    def test_diff_disables_external_and_textconv_drivers(self):
+        calls = []
+
+        def fake_run(command, **kwargs):
+            calls.append(command)
+            return type("Result", (), {"stdout": "content"})()
+
+        with patch("review_pr.run", side_effect=fake_run):
+            from review_pr import review_material
+            review_material(Path("/repo"), "base", "head")
+
+        self.assertEqual(calls[0][:4], ["git", "diff", "--no-ext-diff", "--no-textconv"])
 
     def test_review_output_is_outside_untrusted_worktree(self):
         with tempfile.TemporaryDirectory() as temp:

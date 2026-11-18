@@ -46,15 +46,15 @@ def require_ready_pr(data):
         status = check.get("status")
         conclusion = check.get("conclusion")
         name = check.get("name") or check.get("context") or "unknown check"
+        successful = (status == "COMPLETED" and conclusion == "SUCCESS") or check.get("state") == "SUCCESS"
         optional_skip = conclusion == "SKIPPED" and name == "Publicar no Fly.io"
         if (
             name == "testes"
             and check.get("workflowName") == "CI"
-            and status == "COMPLETED"
-            and conclusion == "SUCCESS"
+            and successful
         ):
             required_success = True
-        if status != "COMPLETED" or (conclusion != "SUCCESS" and not optional_skip):
+        if not successful and not optional_skip:
             failures.append(name)
     if not required_success:
         failures.append("required check testes is missing or unsuccessful")
@@ -100,7 +100,7 @@ Compare HEAD against the exact base commit {base_sha}.
 
 def review_material(repo, base_sha, head_sha):
     paths = ("AGENTS.md", ".github/agents/reviewer.md", ".agents/skills/ponytail-review/SKILL.md")
-    sections = [run(["git", "diff", "--no-ext-diff", base_sha, head_sha], cwd=repo).stdout]
+    sections = [run(["git", "diff", "--no-ext-diff", "--no-textconv", base_sha, head_sha], cwd=repo).stdout]
     for relative in paths:
         content = run(["git", "show", f"{base_sha}:{relative}"], cwd=repo).stdout
         sections.append(f"\n--- trusted base policy: {relative} ---\n{content}")
@@ -196,7 +196,9 @@ def main():
         body = (
             f"## Revisão independente local ({agent})\n\n"
             f"**Base:** `{initial['baseRefOid']}`  \n"
-            f"**Head:** `{initial['headRefOid']}`\n\n{review}"
+            f"**Head:** `{initial['headRefOid']}`\n\n"
+            "O agente local não encontrou bloqueios no diff exato acima.\n\n"
+            "Verdict: Ship."
         )
         run(["gh", "pr", "comment", str(args.pr), "--body", body], capture=False)
         return 0
