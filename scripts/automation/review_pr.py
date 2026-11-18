@@ -49,7 +49,8 @@ def require_ready_pr(data):
 
 
 def is_ship(review):
-    return bool(re.search(r"(?im)^(?:Verdict:\s*Ship\.|Looks good\. Ship\.)\s*$", review))
+    lines = [line.strip() for line in review.splitlines() if line.strip()]
+    return bool(lines) and lines[-1] == "Verdict: Ship."
 
 
 def safe_review(review):
@@ -70,7 +71,7 @@ def temporary_worktree(repo, sha, directory, runner=run):
         runner(["git", "worktree", "remove", "--force", str(directory)], cwd=repo)
 
 
-def review_prompt(number, sha):
+def review_prompt(number, sha, base):
     return f"""Review PR #{number} at exact SHA {sha} as an independent senior reviewer.
 
 Follow AGENTS.md, .github/agents/reviewer.md and the ponytail-review skill if available.
@@ -83,15 +84,17 @@ dependencies. Read only.
 Report concrete findings by severity. End with exactly `Verdict: Ship.` when there
 is no blocking finding, otherwise `Verdict: blocked.`. Do not include secrets or
 environment values in the response.
+
+Compare HEAD against origin/{base}.
 """
 
 
 def run_agent(agent, number, sha, base, worktree, output):
-    prompt = review_prompt(number, sha)
+    prompt = review_prompt(number, sha, base)
     if agent == "codex":
         command = [
             "codex", "exec", "--sandbox", "read-only", "--ephemeral",
-            "-o", str(output), prompt + f"\nCompare HEAD against origin/{base}.\n",
+            "-o", str(output), prompt,
         ]
         run(command, cwd=worktree, capture=False)
     else:
@@ -116,6 +119,13 @@ def confirm_unchanged(initial, current):
     require_ready_pr(current)
 
 
+def merge_command(number, sha):
+    return [
+        "gh", "pr", "merge", str(number), "--merge", "--delete-branch",
+        "--match-head-commit", sha,
+    ]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int)
@@ -134,6 +144,7 @@ def main():
     require_ready_pr(initial)
     agent = choose_agent(args.agent)
     run([agent, "--version"])
+    run(["git", "fetch", "origin", initial["baseRefName"]])
     run(["git", "fetch", "origin", f"pull/{args.pr}/head"])
 
     with tempfile.TemporaryDirectory(prefix=f"vec-review-pr-{args.pr}-") as temp:
@@ -155,7 +166,7 @@ def main():
         if not ship:
             raise ReviewError("review blocked the PR")
         if args.merge:
-            run(["gh", "pr", "merge", str(args.pr), "--merge", "--delete-branch"], capture=False)
+            run(merge_command(args.pr, initial["headRefOid"]), capture=False)
         return 0
 
 
