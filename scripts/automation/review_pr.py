@@ -47,7 +47,12 @@ def require_ready_pr(data):
         conclusion = check.get("conclusion")
         name = check.get("name") or check.get("context") or "unknown check"
         optional_skip = conclusion == "SKIPPED" and name == "Publicar no Fly.io"
-        if name == "testes" and status == "COMPLETED" and conclusion == "SUCCESS":
+        if (
+            name == "testes"
+            and check.get("workflowName") == "CI"
+            and status == "COMPLETED"
+            and conclusion == "SUCCESS"
+        ):
             required_success = True
         if status != "COMPLETED" or (conclusion != "SUCCESS" and not optional_skip):
             failures.append(name)
@@ -185,11 +190,15 @@ def main():
         print(review)
         if args.dry_run:
             return 0 if ship else 2
-
-        body = f"## Revisão independente local ({agent})\n\n**SHA:** `{initial['headRefOid']}`\n\n{review}"
-        run(["gh", "pr", "comment", str(args.pr), "--body", body], capture=False)
         if not ship:
-            raise ReviewError("review blocked the PR")
+            raise ReviewError("review blocked the PR; nothing was published")
+
+        body = (
+            f"## Revisão independente local ({agent})\n\n"
+            f"**Base:** `{initial['baseRefOid']}`  \n"
+            f"**Head:** `{initial['headRefOid']}`\n\n{review}"
+        )
+        run(["gh", "pr", "comment", str(args.pr), "--body", body], capture=False)
         return 0
 
 

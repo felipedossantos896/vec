@@ -54,7 +54,8 @@ use `--dry-run`.
 
 O script monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
 executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
-CI e registra o parecer no PR. O
+CI e registra o parecer no PR somente quando o veredito for `Ship`. Bloqueios
+ficam locais para correção. O
 merge fica separado, sujeito às proteções do GitHub, porque a CLI não consegue
 fixar atomicamente o SHA da base revisada. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas

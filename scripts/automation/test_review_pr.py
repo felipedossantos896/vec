@@ -13,7 +13,7 @@ def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status=
         "headRefOid": sha,
         "baseRefName": base,
         "baseRefOid": base_sha,
-        "statusCheckRollup": [{"name": "testes", "status": status, "conclusion": conclusion}],
+        "statusCheckRollup": [{"name": "testes", "workflowName": "CI", "status": status, "conclusion": conclusion}],
     }
 
 
@@ -35,6 +35,12 @@ class ReviewPRTests(unittest.TestCase):
     def test_required_check_must_be_present(self):
         data = pr()
         data["statusCheckRollup"][0]["name"] = "unrelated"
+        with self.assertRaisesRegex(ReviewError, "required check"):
+            require_ready_pr(data)
+
+    def test_required_check_must_come_from_ci_workflow(self):
+        data = pr()
+        data["statusCheckRollup"][0]["workflowName"] = "untrusted"
         with self.assertRaisesRegex(ReviewError, "required check"):
             require_ready_pr(data)
 
