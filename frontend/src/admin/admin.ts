@@ -96,7 +96,7 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   naoBatizados:   { label: 'Ainda não batizados', f: r => r.batismo !== 'S' },
   naoRecebeu:     { label: 'Ainda não receberam Jesus', f: r => r.recebeuJesus === 'N' },
   naoFrequenta:   { label: 'Não congregam com frequência', f: r => r.frequentaCultos === 'N' },
-  semDiscipulador:{ label: 'Sem discipulador', f: metricasIndicadores.semDiscipulador },
+  semDiscipulador:{ label: 'Sem discipulador', f: r => metricasIndicadores.semDiscipulador(r) },
   querDiscipulado:{ label: 'Querem ser discipulados', f: r => r.interesseDiscipulado === 'S' },
   querCuidar:     { label: 'Querem cuidar de pessoas', f: r => r.interesseCuidar === 'S' },
   querLiderar:    { label: 'Querem liderar célula', f: r => r.interesseLider === 'S' },
