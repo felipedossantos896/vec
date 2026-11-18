@@ -53,7 +53,7 @@ $('btnRefresh').addEventListener('click', () => {
 function derivar(x: Registro): Registro {
   x._nasc = parseData(x.nascimento);
   x._idade = idade(x._nasc);
-  x._jornada = JORNADA.filter(([k]) => x[k] === 'S').length;
+  x._jornada = metricasIndicadores.etapasConcluidas(x);
   x._contato = parseData(x.ultimoContato);
   x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
   return x;
@@ -110,7 +110,7 @@ function medidor(label: string, n: number, total: number): string {
 
 const pips = (r: Registro): string => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
-const baseIndicadores = () => estado.regs.filter(r => (!estado.setor || r.setor === estado.setor) && (!estado.celula || r.celula === estado.celula));
+const baseIndicadores = () => metricasIndicadores.filtrar(estado.regs, estado.setor, estado.celula);
 
 // Há quanto tempo foi o último contato registrado
 function contato(r: Registro): string {

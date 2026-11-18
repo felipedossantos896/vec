@@ -53,7 +53,8 @@ function jornadaPorMes(base) {
 }
 function renderIndicadores() {
     const base = baseIndicadores();
-    const total = base.length;
+    const resumo = metricasIndicadores.resumir(base);
+    const total = resumo.total;
     if (!total) {
         $('gConteudo').innerHTML = `<div class="empty">${estado.regs.length ? 'Nenhum cadastro nesse setor ou célula.' : 'Ainda não há cadastros para mostrar.'}</div>`;
         return;
@@ -62,8 +63,8 @@ function renderIndicadores() {
     const novos = base.filter(r => (parseData(r.dataHora)?.getTime() ?? 0) >= limite).length;
     const idades = base.map(r => r._idade).filter((i) => i != null);
     const media = idades.length ? Math.round(idades.reduce((a, b) => a + b, 0) / idades.length) : null;
-    const completa = base.filter(r => r._jornada === JORNADA.length).length;
-    const etapas = (base.reduce((a, r) => a + r._jornada, 0) / total).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    const completa = resumo.jornadaCompleta;
+    const etapas = resumo.mediaEtapas.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
     const faixas = FAIXAS.map(([rotulo, min, max]) => {
         const n = idades.filter(i => i >= min && i <= max).length;
         return { rotulo, titulo: `${rotulo} anos: ${plural(n, 'pessoa', 'pessoas')} (${idades.length ? Math.round((n / idades.length) * 100) : 0}%)`, n };

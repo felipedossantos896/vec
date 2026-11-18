@@ -16,7 +16,11 @@ type recordingDB struct {
 
 func (d *recordingDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
 	d.doCalls = append(d.doCalls, append([]turso.Stmt(nil), stmts...))
-	return make([]*turso.Result, len(stmts)), nil
+	results := make([]*turso.Result, len(stmts))
+	for i := range results {
+		results[i] = &turso.Result{}
+	}
+	return results, nil
 }
 
 func (d *recordingDB) Tx(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -24,7 +28,11 @@ func (d *recordingDB) Tx(_ context.Context, stmts ...turso.Stmt) ([]*turso.Resul
 	if d.txResult != nil {
 		return d.txResult, nil
 	}
-	return make([]*turso.Result, len(stmts)), nil
+	results := make([]*turso.Result, len(stmts))
+	for i := range results {
+		results[i] = &turso.Result{}
+	}
+	return results, nil
 }
 
 func TestInsertRespostaUsesRequestIDForIdempotency(t *testing.T) {
@@ -88,5 +96,55 @@ func TestImportarRespostasRequiresImportKeyBeforeWriting(t *testing.T) {
 	}
 	if len(db.txCalls) != 0 {
 		t.Fatalf("houve gravação apesar da chave ausente: %#v", db.txCalls)
+	}
+}
+
+func TestListRespostasLimitsEveryQueryToScope(t *testing.T) {
+	tests := []struct {
+		name  string
+		scope Scope
+		cond  string
+		args  []any
+	}{
+		{"area", Scope{Todos: true}, "1 = 1", nil},
+		{"setor", Scope{Setores: []string{"Norte", "Sul"}}, "setor IN (?, ?)", []any{"Norte", "Sul"}},
+		{"celula", Scope{Celulas: []string{"Hope"}}, "celula IN (?)", []any{"Hope"}},
+		{"discipulador", Scope{Discipulador: 42}, "discipulador_id = ?", []any{int64(42)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := &recordingDB{}
+			_, err := (&Store{DB: db}).ListRespostas(context.Background(), tt.scope)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(db.doCalls) != 1 || len(db.doCalls[0]) != 2 {
+				t.Fatalf("consultas = %#v", db.doCalls)
+			}
+			for _, stmt := range db.doCalls[0] {
+				if !strings.Contains(stmt.SQL, tt.cond) {
+					t.Errorf("SQL sem escopo %q: %s", tt.cond, stmt.SQL)
+				}
+				if len(stmt.Args) != len(tt.args) {
+					t.Fatalf("argumentos = %#v, queria %#v", stmt.Args, tt.args)
+				}
+				for i := range tt.args {
+					if stmt.Args[i] != tt.args[i] {
+						t.Errorf("argumentos = %#v, queria %#v", stmt.Args, tt.args)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestListRespostasWithEmptyScopeDoesNotQuery(t *testing.T) {
+	db := &recordingDB{}
+	respostas, err := (&Store{DB: db}).ListRespostas(context.Background(), Scope{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if respostas != nil || len(db.doCalls) != 0 {
+		t.Fatalf("escopo vazio retornou %#v e executou %#v", respostas, db.doCalls)
 	}
 }

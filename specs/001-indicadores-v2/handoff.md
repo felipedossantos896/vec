@@ -26,3 +26,14 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Pendências/bloqueios:
 - Próxima ação recomendada:
 - Estado da Issue confirmado em:
+
+### T002 / Issue #14 — 2026-11-18
+- Agente utilizado: Codex
+- Branch/PR e commit: `feat/issue-14-metricas`; PR e commit ainda pendentes.
+- Objetivo e escopo: extrair regras puras dos Indicadores e testar métricas, filtros e escopos sem alterar contratos ou persistência.
+- Arquivos alterados: métricas e testes do frontend, testes de escopo do store, asset embutido, script npm e CI.
+- Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (4 testes), `go vet ./...`, `go test ./...`, `go build ./...`, `gofmt` e `git diff --check`; todos aprovados localmente.
+- Decisões e riscos: testes usam `node:test` do Node 24 já presente no CI, sem nova dependência; o JavaScript compilado permanece versionado. Não houve teste visual em navegador.
+- Pendências/bloqueios: publicar a branch, abrir PR não-draft e confirmar CI/revisão independente antes de considerar a tarefa concluída.
+- Próxima ação recomendada: revisar o diff, executar o CI no PR e validar que o commit revisado corresponde ao commit aprovado.
+- Estado da Issue confirmado em: aberta em 2026-11-18; T001/#13, sua única dependência, encerrada.
