@@ -27,7 +27,7 @@ def run(command, *, cwd=None, capture=True):
 
 
 def pr_data(number):
-    fields = "number,state,isDraft,baseRefName,headRefName,headRefOid,statusCheckRollup,url"
+    fields = "number,state,isDraft,baseRefName,baseRefOid,headRefName,headRefOid,statusCheckRollup,url"
     result = run(["gh", "pr", "view", str(number), "--json", fields])
     return json.loads(result.stdout)
 
@@ -71,7 +71,7 @@ def temporary_worktree(repo, sha, directory, runner=run):
         runner(["git", "worktree", "remove", "--force", str(directory)], cwd=repo)
 
 
-def review_prompt(number, sha, base):
+def review_prompt(number, sha, base_sha):
     return f"""Review PR #{number} at exact SHA {sha} as an independent senior reviewer.
 
 Follow AGENTS.md, .github/agents/reviewer.md and the ponytail-review skill if available.
@@ -85,12 +85,12 @@ Report concrete findings by severity. End with exactly `Verdict: Ship.` when the
 is no blocking finding, otherwise `Verdict: blocked.`. Do not include secrets or
 environment values in the response.
 
-Compare HEAD against origin/{base}.
+Compare HEAD against the exact base commit {base_sha}.
 """
 
 
-def run_agent(agent, number, sha, base, worktree, output):
-    prompt = review_prompt(number, sha, base)
+def run_agent(agent, number, sha, base_sha, worktree, output):
+    prompt = review_prompt(number, sha, base_sha)
     if agent == "codex":
         command = [
             "codex", "exec", "--sandbox", "read-only", "--ephemeral",
@@ -116,7 +116,14 @@ def choose_agent(requested):
 def confirm_unchanged(initial, current):
     if current["headRefOid"] != initial["headRefOid"]:
         raise ReviewError("PR changed during review; run it again")
+    if (current["baseRefName"], current["baseRefOid"]) != (initial["baseRefName"], initial["baseRefOid"]):
+        raise ReviewError("PR base changed during review; run it again")
     require_ready_pr(current)
+
+
+def confirm_fetched_base(expected, actual):
+    if actual != expected:
+        raise ReviewError("fetched base does not match the PR base")
 
 
 def merge_command(number, sha):
@@ -144,14 +151,17 @@ def main():
     require_ready_pr(initial)
     agent = choose_agent(args.agent)
     run([agent, "--version"])
-    run(["git", "fetch", "origin", initial["baseRefName"]])
+    base_ref = f"refs/remotes/origin/{initial['baseRefName']}"
+    run(["git", "fetch", "origin", f"{initial['baseRefName']}:{base_ref}"])
+    fetched_base = run(["git", "rev-parse", base_ref]).stdout.strip()
+    confirm_fetched_base(initial["baseRefOid"], fetched_base)
     run(["git", "fetch", "origin", f"pull/{args.pr}/head"])
 
     with tempfile.TemporaryDirectory(prefix=f"vec-review-pr-{args.pr}-") as temp:
         worktree = Path(temp) / "worktree"
         with temporary_worktree(repo, initial["headRefOid"], worktree):
             output = worktree / ".review.md"
-            run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefName"], worktree, output)
+            run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefOid"], worktree, output)
             review = safe_review(output.read_text(encoding="utf-8"))
 
         current = pr_data(args.pr)

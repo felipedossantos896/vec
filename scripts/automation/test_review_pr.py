@@ -2,14 +2,16 @@ import tempfile
 from pathlib import Path
 import unittest
 
-from review_pr import ReviewError, confirm_unchanged, is_ship, merge_command, require_ready_pr, safe_review, temporary_worktree
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, merge_command, require_ready_pr, safe_review, temporary_worktree
 
 
-def pr(sha="abc", conclusion="SUCCESS", status="COMPLETED"):
+def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
     return {
         "state": "OPEN",
         "isDraft": False,
         "headRefOid": sha,
+        "baseRefName": base,
+        "baseRefOid": base_sha,
         "statusCheckRollup": [{"name": "testes", "status": status, "conclusion": conclusion}],
     }
 
@@ -25,6 +27,17 @@ class ReviewPRTests(unittest.TestCase):
     def test_sha_must_stay_unchanged(self):
         with self.assertRaisesRegex(ReviewError, "changed"):
             confirm_unchanged(pr("old"), pr("new"))
+
+    def test_base_must_stay_unchanged(self):
+        with self.assertRaisesRegex(ReviewError, "base changed"):
+            confirm_unchanged(pr(), pr(base_sha="new-base"))
+        with self.assertRaisesRegex(ReviewError, "base changed"):
+            confirm_unchanged(pr(), pr(base="release"))
+
+    def test_fetched_base_must_match_pr(self):
+        confirm_fetched_base("base123", "base123")
+        with self.assertRaisesRegex(ReviewError, "does not match"):
+            confirm_fetched_base("base123", "stale")
 
     def test_only_explicit_ship_verdict_passes(self):
         self.assertTrue(is_ship("Summary\n\nVerdict: Ship."))
