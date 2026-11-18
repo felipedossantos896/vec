@@ -3,6 +3,9 @@ const metricasIndicadores = {
     etapasConcluidas(registro) {
         return JORNADA.filter(([chave]) => registro[chave] === 'S').length;
     },
+    semDiscipulador(registro) {
+        return !String(registro.discipulador || '').trim();
+    },
     filtrar(registros, setor, celula) {
         return registros.filter(r => (!setor || r.setor === setor) && (!celula || r.celula === celula));
     },
@@ -13,9 +16,7 @@ const metricasIndicadores = {
         return {
             total,
             jornadaCompleta,
-            mediaEtapas: total ? etapas / total : null,
-            jornadaIncompleta: total - jornadaCompleta,
-            semDiscipulador: registros.filter(r => !String(r.discipulador || '').trim()).length
+            mediaEtapas: total ? etapas / total : null
         };
     }
 };

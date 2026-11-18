@@ -99,42 +99,57 @@ func TestImportarRespostasRequiresImportKeyBeforeWriting(t *testing.T) {
 	}
 }
 
-func TestListRespostasLimitsEveryQueryToScope(t *testing.T) {
+func TestEscopoSQL(t *testing.T) {
 	tests := []struct {
 		name  string
 		scope Scope
 		cond  string
 		args  []any
+		ok    bool
 	}{
-		{"area", Scope{Todos: true}, "1 = 1", nil},
-		{"setor", Scope{Setores: []string{"Norte", "Sul"}}, "setor IN (?, ?)", []any{"Norte", "Sul"}},
-		{"celula", Scope{Celulas: []string{"Hope"}}, "celula IN (?)", []any{"Hope"}},
-		{"discipulador", Scope{Discipulador: 42}, "discipulador_id = ?", []any{int64(42)}},
+		{"area", Scope{Todos: true}, "1 = 1", nil, true},
+		{"setor", Scope{Setores: []string{"Norte", "Sul"}}, "(setor IN (?, ?))", []any{"Norte", "Sul"}, true},
+		{"celula", Scope{Celulas: []string{"Hope"}}, "(celula IN (?))", []any{"Hope"}, true},
+		{"discipulador", Scope{Discipulador: 42}, "(discipulador_id = ?)", []any{int64(42)}, true},
+		{"combinado", Scope{Setores: []string{"Norte"}, Celulas: []string{"Hope"}, Discipulador: 42}, "(setor IN (?) OR celula IN (?) OR discipulador_id = ?)", []any{"Norte", "Hope", int64(42)}, true},
+		{"vazio", Scope{}, "()", nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := &recordingDB{}
-			_, err := (&Store{DB: db}).ListRespostas(context.Background(), tt.scope)
-			if err != nil {
-				t.Fatal(err)
+			cond, args, ok := escopoSQL(tt.scope)
+			if cond != tt.cond || ok != tt.ok {
+				t.Errorf("escopoSQL() = %q, %v; queria %q, %v", cond, ok, tt.cond, tt.ok)
 			}
-			if len(db.doCalls) != 1 || len(db.doCalls[0]) != 2 {
-				t.Fatalf("consultas = %#v", db.doCalls)
+			if len(args) != len(tt.args) {
+				t.Fatalf("argumentos = %#v, queria %#v", args, tt.args)
 			}
-			for _, stmt := range db.doCalls[0] {
-				if !strings.Contains(stmt.SQL, tt.cond) {
-					t.Errorf("SQL sem escopo %q: %s", tt.cond, stmt.SQL)
-				}
-				if len(stmt.Args) != len(tt.args) {
-					t.Fatalf("argumentos = %#v, queria %#v", stmt.Args, tt.args)
-				}
-				for i := range tt.args {
-					if stmt.Args[i] != tt.args[i] {
-						t.Errorf("argumentos = %#v, queria %#v", stmt.Args, tt.args)
-					}
+			for i := range tt.args {
+				if args[i] != tt.args[i] {
+					t.Errorf("argumentos = %#v, queria %#v", args, tt.args)
 				}
 			}
 		})
+	}
+}
+
+func TestListRespostasUsesScopeInBothQueries(t *testing.T) {
+	db := &recordingDB{}
+	scope := Scope{Setores: []string{"Norte"}, Celulas: []string{"Hope"}}
+	_, err := (&Store{DB: db}).ListRespostas(context.Background(), scope)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(db.doCalls) != 1 || len(db.doCalls[0]) != 2 {
+		t.Fatalf("consultas = %#v", db.doCalls)
+	}
+	cond, args, _ := escopoSQL(scope)
+	for _, stmt := range db.doCalls[0] {
+		if !strings.Contains(stmt.SQL, "WHERE excluido_em IS NULL AND "+cond) {
+			t.Errorf("SQL sem escopo exato %q: %s", cond, stmt.SQL)
+		}
+		if len(stmt.Args) != len(args) || stmt.Args[0] != args[0] || stmt.Args[1] != args[1] {
+			t.Errorf("argumentos = %#v, queria %#v", stmt.Args, args)
+		}
 	}
 }
 

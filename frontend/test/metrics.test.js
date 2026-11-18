@@ -14,7 +14,7 @@ test('conta as seis etapas de forma independente', () => {
   assert.equal(metricas.etapasConcluidas(Object.fromEntries(JORNADA.map(([chave]) => [chave, 'S']))), 6);
 });
 
-test('resume jornada, média e discipulador vazio', () => {
+test('resume jornada e média', () => {
   const registros = [
     { _jornada: 6, discipulador: 'Ana' },
     { _jornada: 3, discipulador: '   ' },
@@ -22,12 +22,18 @@ test('resume jornada, média e discipulador vazio', () => {
   ];
   assert.deepEqual(
     { ...metricas.resumir(registros) },
-    { total: 3, jornadaCompleta: 1, mediaEtapas: 3, jornadaIncompleta: 2, semDiscipulador: 2 }
+    { total: 3, jornadaCompleta: 1, mediaEtapas: 3 }
   );
   assert.deepEqual(
     { ...metricas.resumir([]) },
-    { total: 0, jornadaCompleta: 0, mediaEtapas: null, jornadaIncompleta: 0, semDiscipulador: 0 }
+    { total: 0, jornadaCompleta: 0, mediaEtapas: null }
   );
+});
+
+test('identifica discipulador ausente ou só com espaços', () => {
+  assert.equal(metricas.semDiscipulador({}), true);
+  assert.equal(metricas.semDiscipulador({ discipulador: '   ' }), true);
+  assert.equal(metricas.semDiscipulador({ discipulador: 'Ana' }), false);
 });
 
 test('calcula seis jornadas completas entre doze pessoas', () => {
