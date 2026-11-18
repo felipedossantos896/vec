@@ -56,6 +56,7 @@ O script cria um worktree descartável, executa o agente em modo de revisão,
 exige veredito explícito, reconfirma SHA e CI e registra o parecer no PR. O
 merge fica separado, sujeito às proteções do GitHub, porque a CLI não consegue
 fixar atomicamente o SHA da base revisada. O agente recebe somente variáveis de
-ambiente necessárias à sessão local. O script usa as sessões locais de
+ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
+de shell ou acesso ao checkout. O script usa as sessões locais de
 `codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
 uma segunda conta GitHub.

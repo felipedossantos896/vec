@@ -24,6 +24,13 @@ class ReviewPRTests(unittest.TestCase):
             require_ready_pr(pr(conclusion="FAILURE"))
         with self.assertRaisesRegex(ReviewError, "not green"):
             require_ready_pr(pr(status="IN_PROGRESS", conclusion=""))
+        with self.assertRaisesRegex(ReviewError, "not green"):
+            require_ready_pr(pr(conclusion="SKIPPED"))
+
+    def test_optional_deploy_may_be_skipped(self):
+        data = pr(conclusion="SKIPPED")
+        data["statusCheckRollup"][0]["name"] = "Publicar no Fly.io"
+        require_ready_pr(data)
 
     def test_sha_must_stay_unchanged(self):
         with self.assertRaisesRegex(ReviewError, "changed"):
@@ -57,12 +64,16 @@ class ReviewPRTests(unittest.TestCase):
 
         def fake_run(command, **kwargs):
             calls.append(kwargs)
+            if command[0] == "git":
+                return type("Result", (), {"stdout": "diff"})()
 
         with patch.dict("review_pr.os.environ", {"PATH": "/bin", "HOME": "/tmp/home", "SECRET": "nope"}, clear=True):
             with patch("review_pr.run", side_effect=fake_run):
                 run_agent("codex", 28, "head", "base", Path("/tmp/worktree"), Path("/tmp/review"))
 
-        self.assertEqual(calls[0]["env"], {"HOME": "/tmp/home", "PATH": "/bin"})
+        agent_call = calls[-1]
+        self.assertEqual(agent_call["env"], {"HOME": "/tmp/home", "PATH": "/bin"})
+        self.assertIn("input_text", agent_call)
 
     def test_review_output_is_outside_untrusted_worktree(self):
         with tempfile.TemporaryDirectory() as temp:
