@@ -1,0 +1,29 @@
+name: Agent orchestration (foundation)
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: "Spec a validar (somente diretório specs/NNN-nome)"
+        required: true
+        default: "001-indicadores-v2"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-foundation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-graph:
+    name: Validate spec dependency graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate spec and dependency references
+        env:
+          SPEC_NAME: ${{ inputs.spec }}
+        run: python3 scripts/automation/validate_graph.py
