@@ -102,11 +102,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
+          echo '.agent-task-prompt.txt' >> .git/info/exclude
           git add -A
-          git reset -q -- .agent-task-prompt.txt
           git diff --cached --quiet && { echo "::error::No changes to commit"; exit 1; }
           git commit -m "test: implement ${TASK_ID} from issue #${ISSUE_NUMBER}"
-          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" push "https://github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$branch"
+          gh auth setup-git
+          git push "https://github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$branch"
           gh pr create --head "$branch" --base main \
             --title "agent: ${TASK_ID} — Issue #${ISSUE_NUMBER}" \
             --body "Implements #${ISSUE_NUMBER} under specs/${SPEC_NAME}/.\n\nAutomated checks executed in the agent workflow. Review the diff, risk, test evidence and CI before merge. No auto-merge or deploy requested."
