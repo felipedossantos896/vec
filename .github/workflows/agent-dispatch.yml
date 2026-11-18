@@ -1,29 +1,37 @@
-name: Agent orchestration (foundation)
+name: Agent orchestration (graph preflight)
 
 on:
   workflow_dispatch:
     inputs:
       spec:
-        description: "Spec a validar (somente diretório specs/NNN-nome)"
+        description: "Spec to inspect (specs/NNN-name)"
         required: true
         default: "001-indicadores-v2"
         type: string
 
 permissions:
   contents: read
+  issues: read
 
 concurrency:
-  group: agent-foundation-${{ github.ref }}
+  group: agent-graph-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  validate-graph:
-    name: Validate spec dependency graph
+  resolve-graph:
+    name: Validate and resolve SDD dependencies
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Validate spec and dependency references
+      - name: Run graph unit tests
+        run: python3 -m unittest discover -s scripts/automation -p 'test_*.py' -v
+      - name: Validate spec files
         env:
           SPEC_NAME: ${{ inputs.spec }}
         run: python3 scripts/automation/validate_graph.py
+      - name: Resolve tasks against GitHub Issues (read-only)
+        env:
+          SPEC_NAME: ${{ inputs.spec }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/automation/resolve_graph.py
