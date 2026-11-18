@@ -29,7 +29,7 @@ credenciais, dados de membros ou conteúdo confidencial.
 
 ### T002 / Issue #14 — 2026-11-18
 - Agente utilizado: Codex
-- Branch/PR e commit: `feat/issue-14-metricas`; PR e commit ainda pendentes.
+- Branch/PR e commit: `feat/issue-14-metricas`; implementação em `f07f7e8`; PR ainda pendente.
 - Objetivo e escopo: extrair regras puras dos Indicadores e testar métricas, filtros e escopos sem alterar contratos ou persistência.
 - Arquivos alterados: métricas e testes do frontend, testes de escopo do store, asset embutido, script npm e CI.
 - Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (4 testes), `go vet ./...`, `go test ./...`, `go build ./...`, `gofmt` e `git diff --check`; todos aprovados localmente.
