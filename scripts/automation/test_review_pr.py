@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, temporary_worktree, trusted_output_path
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, trusted_output_path
 
 
 def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
@@ -28,9 +28,15 @@ class ReviewPRTests(unittest.TestCase):
             require_ready_pr(pr(conclusion="SKIPPED"))
 
     def test_optional_deploy_may_be_skipped(self):
-        data = pr(conclusion="SKIPPED")
-        data["statusCheckRollup"][0]["name"] = "Publicar no Fly.io"
+        data = pr()
+        data["statusCheckRollup"].append({"name": "Publicar no Fly.io", "status": "COMPLETED", "conclusion": "SKIPPED"})
         require_ready_pr(data)
+
+    def test_required_check_must_be_present(self):
+        data = pr()
+        data["statusCheckRollup"][0]["name"] = "unrelated"
+        with self.assertRaisesRegex(ReviewError, "required check"):
+            require_ready_pr(data)
 
     def test_sha_must_stay_unchanged(self):
         with self.assertRaisesRegex(ReviewError, "changed"):
@@ -89,21 +95,6 @@ class ReviewPRTests(unittest.TestCase):
 
             self.assertEqual(target.read_text(encoding="utf-8"), "preserve")
             self.assertEqual(output.parent, root)
-
-    def test_worktree_is_removed_after_failure(self):
-        calls = []
-
-        def fake_run(command, **kwargs):
-            calls.append(command)
-
-        with tempfile.TemporaryDirectory() as temp:
-            path = Path(temp) / "review"
-            with self.assertRaisesRegex(RuntimeError, "boom"):
-                with temporary_worktree(Path(temp), "abc", path, runner=fake_run):
-                    raise RuntimeError("boom")
-        self.assertEqual(calls[0][:4], ["git", "worktree", "add", "--detach"])
-        self.assertEqual(calls[-1][:4], ["git", "worktree", "remove", "--force"])
-
 
 if __name__ == "__main__":
     unittest.main()

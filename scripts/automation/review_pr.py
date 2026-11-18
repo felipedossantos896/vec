@@ -2,7 +2,6 @@
 """Review a PR using an already-authenticated local agent CLI."""
 
 import argparse
-from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
@@ -42,13 +41,18 @@ def require_ready_pr(data):
     if not checks:
         raise ReviewError("PR has no checks")
     failures = []
+    required_success = False
     for check in checks:
         status = check.get("status")
         conclusion = check.get("conclusion")
         name = check.get("name") or check.get("context") or "unknown check"
         optional_skip = conclusion == "SKIPPED" and name == "Publicar no Fly.io"
+        if name == "testes" and status == "COMPLETED" and conclusion == "SUCCESS":
+            required_success = True
         if status != "COMPLETED" or (conclusion != "SUCCESS" and not optional_skip):
             failures.append(name)
+    if not required_success:
+        failures.append("required check testes is missing or unsuccessful")
     if failures:
         raise ReviewError("checks are not green: " + ", ".join(failures))
 
@@ -65,15 +69,6 @@ def safe_review(review):
     if secret.search(review):
         raise ReviewError("review output may contain a secret")
     return review.strip()
-
-
-@contextmanager
-def temporary_worktree(repo, sha, directory, runner=run):
-    runner(["git", "worktree", "add", "--detach", str(directory), sha], cwd=repo)
-    try:
-        yield directory
-    finally:
-        runner(["git", "worktree", "remove", "--force", str(directory)], cwd=repo)
 
 
 def review_prompt(number, sha, base_sha, material):
@@ -98,17 +93,17 @@ Compare HEAD against the exact base commit {base_sha}.
 """
 
 
-def review_material(worktree, base_sha):
-    paths = ("AGENTS.md", ".github/agents/reviewer.md", "docs/development/multi-agent.md")
-    sections = [run(["git", "diff", "--no-ext-diff", base_sha, "HEAD"], cwd=worktree).stdout]
+def review_material(repo, base_sha, head_sha):
+    paths = ("AGENTS.md", ".github/agents/reviewer.md", ".agents/skills/ponytail-review/SKILL.md")
+    sections = [run(["git", "diff", "--no-ext-diff", base_sha, head_sha], cwd=repo).stdout]
     for relative in paths:
-        content = run(["git", "show", f"HEAD:{relative}"], cwd=worktree).stdout
-        sections.append(f"\n--- {relative} ---\n{content}")
+        content = run(["git", "show", f"{base_sha}:{relative}"], cwd=repo).stdout
+        sections.append(f"\n--- trusted base policy: {relative} ---\n{content}")
     return "".join(sections)
 
 
-def run_agent(agent, number, sha, base_sha, worktree, output):
-    prompt = review_prompt(number, sha, base_sha, review_material(worktree, base_sha))
+def run_agent(agent, number, sha, base_sha, repo, output):
+    prompt = review_prompt(number, sha, base_sha, review_material(repo, base_sha, sha))
     allowed = ("HOME", "PATH", "TMPDIR", "LANG", "LC_ALL", "TERM", "NO_COLOR", "XDG_CONFIG_HOME", "CODEX_HOME")
     agent_env = {name: os.environ[name] for name in allowed if name in os.environ}
     if agent == "codex":
@@ -117,7 +112,7 @@ def run_agent(agent, number, sha, base_sha, worktree, output):
             "--ignore-user-config", "--disable", "shell_tool", "--disable", "js_repl",
             "--skip-git-repo-check", "-o", str(output), "-",
         ]
-        run(command, cwd=output.parent, capture=False, env=agent_env, input_text=prompt)
+        run(command, cwd=output.parent, env=agent_env, input_text=prompt)
     else:
         result = run(
             ["claude", "-p", "--permission-mode", "plan", "--tools", ""],
@@ -180,11 +175,9 @@ def main():
     run(["git", "fetch", "origin", f"pull/{args.pr}/head"])
 
     with tempfile.TemporaryDirectory(prefix=f"vec-review-pr-{args.pr}-") as temp:
-        worktree = Path(temp) / "worktree"
-        with temporary_worktree(repo, initial["headRefOid"], worktree):
-            output = trusted_output_path(temp)
-            run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefOid"], worktree, output)
-            review = safe_review(output.read_text(encoding="utf-8"))
+        output = trusted_output_path(temp)
+        run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefOid"], repo, output)
+        review = safe_review(output.read_text(encoding="utf-8"))
 
         current = pr_data(args.pr)
         confirm_unchanged(initial, current)

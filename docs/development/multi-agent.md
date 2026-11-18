@@ -52,8 +52,9 @@ Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
 omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
 use `--dry-run`.
 
-O script cria um worktree descartável, executa o agente em modo de revisão,
-exige veredito explícito, reconfirma SHA e CI e registra o parecer no PR. O
+O script monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
+executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
+CI e registra o parecer no PR. O
 merge fica separado, sujeito às proteções do GitHub, porque a CLI não consegue
 fixar atomicamente o SHA da base revisada. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
