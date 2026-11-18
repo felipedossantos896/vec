@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Review and optionally merge a PR using an already-authenticated local agent CLI."""
+"""Review a PR using an already-authenticated local agent CLI."""
 
 import argparse
 from contextlib import contextmanager
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -16,13 +17,14 @@ class ReviewError(Exception):
     pass
 
 
-def run(command, *, cwd=None, capture=True):
+def run(command, *, cwd=None, capture=True, env=None):
     return subprocess.run(
         command,
         cwd=cwd,
         check=True,
         text=True,
         capture_output=capture,
+        env=env,
     )
 
 
@@ -91,14 +93,20 @@ Compare HEAD against the exact base commit {base_sha}.
 
 def run_agent(agent, number, sha, base_sha, worktree, output):
     prompt = review_prompt(number, sha, base_sha)
+    allowed = ("HOME", "PATH", "TMPDIR", "LANG", "LC_ALL", "TERM", "NO_COLOR", "XDG_CONFIG_HOME", "CODEX_HOME")
+    agent_env = {name: os.environ[name] for name in allowed if name in os.environ}
     if agent == "codex":
         command = [
             "codex", "exec", "--sandbox", "read-only", "--ephemeral",
             "-o", str(output), prompt,
         ]
-        run(command, cwd=worktree, capture=False)
+        run(command, cwd=worktree, capture=False, env=agent_env)
     else:
-        result = run(["claude", "-p", "--permission-mode", "plan", prompt], cwd=worktree)
+        result = run(
+            ["claude", "-p", "--permission-mode", "plan", prompt],
+            cwd=worktree,
+            env=agent_env,
+        )
         output.write_text(result.stdout, encoding="utf-8")
 
 
@@ -126,19 +134,11 @@ def confirm_fetched_base(expected, actual):
         raise ReviewError("fetched base does not match the PR base")
 
 
-def merge_command(number, sha):
-    return [
-        "gh", "pr", "merge", str(number), "--merge", "--delete-branch",
-        "--match-head-commit", sha,
-    ]
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int)
     parser.add_argument("--agent", choices=("auto", "codex", "claude"), default="auto")
-    parser.add_argument("--merge", action="store_true", help="merge only after a Ship verdict")
-    parser.add_argument("--dry-run", action="store_true", help="do not comment or merge")
+    parser.add_argument("--dry-run", action="store_true", help="do not comment")
     args = parser.parse_args()
     if args.pr < 1:
         raise ReviewError("invalid PR number")
@@ -175,8 +175,6 @@ def main():
         run(["gh", "pr", "comment", str(args.pr), "--body", body], capture=False)
         if not ship:
             raise ReviewError("review blocked the PR")
-        if args.merge:
-            run(merge_command(args.pr, initial["headRefOid"]), capture=False)
         return 0
 
 

@@ -1,8 +1,9 @@
 import tempfile
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
-from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, merge_command, require_ready_pr, safe_review, temporary_worktree
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_ready_pr, run_agent, safe_review, temporary_worktree
 
 
 def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
@@ -46,15 +47,22 @@ class ReviewPRTests(unittest.TestCase):
         self.assertFalse(is_ship("It should ship later."))
         self.assertFalse(is_ship("Verdict: Ship.\n\nVerdict: blocked."))
 
-    def test_merge_is_pinned_to_reviewed_sha(self):
-        command = merge_command(28, "abc123")
-        self.assertIn("--match-head-commit", command)
-        self.assertEqual(command[-1], "abc123")
-
     def test_review_rejects_possible_secrets(self):
         self.assertEqual(safe_review("Verdict: Ship."), "Verdict: Ship.")
         with self.assertRaisesRegex(ReviewError, "secret"):
             safe_review("api_key=do-not-print")
+
+    def test_agent_receives_only_allowlisted_environment(self):
+        calls = []
+
+        def fake_run(command, **kwargs):
+            calls.append(kwargs)
+
+        with patch.dict("review_pr.os.environ", {"PATH": "/bin", "HOME": "/tmp/home", "SECRET": "nope"}, clear=True):
+            with patch("review_pr.run", side_effect=fake_run):
+                run_agent("codex", 28, "head", "base", Path("/tmp/worktree"), Path("/tmp/review"))
+
+        self.assertEqual(calls[0]["env"], {"HOME": "/tmp/home", "PATH": "/bin"})
 
     def test_worktree_is_removed_after_failure(self):
         calls = []

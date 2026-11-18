@@ -42,17 +42,20 @@ Peça para continuar a mesma Issue a partir do handoff, do diff e dos commits.
 ## Revisão independente local
 
 Depois que o CI do PR estiver verde, outro agente local pode revisar o SHA e,
-se não houver bloqueio, fazer o merge em um comando:
+se não houver bloqueio, registrar o parecer no PR:
 
 ```bash
-python3 scripts/automation/review_pr.py 27 --agent codex --merge
+python3 scripts/automation/review_pr.py <PR> --agent codex
 ```
 
 Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
-omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar
-nem mesclar, use `--dry-run`.
+omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
+use `--dry-run`.
 
 O script cria um worktree descartável, executa o agente em modo de revisão,
-exige veredito explícito, reconfirma SHA e CI, registra o parecer no PR e só
-então permite o merge. Ele usa as sessões locais de `codex`/`claude` e `gh`:
-não requer API key nem cria uma falsa aprovação por uma segunda conta GitHub.
+exige veredito explícito, reconfirma SHA e CI e registra o parecer no PR. O
+merge fica separado, sujeito às proteções do GitHub, porque a CLI não consegue
+fixar atomicamente o SHA da base revisada. O agente recebe somente variáveis de
+ambiente necessárias à sessão local. O script usa as sessões locais de
+`codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
+uma segunda conta GitHub.
