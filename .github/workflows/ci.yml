@@ -24,7 +24,7 @@ jobs:
           cache: npm
 
       - name: Preparar Rust
-        run: rustup toolchain install 1.100.0 --profile minimal
+        run: rustup toolchain install 1.100.0 --profile minimal --component rustfmt
 
       - name: Instalar ferramentas do frontend
         run: npm ci
