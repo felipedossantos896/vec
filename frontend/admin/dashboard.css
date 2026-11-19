@@ -16,6 +16,17 @@
 .stat-primary { border-color: var(--navy); background: var(--navy); color: var(--white); }
 .stat-primary span, .stat-primary small { color: rgba(255, 255, 255, 0.74); }
 
+/* Central de atenção: contagens acionáveis que reutilizam os filtros de Pessoas */
+.attention { margin-top: 32px; padding: var(--space-5); border: 1px solid var(--gold-soft); border-radius: var(--r-lg); background: var(--gold-wash); }
+.attention-grid { display: grid; gap: var(--space-3); }
+.attention-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 2px 14px; width: 100%; padding: var(--space-4); border: 1px solid var(--gold-soft); border-radius: var(--r-md); background: var(--surface-card); color: var(--ink); text-align: left; box-shadow: var(--shadow-card); }
+.attention-card b { grid-row: 1 / 4; align-self: center; min-width: 48px; color: var(--gold-ink); font: 500 2.5rem/1 var(--serif); text-align: center; font-variant-numeric: tabular-nums; }
+.attention-card span { font-weight: 700; }
+.attention-card small { color: var(--muted); }
+.attention-card em { margin-top: 6px; color: var(--navy); font-size: 0.86rem; font-style: normal; font-weight: 700; }
+.attention-card:disabled { cursor: default; box-shadow: none; }
+.attention-card:disabled b, .attention-card:disabled em { color: var(--ok); }
+
 /* ── Painéis: jornada e células ── */
 .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 14px; margin-top: 14px; }
 .panel, .ui-card { min-width: 0; padding: var(--space-5); border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
@@ -152,6 +163,7 @@
 @media (hover: hover) {
   .cell-row:not(.active):hover, .item:hover, .passo:hover, .pessoa:hover { background: var(--gold-wash); }
   button.mc:hover { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .attention-card:not(:disabled):hover { border-color: var(--gold); }
 }
 @media (min-width: 640px) { .panel, .ui-card { padding: var(--space-6); } }
 @media (min-width: 900px) { .search { flex-basis: 280px; } }
@@ -162,6 +174,7 @@
   .stat b, .ui-kpi b { font-size: 2.75rem; }
   .chart-scroll { overflow-x: visible; }
   .cols { min-width: 0; }
+  .attention-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ── Tabela ── */

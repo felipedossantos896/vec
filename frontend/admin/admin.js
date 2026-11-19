@@ -17,6 +17,7 @@ const SITUACOES = {
     naoRecebeu: { label: 'Ainda não receberam Jesus', f: r => r.recebeuJesus === 'N' },
     naoFrequenta: { label: 'Não congregam com frequência', f: r => r.frequentaCultos === 'N' },
     semDiscipulador: { label: 'Sem discipulador', f: r => metricasIndicadores.semDiscipulador(r) },
+    jornadaIncompleta: { label: 'Jornada incompleta', f: r => metricasIndicadores.jornadaIncompleta(r) },
     querDiscipulado: { label: 'Querem ser discipulados', f: r => r.interesseDiscipulado === 'S' },
     querCuidar: { label: 'Querem cuidar de pessoas', f: r => r.interesseCuidar === 'S' },
     querLiderar: { label: 'Querem liderar célula', f: r => r.interesseLider === 'S' },
@@ -38,7 +39,7 @@ JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo')
 // Grupos do filtro de situação; uma situação fora da lista cai em "Outras"
 const GRUPOS_SITUACAO = [
     ['Cuidado', ['semContato', 'semDiscipulador', 'naoFrequenta', 'semCelula', 'naoRecebeu']],
-    ['Jornada', ['naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
+    ['Jornada', ['jornadaIncompleta', 'naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
     ['Discipulado', ['meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
     ['Interesses e serviço', ['querLiderar', 'querCuidar', 'querAnfitriao', 'servem']],
     ['Cadastro', ['duplicados']]

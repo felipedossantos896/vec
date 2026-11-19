@@ -36,6 +36,11 @@ test('identifica discipulador ausente ou só com espaços', () => {
   assert.equal(metricas.semDiscipulador({ discipulador: 'Ana' }), false);
 });
 
+test('identifica jornada incompleta sem presumir ordem', () => {
+  assert.equal(metricas.jornadaIncompleta({ _jornada: 5 }), true);
+  assert.equal(metricas.jornadaIncompleta({ _jornada: 6 }), false);
+});
+
 test('calcula seis jornadas completas entre doze pessoas', () => {
   const registros = Array.from({ length: 12 }, (_, i) => ({ _jornada: i < 6 ? 6 : 2 }));
   const resumo = metricas.resumir(registros);

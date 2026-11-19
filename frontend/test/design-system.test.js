@@ -39,3 +39,10 @@ test('organiza indicadores em seções e preserva todas as métricas', () => {
   }
   assert.match(charts, /class="chart-scroll" role="region" aria-label=/);
 });
+
+test('central de atenção reutiliza filtros existentes de Pessoas', () => {
+  assert.match(charts, /id="centralAtencao"/);
+  assert.match(charts, /data-sit="\$\{situacao\}"/);
+  assert.match(charts, /jornadaIncompleta/);
+  assert.match(charts, /semDiscipulador/);
+});

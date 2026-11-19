@@ -13,6 +13,10 @@ const metricasIndicadores = {
     return !String(registro.discipulador || '').trim();
   },
 
+  jornadaIncompleta(registro: Registro): boolean {
+    return registro._jornada < JORNADA.length;
+  },
+
   filtrar(registros: Registro[], setor: string, celula: string): Registro[] {
     return registros.filter(r => (!setor || r.setor === setor) && (!celula || r.celula === celula));
   },

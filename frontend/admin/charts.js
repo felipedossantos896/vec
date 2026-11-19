@@ -26,6 +26,18 @@ function painel(titulo, sub, corpo) {
 function kpi(label, valor, nota, destaque = false) {
     return `<div class="stat kpi ui-kpi${destaque ? ' stat-primary' : ''}"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
 }
+function centralAtencao(base) {
+    const itens = [
+        ['jornadaIncompleta', 'Jornada incompleta', 'Pessoas que ainda não concluíram as seis etapas.'],
+        ['semDiscipulador', 'Sem discipulador', 'Pessoas sem um discipulador informado.']
+    ];
+    return `<section class="attention" aria-labelledby="centralAtencao">
+    <header class="indicator-heading"><div><p class="eyebrow">Ação</p><h2 id="centralAtencao">Central de atenção</h2></div><p>Os grupos podem se sobrepor e seguem o escopo selecionado.</p></header>
+    <div class="attention-grid">${itens.map(([situacao, titulo, nota]) => {
+        const n = base.filter(SITUACOES[situacao].f).length;
+        return `<button type="button" class="attention-card" data-sit="${situacao}"${n ? '' : ' disabled'}><b>${n}</b><span>${titulo}</span><small>${nota}</small><em>${n ? 'Ver em Pessoas →' : 'Tudo em dia'}</em></button>`;
+    }).join('')}</div></section>`;
+}
 // Cadastros recebidos em cada um dos últimos 12 meses, incluindo os meses sem nenhum
 function porMes(base) {
     const hoje = new Date();
@@ -80,6 +92,7 @@ function renderIndicadores() {
             kpi('Idade média', media != null ? `${media}` : '—', media != null ? 'anos' : 'sem datas de nascimento') +
             kpi('Jornada completa', String(completa), `${Math.round((completa / total) * 100)}% concluíram as ${JORNADA.length} etapas`) +
             kpi('Etapas por pessoa', etapas, `em média, de ${JORNADA.length}`)}</div></section>
+    ${centralAtencao(base)}
     <section class="indicator-section" aria-labelledby="indicadoresJornada">
     <header class="indicator-heading"><div><p class="eyebrow">Jornada</p><h2 id="indicadoresJornada">Caminho de desenvolvimento</h2></div><p>Cada etapa é contada de forma independente.</p></header>
     <div class="panels">${mapaJornada(base) + painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base), 'Jornada concluída por mês'))}</div></section>
