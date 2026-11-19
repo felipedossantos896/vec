@@ -19,9 +19,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
+import { BANCO, urlDoBanco } from './banco.mjs';
 
 const run = promisify(execFile);
-const BANCO = 'vec-dev';
 const VIEWPORTS = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const KPIS = 5;
 const PERMISSOES = [
@@ -48,11 +48,6 @@ async function cmd(programa, args, opcoes = {}) {
   } catch {
     throw new Etapa(`${programa} ${args[0] ?? ''} falhou`);
   }
-}
-
-export function urlDoBanco(url, banco = BANCO) {
-  const m = /^libsql:\/\/([^./]+)\.[^/]+$/.exec(url.trim());
-  return Boolean(m && m[1].startsWith(`${banco}-`) && m[1].length > banco.length + 1);
 }
 
 function portaLivre() {
@@ -188,6 +183,14 @@ async function validarVazio(navegador, base, cred) {
   }
 }
 
+function usuarioDoArquivo() {
+  try {
+    return JSON.parse(readFileSync(join(estado.dir, 'credencial.json'), 'utf8')).usuario ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Uma única limpeza, compartilhada entre o fluxo normal e os sinais. */
 function limpar() {
   limpeza ??= executarLimpeza();
@@ -206,9 +209,14 @@ async function executarLimpeza() {
   const bin = estado.dir && join(estado.dir, 'e2e-usuario');
   if (bin && existsSync(bin) && estado.env) {
     try {
-      if (estado.usuario) await cmd(bin, ['remover', '-usuario', estado.usuario], { env: estado.env });
-      const restantes = await cmd(bin, ['contar'], { env: estado.env });
-      restantes === '0' ? ok('nenhum usuário temporário restante') : falha(`${restantes} usuário(s) temporário(s) restante(s) no ${BANCO}`);
+      // `criar` pode gravar o usuário e ainda falhar (Ctrl+C, timeout, rede):
+      // nesse caso o nome é recuperado do arquivo de credencial.
+      const usuario = estado.usuario || usuarioDoArquivo();
+      if (usuario) {
+        await cmd(bin, ['remover', '-usuario', usuario], { env: estado.env });
+        const restantes = await cmd(bin, ['contar', '-usuario', usuario], { env: estado.env });
+        restantes === '0' ? ok('usuário temporário removido') : falha(`usuário temporário ainda existe no ${BANCO}`);
+      }
     } catch {
       falha(`não foi possível remover o usuário temporário; remova-o com e2e-usuario remover`);
     }
@@ -258,4 +266,4 @@ async function principal() {
   process.exitCode = falhas ? 1 : 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await principal();
+await principal();

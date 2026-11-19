@@ -96,7 +96,7 @@ foco de teclado visível, ausência de overflow horizontal, console e HTTP sem
 erros, estado vazio (resposta simulada, nada é gravado) e logout.
 
 Sempre, inclusive em falha ou Ctrl+C, encerra navegador e servidor, remove o
-usuário e os arquivos temporários e confere que não restou usuário `e2e-*`.
+usuário e os arquivos temporários e confere que o usuário desta execução foi removido (outras execuções simultâneas não interferem).
 Nada de token, senha, screenshot ou dado de pessoas é impresso ou gravado.
 `E2E_SIMULAR_FALHA=1` força uma falha após o login para comprovar a limpeza.
 O token expira sozinho em 1 dia; o Turso não permite revogar um token

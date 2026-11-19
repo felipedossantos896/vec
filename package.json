@@ -4,7 +4,7 @@
   "scripts": {
     "build": "npm run build:css && tsc --project frontend/tsconfig.json",
     "build:css": "tailwindcss -i frontend/tailwind.input.css -o frontend/tailwind.css --minify",
-    "test:frontend": "tsc --project frontend/tsconfig.json && node --test frontend/test/*.test.js",
+    "test:frontend": "tsc --project frontend/tsconfig.json && node --test frontend/test/*.test.js scripts/e2e/*.test.mjs",
     "typecheck": "tsc --project frontend/tsconfig.json --noEmit",
     "test:e2e:dev": "node scripts/e2e/dev-smoke.mjs"
   },

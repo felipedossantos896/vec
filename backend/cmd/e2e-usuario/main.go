@@ -7,7 +7,7 @@
 //
 //	e2e-usuario criar -arquivo /tmp/dir/credencial.json
 //	e2e-usuario remover -usuario e2e-1a2b3c4d
-//	e2e-usuario contar
+//	e2e-usuario contar [-usuario e2e-1a2b3c4d]
 package main
 
 import (
@@ -61,8 +61,10 @@ func main() {
 		_ = flags.Parse(os.Args[2:])
 		err = remover(ctx, db, *usuario)
 	case "contar":
+		usuario := flags.String("usuario", "", "conta só este usuário temporário (padrão: todos)")
+		_ = flags.Parse(os.Args[2:])
 		var n int
-		if n, err = contar(ctx, db); err == nil {
+		if n, err = contar(ctx, db, *usuario); err == nil {
 			fmt.Println(n)
 		}
 	default:
@@ -73,11 +75,13 @@ func main() {
 	}
 }
 
-// hostDev confere que o host é "vec-dev-<organização>.<região>...", ou seja,
-// o banco exatamente chamado vec-dev (e não vec-dev2 nem vec-prod).
+// hostDev confere que o host é da Turso e começa com "vec-dev-" (Turso monta
+// <banco>-<organização>.<região>.turso.io). Recusa vec-dev2, vec-prod e outros
+// domínios. Como nomes podem ter hífen, não distingue um banco "vec-dev-x";
+// o script resolve a URL pelo nome exato com o turso CLI.
 func hostDev(host string) bool {
-	rotulo, _, ok := strings.Cut(host, ".")
-	if !ok {
+	rotulo, resto, ok := strings.Cut(host, ".")
+	if !ok || !strings.HasSuffix("."+resto, ".turso.io") {
 		return false
 	}
 	org, ok := strings.CutPrefix(rotulo, bancoDev+"-")
@@ -146,12 +150,19 @@ func remover(ctx context.Context, db turso.DB, usuario string) error {
 	return err
 }
 
-// contar devolve quantos usuários temporários existem (o esperado após o
-// smoke é zero).
-func contar(ctx context.Context, db turso.DB) (int, error) {
-	res, err := db.Do(ctx, turso.Stmt{
+// contar devolve quantos usuários temporários existem; com usuario, conta só
+// esse (assim execuções simultâneas não se atrapalham).
+func contar(ctx context.Context, db turso.DB, usuario string) (int, error) {
+	stmt := turso.Stmt{
 		SQL: `SELECT usuario FROM usuarios WHERE usuario GLOB 'e2e-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'`,
-	})
+	}
+	if usuario != "" {
+		if !temporario(usuario) {
+			return 0, errors.New("só usuários temporários (prefixo e2e-) podem ser contados")
+		}
+		stmt = turso.Stmt{SQL: `SELECT usuario FROM usuarios WHERE usuario = ?`, Args: []any{usuario}}
+	}
+	res, err := db.Do(ctx, stmt)
 	if err != nil {
 		return 0, err
 	}

@@ -2,13 +2,15 @@ package main
 
 import "testing"
 
-func TestHostDevAceitaSomenteVecDev(t *testing.T) {
+func TestHostDevExigeTursoEPrefixoVecDev(t *testing.T) {
 	casos := map[string]bool{
 		"vec-dev-org.aws-us-east-1.turso.io":  true,
 		"vec-prod-org.aws-us-east-1.turso.io": false,
 		"vec-dev.aws-us-east-1.turso.io":      false,
 		"vec-dev2-org.turso.io":               false,
 		"vec-devorg.turso.io":                 false,
+		"vec-dev-org.evil.test":               false,
+		"vec-dev-org.turso.io.evil.test":      false,
 		"(não definido)":                      false,
 		"":                                    false,
 	}
