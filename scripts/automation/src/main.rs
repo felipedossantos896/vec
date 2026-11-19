@@ -447,7 +447,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let initial = pr_data(number, &repository)?;
     require_owner_pr(&initial, owner)?;
     require_ready_pr(&initial)?;
-    let evidence = verified_ci_evidence(&repository, number, &initial)?;
+    let ci_evidence = verified_ci_evidence(&repository, number, &initial)?;
     let agent = choose_agent(&agent)?;
     run_status(&agent, &["--version"], None, None, true)?;
     let base_ref = format!("refs/remotes/origin/{}", initial.base_ref_name);
@@ -478,6 +478,34 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     .map_err(|error| format!("fetching the reviewed PR head: {error}"))?;
     let temp = TempDir::new(&format!("vec-review-pr-{number}"))?;
     let output = temp.path.join("review.md");
+    let changed_ci = !run_output(
+        "git",
+        &[
+            "diff",
+            "--no-ext-diff",
+            "--no-textconv",
+            "--name-only",
+            &initial.base_ref_oid,
+            &initial.head_ref_oid,
+            "--",
+            ".github/workflows/ci.yml",
+        ],
+        Some(&root),
+    )?
+    .is_empty();
+    if changed_ci && !dry_run {
+        return Err(
+            "this PR changes the CI workflow; use --dry-run and review the CI changes separately"
+                .into(),
+        );
+    }
+    let evidence = if changed_ci {
+        format!(
+            "The API verified the run identity and result below. This PR changes the CI workflow itself. Inspect the workflow diff to assess what the run actually tested.\n{ci_evidence}"
+        )
+    } else {
+        ci_evidence
+    };
     run_agent(&agent, number, &initial, &evidence, &root, &output)
         .map_err(|error| format!("running the local {agent} review: {error}"))?;
     let review = safe_review(&fs::read_to_string(&output).map_err(|e| e.to_string())?)?;
