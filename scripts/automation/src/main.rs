@@ -487,10 +487,10 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let output = temp.path.join("review.md");
     run_agent(&agent, number, &initial, &evidence, &root, &output)?;
     let review = safe_review(&fs::read_to_string(&output).map_err(|e| e.to_string())?)?;
+    verified_ci_evidence(&repository, &initial.head_ref_oid)?;
     let current = pr_data(number, &repository)?;
     require_owner_pr(&current, owner)?;
     confirm_unchanged(&initial, &current)?;
-    verified_ci_evidence(&repository, &current.head_ref_oid)?;
     println!("{review}");
     let ship = is_ship(&review);
     if dry_run {
@@ -504,8 +504,8 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         return Err("review blocked the PR; nothing was published".into());
     }
     let body = format!(
-        "## Revisão independente local ({agent})\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
-        initial.base_ref_oid, initial.head_ref_oid
+        "## Revisão independente local ({agent})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
+        initial.base_ref_name, initial.base_ref_oid, initial.head_ref_oid
     );
     run_status(
         "gh",
