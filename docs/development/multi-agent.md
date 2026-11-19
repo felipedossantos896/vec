@@ -52,8 +52,10 @@ cargo run --locked --manifest-path scripts/automation/Cargo.toml -- review-pr <P
 ```
 
 Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
-omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
-use `--dry-run`.
+omita a opção para escolher o primeiro CLI disponível **que não seja coautor da
+PR** (conforme os trailers `Co-Authored-By` dos commits). Indicar um agente
+coautor é recusado. Para ensaiar sem comentar nem publicar status, use
+`--dry-run`.
 
 Para PRs que alteram `.github/workflows/ci.yml`, o revisor também compara as
 etapas do workflow e confirma que as validações obrigatórias foram preservadas
@@ -69,10 +71,51 @@ CI, inclui no contexto confiável a evidência dos checks do SHA exato e registr
 no PR somente base, head e aprovação fixa quando o veredito for
 `Ship`. Bloqueios ficam locais para correção. Incorpore a PR pelo GitHub após
 conferir o parecer e a branch de destino. A `main` exige o check `testes` do
-GitHub Actions e uma branch atualizada. O CLI rejeita `--merge` porque a API
+GitHub Actions, o status `revisao-independente` (veja abaixo) e uma branch
+atualizada. O CLI rejeita `--merge` porque a API
 do GitHub aceita uma condição para o SHA de origem, mas não para a branch de
 destino revisada. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
 de shell ou acesso ao checkout. O binário usa as sessões locais de
 `codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
 uma segunda conta GitHub.
+
+### Gate de revisão na `main`
+
+Com veredito `Ship`, o `review-pr` publica, além do comentário, o commit status
+`revisao-independente = success` no SHA revisado. Com bloqueio, publica
+`failure`. O status pertence ao SHA, então qualquer novo push ou rebase
+exige nova revisão. Como o repositório tem um único colaborador e o GitHub não
+permite que o autor aprove a própria PR, o gate usa status obrigatório em vez
+de aprovação formal.
+
+Configuração da proteção (aplicar só depois que este fluxo estiver na `main`).
+O `PUT` substitui a proteção inteira; o estado anterior está no rollback:
+
+```bash
+gh api -X PUT repos/<owner>/<repo>/branches/main/protection --input - <<'JSON'
+{"required_status_checks":{"strict":true,"contexts":["testes","revisao-independente"]},
+ "enforce_admins":true,
+ "required_pull_request_reviews":{"required_approving_review_count":0},
+ "restrictions":null,"required_conversation_resolution":true,
+ "allow_force_pushes":false,"allow_deletions":false}
+JSON
+```
+
+Isso exige PR (sem aprovação formal), conversas resolvidas, CI e revisão
+independente no SHA atual, com a branch atualizada, inclusive para admins.
+
+Rollback para o estado anterior a esta mudança (registrado em 2026-11-19):
+
+```bash
+gh api -X PUT repos/<owner>/<repo>/branches/main/protection --input - <<'JSON'
+{"required_status_checks":{"strict":true,"contexts":["testes"]},
+ "enforce_admins":true,"required_pull_request_reviews":null,
+ "restrictions":null,"required_conversation_resolution":false,
+ "allow_force_pushes":false,"allow_deletions":false}
+JSON
+```
+
+Limite conhecido: quem tem permissão de escrita pode publicar um status
+manualmente; o gate impede merge acidental sem revisão, não um colaborador
+mal-intencionado. Deploy e auto-merge seguem desabilitados por padrão.

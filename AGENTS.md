@@ -16,6 +16,11 @@ Ambos seguem a mesma fonte de verdade: este arquivo, as ADRs, Specs e Issues.
 - O histórico de chat do Codex e do Claude Code **não** é compartilhado. Usar Git, Issues e handoff como continuidade.
 - Se houver alterações locais de outro agente, não sobrescrever; criar branch ou worktree isolado.
 - Não executar dois agentes simultaneamente no mesmo working tree.
+- Todo commit feito por agente termina com o trailer do próprio agente
+  (`Co-Authored-By: Claude ...` ou `Co-Authored-By: Codex ...`). O `review-pr`
+  usa esses trailers e recusa revisor que seja coautor da PR.
+- Merge na `main` exige os status `testes` e `revisao-independente` no SHA
+  atual; o segundo só é publicado pelo `review-pr` de outro agente.
 
 ## Limites de segurança
 - Não expor dados pessoais, tokens, credenciais ou conteúdo sensível em prompts, logs ou PRs.

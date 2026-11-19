@@ -3,6 +3,7 @@ use crate::Result;
 use crate::process::{
     allowlisted_environment, require_command, run_captured_with_input, run_output_raw, run_status,
 };
+use regex::Regex;
 use std::fs;
 use std::path::Path;
 
@@ -125,17 +126,41 @@ pub(super) fn run_agent(
     }
 }
 
-pub(super) fn choose_agent(requested: &str) -> Result<String> {
+/// Agents that co-authored the PR commits, from `Co-Authored-By` trailers.
+pub(super) fn implementers(messages: &str) -> Vec<&'static str> {
+    let trailer = Regex::new(r"(?im)^co-authored-by:\s*(claude|codex)\b").unwrap();
+    let mut found: Vec<&'static str> = trailer
+        .captures_iter(messages)
+        .map(|capture| {
+            if capture[1].eq_ignore_ascii_case("claude") {
+                "claude"
+            } else {
+                "codex"
+            }
+        })
+        .collect();
+    found.sort_unstable();
+    found.dedup();
+    found
+}
+
+/// Picks a reviewer that did not implement the PR.
+pub(super) fn choose_agent(requested: &str, implemented_by: &[&str]) -> Result<String> {
     if requested != "auto" {
+        if implemented_by.contains(&requested) {
+            return Err(format!(
+                "independent review required: {requested} co-authored commits in this PR; use another agent"
+            ));
+        }
         require_command(requested)?;
         return Ok(requested.into());
     }
     for candidate in ["codex", "claude"] {
-        if require_command(candidate).is_ok() {
+        if !implemented_by.contains(&candidate) && require_command(candidate).is_ok() {
             return Ok(candidate.into());
         }
     }
-    Err("install and authenticate codex or claude CLI".into())
+    Err("no independent reviewer available: install and authenticate an agent that did not co-author this PR".into())
 }
 
 fn diff_args(base: &str, head: &str) -> Vec<String> {
@@ -148,6 +173,20 @@ fn diff_args(base: &str, head: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn implementers_come_from_trailers() {
+        let messages = "feat: x\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\nfix: y\nco-authored-by: Codex <codex@example.test>\n";
+        assert_eq!(implementers(messages), vec!["claude", "codex"]);
+        assert!(implementers("fix: mention claude in text\nCo-Authored-By: Someone").is_empty());
+    }
+
+    #[test]
+    fn co_author_cannot_review() {
+        let error = choose_agent("claude", &["claude"]).unwrap_err();
+        assert!(error.contains("independent review required"));
+        assert!(choose_agent("auto", &["claude", "codex"]).is_err());
+    }
 
     #[test]
     fn diff_disables_external_drivers() {

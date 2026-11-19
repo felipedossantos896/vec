@@ -3,7 +3,7 @@ mod github;
 
 use crate::Result;
 use crate::process::{TempDir, repo_root, require_command, run_output, run_status};
-use agent::{choose_agent, run_agent};
+use agent::{choose_agent, implementers, run_agent};
 use github::{
     confirm_unchanged, pr_data, require_owner_pr, require_ready_pr, verified_ci_evidence,
 };
@@ -11,6 +11,7 @@ use regex::Regex;
 use std::fs;
 
 pub(crate) const BLOCKED_DRY_RUN: &str = "review blocked the PR";
+const REVIEW_CONTEXT: &str = "revisao-independente";
 
 pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
     let number: u64 = args
@@ -60,8 +61,6 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
     require_owner_pr(&initial, owner)?;
     require_ready_pr(&initial)?;
     let ci_evidence = verified_ci_evidence(&repository, number, &initial)?;
-    let agent = choose_agent(&agent)?;
-    run_status(&agent, &["--version"], None, None, true)?;
     let base_ref = format!("refs/remotes/origin/{}", initial.base_ref_name);
     let remote = format!("https://github.com/{repository}.git");
     run_status(
@@ -88,6 +87,17 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         true,
     )
     .map_err(|error| format!("fetching the reviewed PR head: {error}"))?;
+    let messages = run_output(
+        "git",
+        &[
+            "log",
+            "--format=%B",
+            &format!("{}..{}", initial.base_ref_oid, initial.head_ref_oid),
+        ],
+        Some(&root),
+    )?;
+    let agent = choose_agent(&agent, &implementers(&messages))?;
+    run_status(&agent, &["--version"], None, None, true)?;
     let temp = TempDir::new(&format!("vec-review-pr-{number}"))?;
     let output = temp.path.join("review.md");
     let changed_ci = !run_output(
@@ -129,7 +139,8 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         };
     }
     if !ship {
-        return Err("review blocked the PR; nothing was published".into());
+        publish_status(&repository, &initial.head_ref_oid, false, &agent)?;
+        return Err("review blocked the PR; status revisao-independente set to failure".into());
     }
     let body = format!(
         "## Revisão independente local ({agent})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
@@ -150,7 +161,38 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         None,
         false,
     )?;
-    Ok(())
+    publish_status(&repository, &initial.head_ref_oid, true, &agent)
+}
+
+/// Commit status required by the `main` protection. It is bound to the
+/// reviewed SHA, so any new push needs a new independent review.
+fn publish_status(repository: &str, sha: &str, ship: bool, agent: &str) -> Result<()> {
+    let (state, description) = if ship {
+        ("success", format!("Ship por {agent} no SHA revisado"))
+    } else {
+        ("failure", format!("Bloqueado por {agent}"))
+    };
+    run_status(
+        "gh",
+        &[
+            "api",
+            "--hostname",
+            "github.com",
+            "-X",
+            "POST",
+            &format!("repos/{repository}/statuses/{sha}"),
+            "-f",
+            &format!("state={state}"),
+            "-f",
+            &format!("context={REVIEW_CONTEXT}"),
+            "-f",
+            &format!("description={description}"),
+        ],
+        None,
+        None,
+        true,
+    )
+    .map_err(|error| format!("publishing the {REVIEW_CONTEXT} status: {error}"))
 }
 
 fn can_publish_review(review: &str, changed_ci: bool) -> bool {
