@@ -184,6 +184,11 @@ mod tests {
             "",
             r#"{"mcpServers":{"playwright": {"command":"npx"}}}"#
         ));
+        // ~/.claude/settings.json plugin and project .mcp.json, joined by mcp_check.
+        let settings = r#"{"enabledPlugins":{"playwright@claude-plugins":true}}"#;
+        assert!(has_playwright_mcp("", &format!("{{}}\n{settings}\n")));
+        let project = r#"{"mcpServers":{"playwright":{"command":"npx"}}}"#;
+        assert!(has_playwright_mcp("", &format!("{{}}\n{{}}\n{project}")));
         assert!(!has_playwright_mcp(
             "# playwright later",
             r#"{"note":"playwright"}"#
