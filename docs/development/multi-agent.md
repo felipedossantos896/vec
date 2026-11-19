@@ -38,3 +38,32 @@ Peça para continuar a mesma Issue a partir do handoff, do diff e dos commits.
   não uma exigência para uso local e não executa Claude Code.
 - Nenhum agente deve contornar CI, revisões ou permissões de produção.
 - O handoff documenta fatos, mas não prova que uma tarefa foi concluída.
+
+## Revisão independente local
+
+Depois que o CI do PR estiver verde, outro agente local pode revisar o SHA e,
+se não houver bloqueio, registrar o parecer no PR:
+
+```bash
+python3 scripts/automation/review_pr.py <PR> --agent codex
+```
+
+Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
+omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
+use `--dry-run`.
+
+Por segurança pragmática, a publicação autônoma só aceita PR criada pelo dono
+do repositório e cuja branch de origem também pertença a ele. PRs de forks ou
+outros autores devem seguir revisão humana.
+
+O script monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
+executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
+CI e registra no PR somente base, head e aprovação fixa quando o veredito for
+`Ship`; texto livre do modelo nunca é publicado. Bloqueios ficam locais para
+correção. O
+merge fica separado, sujeito às proteções do GitHub, porque a CLI não consegue
+fixar atomicamente o SHA da base revisada. O agente recebe somente variáveis de
+ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
+de shell ou acesso ao checkout. O script usa as sessões locais de
+`codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
+uma segunda conta GitHub.

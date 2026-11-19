@@ -34,6 +34,9 @@ jobs:
           git diff --exit-code -- frontend/app.js frontend/contato.js frontend/admin/admin.js frontend/admin/metrics.js frontend/admin/dashboard.js frontend/admin/detalhe.js frontend/admin/charts.js frontend/admin/acompanhamento.js frontend/admin/editar.js frontend/admin/discipulado.js frontend/admin/estrutura.js frontend/admin/anotacoes.js frontend/admin/fotos.js frontend/admin/users.js frontend/tailwind.css
           test -z "$(git status --short --untracked-files=all -- frontend/app.js frontend/contato.js frontend/admin/admin.js frontend/admin/metrics.js frontend/admin/dashboard.js frontend/admin/detalhe.js frontend/admin/charts.js frontend/admin/acompanhamento.js frontend/admin/editar.js frontend/admin/discipulado.js frontend/admin/estrutura.js frontend/admin/anotacoes.js frontend/admin/fotos.js frontend/admin/users.js frontend/tailwind.css)"
 
+      - name: Testes da automação local
+        run: python3 -m unittest discover -s scripts/automation -p 'test_*.py' -v
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
