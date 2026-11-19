@@ -58,15 +58,6 @@ struct Check {
     state: Option<String>,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowRun {
-    database_id: u64,
-    head_sha: String,
-    status: String,
-    conclusion: String,
-}
-
 fn main() {
     if let Err(error) = execute(env::args().skip(1).collect()) {
         eprintln!("{error}");
@@ -456,7 +447,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let initial = pr_data(number, &repository)?;
     require_owner_pr(&initial, owner)?;
     require_ready_pr(&initial)?;
-    let evidence = verified_ci_evidence(&repository, &initial.head_ref_oid)?;
+    let evidence = verified_ci_evidence(&repository, number, &initial)?;
     let agent = choose_agent(&agent)?;
     run_status(&agent, &["--version"], None, None, true)?;
     let base_ref = format!("refs/remotes/origin/{}", initial.base_ref_name);
@@ -471,7 +462,8 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         Some(&root),
         None,
         true,
-    )?;
+    )
+    .map_err(|error| format!("fetching the reviewed base: {error}"))?;
     let fetched = run_output("git", &["rev-parse", &base_ref], Some(&root))?;
     if fetched != initial.base_ref_oid {
         return Err("fetched base does not match the PR base".into());
@@ -482,12 +474,14 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         Some(&root),
         None,
         true,
-    )?;
+    )
+    .map_err(|error| format!("fetching the reviewed PR head: {error}"))?;
     let temp = TempDir::new(&format!("vec-review-pr-{number}"))?;
     let output = temp.path.join("review.md");
-    run_agent(&agent, number, &initial, &evidence, &root, &output)?;
+    run_agent(&agent, number, &initial, &evidence, &root, &output)
+        .map_err(|error| format!("running the local {agent} review: {error}"))?;
     let review = safe_review(&fs::read_to_string(&output).map_err(|e| e.to_string())?)?;
-    verified_ci_evidence(&repository, &initial.head_ref_oid)?;
+    verified_ci_evidence(&repository, number, &initial)?;
     let current = pr_data(number, &repository)?;
     require_owner_pr(&current, owner)?;
     confirm_unchanged(&initial, &current)?;
@@ -768,41 +762,68 @@ fn diff_args(base: &str, head: &str) -> Vec<String> {
         .collect()
 }
 
-fn verified_ci_evidence(repository: &str, head: &str) -> Result<String> {
+fn verified_ci_evidence(repository: &str, number: u64, pr: &PullRequest) -> Result<String> {
+    let endpoint = format!("repos/{repository}/actions/workflows/ci.yml/runs");
     let output = run_output(
         "gh",
         &[
-            "run",
-            "list",
-            "--repo",
-            repository,
-            "--workflow",
-            "ci.yml",
-            "--commit",
-            head,
-            "--event",
-            "pull_request",
-            "--limit",
-            "10",
-            "--json",
-            "databaseId,headSha,status,conclusion",
+            "api",
+            "--hostname",
+            "github.com",
+            "--method",
+            "GET",
+            &endpoint,
+            "-f",
+            "event=pull_request",
+            "-f",
+            &format!("head_sha={}", pr.head_ref_oid),
         ],
         None,
     )?;
-    ci_evidence_from_json(&output, head)
+    let run = ci_run_for_pr(
+        &serde_json::from_str(&output).map_err(|e| e.to_string())?,
+        number,
+        pr,
+    )?;
+    let endpoint = format!("repos/{repository}/actions/runs/{run}/jobs");
+    let output = run_output("gh", &["api", "--hostname", "github.com", &endpoint], None)?;
+    let jobs: Value = serde_json::from_str(&output).map_err(|e| e.to_string())?;
+    if !jobs["jobs"].as_array().is_some_and(|jobs| {
+        jobs.iter().any(|job| {
+            job["name"] == "testes"
+                && job["status"] == "completed"
+                && job["conclusion"] == "success"
+        })
+    }) {
+        return Err("the expected CI run has no successful testes job".into());
+    }
+    Ok(format!(
+        "Trusted gate evidence: GitHub Actions run {run} of ci.yml passed testes for PR #{number} at exact head {} before this review.",
+        pr.head_ref_oid
+    ))
 }
 
-fn ci_evidence_from_json(output: &str, head: &str) -> Result<String> {
-    let runs: Vec<WorkflowRun> = serde_json::from_str(output).map_err(|e| e.to_string())?;
-    let run = runs
-        .iter()
-        .find(|run| run.head_sha == head)
-        .filter(|run| run.status == "completed" && run.conclusion == "success")
-        .ok_or("the expected CI workflow is not successful for the exact head")?;
-    Ok(format!(
-        "Trusted gate evidence: `.github/workflows/ci.yml` completed SUCCESS for exact head {head} in GitHub Actions run {} before this review.",
-        run.database_id
-    ))
+fn ci_run_for_pr(response: &Value, number: u64, pr: &PullRequest) -> Result<u64> {
+    let run = response["workflow_runs"]
+        .as_array()
+        .and_then(|runs| {
+            runs.iter().find(|run| {
+                run["path"] == ".github/workflows/ci.yml"
+                    && run["event"] == "pull_request"
+                    && run["head_sha"] == pr.head_ref_oid
+                    && run["pull_requests"].as_array().is_some_and(|pulls| {
+                        pulls.iter().any(|pull| {
+                            pull["number"] == number
+                                && pull["base"]["ref"] == pr.base_ref_name
+                                && pull["base"]["sha"] == pr.base_ref_oid
+                                && pull["head"]["sha"] == pr.head_ref_oid
+                        })
+                    })
+            })
+        })
+        .filter(|run| run["status"] == "completed" && run["conclusion"] == "success")
+        .ok_or("the expected CI workflow is not successful for this PR, base and head")?;
+    run["id"].as_u64().ok_or_else(|| "missing CI run ID".into())
 }
 
 fn allowlisted_environment() -> Vec<(OsString, OsString)> {
@@ -1212,12 +1233,7 @@ mod tests {
     #[test]
     fn prompt_contains_trusted_ci_evidence() {
         let value = pr();
-        let evidence = ci_evidence_from_json(
-            r#"[{"databaseId":42,"headSha":"head","status":"completed","conclusion":"success"}]"#,
-            "head",
-        )
-        .unwrap();
-        let prompt = review_prompt(34, &value, &evidence, "diff");
+        let prompt = review_prompt(34, &value, "Trusted gate evidence: exact head head", "diff");
         assert!(prompt.starts_with("Trusted gate evidence:"));
         assert!(prompt.contains("exact head head"));
     }
@@ -1347,15 +1363,16 @@ mod tests {
         assert_eq!(safe_http_status(b"private diagnostic without status"), None);
     }
     #[test]
-    fn ci_evidence_requires_expected_run_and_head() {
-        let output =
-            r#"[{"databaseId":42,"headSha":"abc","status":"completed","conclusion":"success"}]"#;
-        assert!(
-            ci_evidence_from_json(output, "abc")
-                .unwrap()
-                .contains("run 42")
-        );
-        assert!(ci_evidence_from_json(output, "other").is_err());
-        assert!(ci_evidence_from_json(&output.replace("success", "failure"), "abc").is_err());
+    fn ci_evidence_requires_the_reviewed_pr_and_base() {
+        let mut response = json!({"workflow_runs":[{
+            "id":42,"path":".github/workflows/ci.yml","event":"pull_request","head_sha":"head",
+            "status":"completed","conclusion":"success","pull_requests":[
+                {"number":36,"base":{"ref":"main","sha":"base"},"head":{"sha":"head"}}
+            ]
+        }]});
+        assert_eq!(ci_run_for_pr(&response, 36, &pr()).unwrap(), 42);
+        assert!(ci_run_for_pr(&response, 37, &pr()).is_err());
+        response["workflow_runs"][0]["pull_requests"][0]["base"]["sha"] = json!("other");
+        assert!(ci_run_for_pr(&response, 36, &pr()).is_err());
     }
 }
