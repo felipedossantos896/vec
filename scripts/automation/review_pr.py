@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 
 class ReviewError(Exception):
@@ -174,14 +175,37 @@ def trusted_output_path(temp_directory):
     return Path(temp_directory) / "review.md"
 
 
+def merge_command(number, repository, head_sha):
+    return [
+        "gh", "pr", "merge", str(number), "--repo", repository, "--merge",
+        "--delete-branch", "--match-head-commit", head_sha,
+    ]
+
+
+def wait_for_ci_run(repository, merge_sha, attempts=30, delay=2):
+    command = [
+        "gh", "run", "list", "--repo", repository, "--commit", merge_sha,
+        "--workflow", "CI", "--event", "push", "--limit", "1", "--json", "databaseId",
+    ]
+    for _ in range(attempts):
+        runs = json.loads(run(command).stdout)
+        if runs:
+            return runs[0]["databaseId"]
+        time.sleep(delay)
+    raise ReviewError("post-merge CI run was not found")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int)
     parser.add_argument("--agent", choices=("auto", "codex", "claude"), default="auto")
     parser.add_argument("--dry-run", action="store_true", help="do not comment")
+    parser.add_argument("--merge", action="store_true", help="merge Ship verdict and wait for post-merge CI/deploy")
     args = parser.parse_args()
     if args.pr < 1:
         raise ReviewError("invalid PR number")
+    if args.dry_run and args.merge:
+        raise ReviewError("--dry-run and --merge cannot be used together")
     if not shutil.which("gh") or not shutil.which("git"):
         raise ReviewError("git and gh are required")
 
@@ -224,6 +248,19 @@ def main():
             "Verdict: Ship."
         )
         run(["gh", "pr", "comment", str(args.pr), "--repo", repository, "--body", body], capture=False)
+        if args.merge:
+            latest = pr_data(args.pr, repository)
+            require_owner_pr(latest, owner)
+            confirm_unchanged(initial, latest)
+            run(merge_command(args.pr, repository, initial["headRefOid"]), capture=False)
+            merged = json.loads(run([
+                "gh", "pr", "view", str(args.pr), "--repo", repository,
+                "--json", "state,mergeCommit",
+            ]).stdout)
+            if merged["state"] != "MERGED" or not merged.get("mergeCommit"):
+                raise ReviewError("GitHub did not report a merge commit")
+            run_id = wait_for_ci_run(repository, merged["mergeCommit"]["oid"])
+            run(["gh", "run", "watch", str(run_id), "--repo", repository, "--exit-status"], capture=False)
         return 0
 
 
