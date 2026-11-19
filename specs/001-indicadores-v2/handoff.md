@@ -70,3 +70,14 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Pendências/bloqueios: revisão independente e CI do PR.
 - Próxima ação recomendada: revisar a PR #33 no SHA final; após merge, T006 fica desbloqueada.
 - Estado da Issue confirmado em: aberta em 2026-11-19; dependências T002/#14 e T003/#15 encerradas.
+
+### T006 / Issue #18 — 2026-11-19
+- Agente utilizado: Codex.
+- Branch/PR e commit: `feat/issue-18-validacao-release`; PR #34; documentação em `eb3a74f`; base validada `9c5613c` (`v1.14.0`).
+- Objetivo e escopo: validar a entrega completa de Indicadores V2, registrar evidências, riscos residuais e um rollback reversível, sem alterar aplicação ou produção.
+- Arquivos alterados: relatório de validação de release e este handoff.
+- Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (11 testes), `gofmt`, `go vet ./...`, `go test ./...`, `go build ./...` e `git diff --check`; aprovados. Playwright MCP validou estado normal, vazio e erro, mobile 390×844 sem overflow, foco visível e movimento reduzido. O HTTP 500 e seu erro de console foram produzidos intencionalmente para validar a recuperação.
+- Decisões e riscos: a versão conserva a janela fixa de 12 meses; não existe seletor de período e a definição desse controle segue como questão aberta na spec. A inspeção usou dados sintéticos, sem escrita no Turso. Não há migration, alteração de API, autorização ou infraestrutura.
+- Pendências/bloqueios: o CI da PR #34 passou em `eb3a74f` (run `44452726022`); uma primeira revisão independente bloqueou a redação do passo 5 do rollback, corrigida no commit seguinte. Novo CI e nova revisão são obrigatórios no SHA final. Spec e plano permanecem **Proposta**.
+- Próxima ação recomendada: revisar o relatório, confirmar o SHA final no CI e incorporar apenas com checks obrigatórios aprovados.
+- Estado da Issue confirmado em: aberta em 2026-11-19; dependências T004/#16 e T005/#17 encerradas.
