@@ -48,3 +48,14 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Pendências/bloqueios: primeira revisão independente pediu fortalecer o teste do rótulo de cada grupo; correção aplicada. CI da PR #31 passou no SHA `aae438a` antes desse ajuste final; novo CI e revisão ainda pendentes.
 - Próxima ação recomendada: confirmar o CI e revisar o novo SHA final da PR #31 antes do merge.
 - Estado da Issue confirmado em: aberta em 2026-11-18; T001/#13, sua única dependência, encerrada.
+
+### T004 / Issue #16 — 2026-11-19
+- Agente utilizado: Codex.
+- Branch/PR e commit: `feat/issue-16-indicadores-layout`; PR #32; implementação em `09a91ce`.
+- Objetivo e escopo: reorganizar Indicadores em visão geral, jornada e perfil; destacar total de pessoas e manter todas as métricas e gráficos existentes.
+- Arquivos alterados: renderer e JavaScript compilado de Indicadores, CSS do dashboard e testes de contrato visual.
+- Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (9 testes), `gofmt`, `go vet ./...`, `go test ./...`, `go build ./...` e `git diff --check`; aprovados. Playwright MCP em 1440×900 e 390×844 validou cinco KPIs, três seções, três regiões de gráfico, rolagem interna no mobile, ausência de overflow da página e console sem warnings/erros. O filtro Norte alterou o total sintético de 12 para 8 e sincronizou Pessoas, Indicadores e Acompanhar.
+- Decisões e riscos: gráficos de 12 meses rolam dentro do card no mobile; nenhuma métrica, API, autorização ou persistência foi alterada. Validação visual com dados sintéticos, sem escrita no Turso.
+- Pendências/bloqueios: revisão independente e CI do PR.
+- Próxima ação recomendada: revisar a PR #32 no SHA final; após merge, T006 ainda dependerá também da T005.
+- Estado da Issue confirmado em: aberta em 2026-11-19; dependências T002/#14 e T003/#15 encerradas.

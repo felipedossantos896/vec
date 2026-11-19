@@ -15,21 +15,21 @@ const VIDA: [string, (r: Registro) => boolean][] = [
 const plural = (n: number, um: string, varios: string): string => `${n} ${n === 1 ? um : varios}`;
 
 // Colunas com o valor no topo; a mais alta ocupa toda a altura do gráfico
-function colunas(itens: Coluna[]): string {
+function colunas(itens: Coluna[], rotulo: string): string {
   const max = Math.max(1, ...itens.map(i => i.n));
-  return `<ol class="cols">${itens.map(i => `
+  return `<div class="chart-scroll" role="region" aria-label="${esc(rotulo)}" tabindex="0"><ol class="cols">${itens.map(i => `
     <li tabindex="0" data-tip="${esc(i.titulo)}" aria-label="${esc(i.titulo)}">
       <span class="col-plot" aria-hidden="true"><span class="col-v">${i.n || ''}</span><i style="--h:${i.n / max}"></i></span>
       <span class="col-x" aria-hidden="true">${i.rotulo}<small>${i.sub || ''}</small></span>
-    </li>`).join('')}</ol>`;
+    </li>`).join('')}</ol></div>`;
 }
 
 function painel(titulo: string, sub: string, corpo: string): string {
   return `<section class="panel ui-card"><header class="panel-head"><h2>${titulo}</h2><p>${sub}</p></header>${corpo}</section>`;
 }
 
-function kpi(label: string, valor: string, nota: string): string {
-  return `<div class="stat kpi ui-kpi"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
+function kpi(label: string, valor: string, nota: string, destaque = false): string {
+  return `<div class="stat kpi ui-kpi${destaque ? ' stat-primary' : ''}"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
 }
 
 // Cadastros recebidos em cada um dos últimos 12 meses, incluindo os meses sem nenhum
@@ -82,20 +82,26 @@ function renderIndicadores() {
   const sim = (grupo: [string, string][]) => lista(grupo.map(([k, l]): [string, number] => [l, base.filter(r => r[k] === 'S').length]));
 
   $('gConteudo').innerHTML =
-    `<div class="stats">${
+    `<section class="indicator-section" aria-labelledby="indicadoresResumo">
+    <header class="indicator-heading"><div><p class="eyebrow">Visão geral</p><h2 id="indicadoresResumo">Retrato atual</h2></div><p>Os números acompanham os filtros selecionados acima.</p></header>
+    <div class="stats">${
+      kpi('Total de pessoas', String(total), 'no escopo selecionado', true) +
       kpi('Novos em 30 dias', String(novos), `${Math.round((novos / total) * 100)}% dos cadastros`) +
       kpi('Idade média', media != null ? `${media}` : '—', media != null ? 'anos' : 'sem datas de nascimento') +
       kpi('Jornada completa', String(completa), `${Math.round((completa / total) * 100)}% concluíram as ${JORNADA.length} etapas`) +
       kpi('Etapas por pessoa', etapas, `em média, de ${JORNADA.length}`)
-    }</div>
-    <div class="panels">${mapaJornada(base) + painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base)))}</div>
-    <h2 class="group-title">Retrato da área</h2>
+    }</div></section>
+    <section class="indicator-section" aria-labelledby="indicadoresJornada">
+    <header class="indicator-heading"><div><p class="eyebrow">Jornada</p><h2 id="indicadoresJornada">Caminho de desenvolvimento</h2></div><p>Cada etapa é contada de forma independente.</p></header>
+    <div class="panels">${mapaJornada(base) + painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base), 'Jornada concluída por mês'))}</div></section>
+    <section class="indicator-section" aria-labelledby="indicadoresPerfil">
+    <header class="indicator-heading"><div><p class="eyebrow">Perfil</p><h2 id="indicadoresPerfil">Retrato da área</h2></div><p>Distribuição e participação das pessoas do escopo.</p></header>
     <div class="panels">${
-      painel('Novos cadastros', 'Formulários recebidos por mês, nos últimos 12 meses.', colunas(porMes(base))) +
-      painel('Faixa etária', semIdade ? `Idade de ${idades.length} pessoas; ${plural(semIdade, 'cadastro', 'cadastros')} sem data válida.` : 'Idade de quem está cadastrado.', colunas(faixas)) +
+      painel('Novos cadastros', 'Formulários recebidos por mês, nos últimos 12 meses.', colunas(porMes(base), 'Novos cadastros por mês')) +
+      painel('Faixa etária', semIdade ? `Idade de ${idades.length} pessoas; ${plural(semIdade, 'cadastro', 'cadastros')} sem data válida.` : 'Idade de quem está cadastrado.', colunas(faixas, 'Distribuição por faixa etária')) +
       painel('Vida na igreja', 'Quem já vive cada prática.', lista(VIDA.map(([l, f]): [string, number] => [l, base.filter(f).length]))) +
       painel('Treinamentos', 'Quem já fez ou participa.', sim(TREINOS))
-    }</div>`;
+    }</div></section>`;
 }
 
 // ── Dica ao passar o mouse ou focar uma coluna ──

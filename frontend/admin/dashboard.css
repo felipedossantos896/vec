@@ -1,12 +1,20 @@
 /* Painel · visão geral, lista de cadastros e detalhe */
 
 /* ── Indicadores (também filtram a lista) ── */
-.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.indicator-section { margin-top: 32px; }
+.indicator-section:first-child { margin-top: 0; }
+.indicator-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; margin-bottom: 14px; }
+.indicator-heading h2 { font: 500 clamp(1.35rem, 3vw, 1.65rem)/1.2 var(--serif); letter-spacing: -0.01em; }
+.indicator-heading > p { max-width: 48ch; color: var(--muted); font-size: 0.92rem; }
+.indicator-heading .eyebrow { margin-bottom: 2px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
 .stat, .ui-kpi { display: flex; cursor: default; flex-direction: column; min-width: 0; padding: var(--space-4); border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); color: var(--ink); text-align: left; box-shadow: var(--shadow-card); transition: background 0.15s, border-color 0.15s, transform 0.15s; }
 .stat span, .ui-kpi span { min-height: 2.5em; color: var(--muted); font-weight: 600; font-size: 0.9rem; line-height: 1.25; }
 .stat span::first-letter, .ui-kpi span::first-letter { text-transform: uppercase; }
 .stat b, .ui-kpi b { margin-top: 6px; font: 500 clamp(2.1rem, 8vw, 2.75rem)/1 var(--serif); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .stat small, .ui-kpi small { margin-top: 8px; color: var(--muted); font-size: 0.82rem; }
+.stat-primary { border-color: var(--navy); background: var(--navy); color: var(--white); }
+.stat-primary span, .stat-primary small { color: rgba(255, 255, 255, 0.74); }
 
 /* ── Painéis: jornada e células ── */
 .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 14px; margin-top: 14px; }
@@ -37,7 +45,9 @@
 
 /* ── Indicadores: números e gráficos de colunas ── */
 .panels.three { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); }
-.cols { display: flex; gap: 2px; }
+.chart-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.chart-scroll:focus-visible { border-radius: var(--r-sm); outline: var(--focus); outline-offset: 3px; }
+.cols { display: flex; min-width: 520px; gap: 2px; }
 .cols li { flex: 1 1 0; min-width: 0; border-radius: 6px; text-align: center; }
 .col-plot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 168px; border-bottom: 1px solid var(--line-strong); }
 .col-plot i { width: min(24px, 72%); height: calc((100% - 24px) * var(--h)); border-radius: 4px 4px 0 0; background: var(--navy-2); transition: height 0.3s ease, background 0.15s; }
@@ -146,10 +156,12 @@
 @media (min-width: 640px) { .panel, .ui-card { padding: var(--space-6); } }
 @media (min-width: 900px) { .search { flex-basis: 280px; } }
 @media (min-width: 720px) {
-  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .stats { gap: 14px; }
   .stat, .ui-kpi { padding: var(--space-5); }
   .stat span, .ui-kpi span { min-height: 0; }
   .stat b, .ui-kpi b { font-size: 2.75rem; }
+  .chart-scroll { overflow-x: visible; }
+  .cols { min-width: 0; }
 }
 
 /* ── Tabela ── */
