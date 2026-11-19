@@ -8,7 +8,7 @@ use std::env;
 /// GitHub Actions keeps using `GITHUB_REPOSITORY` and `GH_TOKEN`. Locally,
 /// the repository comes from the `origin` remote and authentication from the
 /// credentials already stored by `gh`; the token is never read or printed.
-pub(super) fn resolve_repository() -> Result<String> {
+pub(crate) fn resolve_repository() -> Result<String> {
     let configured = env::var("GITHUB_REPOSITORY").unwrap_or_default();
     let repository = if configured.is_empty() {
         let url = run_output("git", &["remote", "get-url", "origin"], None)
