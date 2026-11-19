@@ -22,7 +22,8 @@ Ambos seguem a mesma fonte de verdade: este arquivo, as ADRs, Specs e Issues.
   é aceito em sessão isolada (só diff e regras) e fica registrado no parecer,
   para não depender de um único fornecedor.
 - Merge na `main` exige os status `testes` e `revisao-independente` no SHA
-  atual; o segundo só é publicado pelo `review-pr` de outro agente.
+  atual; o segundo só é publicado pelo `review-pr`, sempre em sessão separada
+  da que implementou.
 
 ## Limites de segurança
 - Não expor dados pessoais, tokens, credenciais ou conteúdo sensível em prompts, logs ou PRs.
