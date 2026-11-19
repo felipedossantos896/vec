@@ -41,6 +41,7 @@ jobs:
         run: |
           cargo fmt --manifest-path scripts/automation/Cargo.toml -- --check
           cargo test --locked --manifest-path scripts/automation/Cargo.toml
+          cargo run --locked --quiet --manifest-path scripts/automation/Cargo.toml -- validate-graph
 
       - uses: actions/setup-go@v5
         with:

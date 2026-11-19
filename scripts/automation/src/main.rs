@@ -1175,7 +1175,14 @@ mod tests {
     }
     #[test]
     fn missing_mapping_rejected() {
-        let value=json!({"schema_version":1,"tasks":[{"id":"T001","issue":13,"depends_on":[]},{"id":"T002","issue":14,"depends_on":["T001"]}]}).to_string();
+        let value = json!({
+            "schema_version": 1,
+            "tasks": [
+                {"id": "T001", "issue": 13, "depends_on": []},
+                {"id": "T002", "issue": 14, "depends_on": ["T001"]}
+            ]
+        })
+        .to_string();
         assert!(
             validate_graph(&value, TASKS)
                 .unwrap_err()
