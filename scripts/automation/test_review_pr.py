@@ -1,9 +1,10 @@
+import json
 import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, require_owner_pr, require_ready_pr, run_agent, safe_review, trusted_output_path
+from review_pr import ReviewError, confirm_fetched_base, confirm_unchanged, is_ship, merge_command, require_owner_pr, require_ready_pr, run_agent, safe_review, trusted_output_path, wait_for_ci_run
 
 
 def pr(sha="abc", base="main", base_sha="base123", conclusion="SUCCESS", status="COMPLETED"):
@@ -76,6 +77,25 @@ class ReviewPRTests(unittest.TestCase):
         confirm_fetched_base("base123", "base123")
         with self.assertRaisesRegex(ReviewError, "does not match"):
             confirm_fetched_base("base123", "stale")
+
+    def test_merge_is_pinned_to_repository_and_head(self):
+        command = merge_command(29, "owner/repo", "abc123")
+        self.assertIn("owner/repo", command)
+        self.assertEqual(command[-2:], ["--match-head-commit", "abc123"])
+
+    def test_post_merge_run_must_match_merge_commit(self):
+        calls = []
+        responses = [[], [{"databaseId": 42}]]
+
+        def fake_run(command, **kwargs):
+            calls.append(command)
+            return type("Result", (), {"stdout": json.dumps(responses.pop(0))})()
+
+        with patch("review_pr.run", side_effect=fake_run):
+            self.assertEqual(wait_for_ci_run("owner/repo", "merge123", delay=0), 42)
+
+        self.assertIn("merge123", calls[0])
+        self.assertIn("push", calls[0])
 
     def test_only_explicit_ship_verdict_passes(self):
         self.assertTrue(is_ship("Summary\n\nVerdict: Ship."))
