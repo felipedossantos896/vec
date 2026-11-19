@@ -219,8 +219,13 @@ fn issue_state(repository: &str, number: u64) -> Result<String> {
         return Err("GITHUB_REPOSITORY and GH_TOKEN required for issue resolution".into());
     }
     let path = format!("repos/{repository}/issues/{number}");
-    let response = run_output_timeout("gh", &["api", &path], None, Duration::from_secs(15))
-        .map_err(|error| format!("Issue #{number}: {error}"))?;
+    let response = run_output_timeout(
+        "gh",
+        &["api", "--hostname", "github.com", &path],
+        None,
+        Duration::from_secs(15),
+    )
+    .map_err(|error| format!("Issue #{number}: {error}"))?;
     let data: Value = serde_json::from_str(&response).map_err(|e| e.to_string())?;
     let state = data
         .get("state")
@@ -954,12 +959,15 @@ fn run_output_timeout(
         .join()
         .map_err(|_| "stdout reader panicked".to_string())?
         .map_err(|e| e.to_string())?;
-    stderr_reader
+    let stderr = stderr_reader
         .join()
         .map_err(|_| "stderr reader panicked".to_string())?
         .map_err(|e| e.to_string())?;
     if !status.success() {
-        return Err(format!("{program} exited with {status}"));
+        let category = safe_http_status(&stderr)
+            .map(|category| format!(" ({category})"))
+            .unwrap_or_default();
+        return Err(format!("{program} exited with {status}{category}"));
     }
     decode_output(stdout, program).map(|output| output.trim().to_string())
 }
@@ -1050,6 +1058,14 @@ fn run_captured_with_input(
 
 fn decode_output(output: Vec<u8>, program: &str) -> Result<String> {
     String::from_utf8(output).map_err(|_| format!("{program} output is not valid UTF-8"))
+}
+
+fn safe_http_status(stderr: &[u8]) -> Option<String> {
+    let stderr = std::str::from_utf8(stderr).ok()?;
+    Regex::new(r"\bHTTP ([1-5][0-9]{2})\b")
+        .unwrap()
+        .captures(stderr)
+        .map(|capture| format!("HTTP {}", &capture[1]))
 }
 
 fn sorted(values: HashSet<String>) -> Vec<String> {
@@ -1401,5 +1417,13 @@ mod tests {
         )
         .unwrap();
         assert_eq!(output.len(), 256 * 1024);
+    }
+    #[test]
+    fn failed_http_command_exposes_only_status_category() {
+        assert_eq!(
+            safe_http_status(b"private diagnostic (HTTP 404) secret"),
+            Some("HTTP 404".into())
+        );
+        assert_eq!(safe_http_status(b"private diagnostic without status"), None);
     }
 }
