@@ -24,14 +24,16 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Preparar Rust
+        run: rustup toolchain install 1.100.0 --profile minimal
       - name: Run graph unit tests
-        run: python3 -m unittest discover -s scripts/automation -p 'test_*.py' -v
+        run: cargo test --locked --manifest-path scripts/automation/Cargo.toml
       - name: Validate spec files
         env:
           SPEC_NAME: ${{ inputs.spec }}
-        run: python3 scripts/automation/validate_graph.py
+        run: cargo run --locked --quiet --manifest-path scripts/automation/Cargo.toml -- validate-graph
       - name: Resolve tasks against GitHub Issues (read-only)
         env:
           SPEC_NAME: ${{ inputs.spec }}
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/automation/resolve_graph.py
+        run: cargo run --locked --quiet --manifest-path scripts/automation/Cargo.toml -- resolve-graph

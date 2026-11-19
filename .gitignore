@@ -12,6 +12,7 @@ dados/
 # Binários e temporários
 /bin/
 node_modules/
+scripts/automation/target/
 *.exe
 *.test
 *.out
