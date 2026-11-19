@@ -20,7 +20,7 @@ test('aplica componentes reutilizáveis sem remover contratos antigos', () => {
   assert.match(dashboard, /\.filters, \.ui-filter-bar/);
   assert.match(dashboard, /\.stat span, \.ui-kpi span/);
   assert.match(dashboard, /\.filters select, \.ui-filter-bar select/);
-  assert.match(charts, /class="stat kpi ui-kpi"/);
+  assert.match(charts, /class="stat kpi ui-kpi/);
   assert.match(charts, /class="panel ui-card"/);
 });
 
@@ -28,4 +28,14 @@ test('rotula os três grupos de filtros', () => {
   for (const label of ['acompanhamento', 'pessoas', 'indicadores']) {
     assert.match(html, new RegExp(`class="filters ui-filter-bar" role="group" aria-label="Filtros de ${label}"`));
   }
+});
+
+test('organiza indicadores em seções e preserva todas as métricas', () => {
+  for (const id of ['indicadoresResumo', 'indicadoresJornada', 'indicadoresPerfil']) {
+    assert.match(charts, new RegExp(`aria-labelledby="${id}"`));
+  }
+  for (const metrica of ['Total de pessoas', 'Novos em 30 dias', 'Idade média', 'Jornada completa', 'Etapas por pessoa']) {
+    assert.match(charts, new RegExp(metrica));
+  }
+  assert.match(charts, /class="chart-scroll" role="region" aria-label=/);
 });
