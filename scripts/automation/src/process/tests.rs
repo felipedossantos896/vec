@@ -4,6 +4,8 @@ use super::*;
 fn agent_environment_is_allowlisted() {
     let allowed = [
         "HOME",
+        "USER",
+        "LOGNAME",
         "PATH",
         "TMPDIR",
         "LANG",
