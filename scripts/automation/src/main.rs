@@ -411,6 +411,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     }
     let mut agent = "auto".to_string();
     let mut dry_run = false;
+    let mut reviewed_ci = false;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -419,6 +420,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
                 agent = args.get(i).ok_or("--agent requires a value")?.clone();
             }
             "--dry-run" => dry_run = true,
+            "--reviewed-ci" => reviewed_ci = true,
             "--merge" => return Err("automatic merge is unavailable; run review-pr without --merge and merge the reviewed PR through GitHub".into()),
             other => return Err(format!("unknown option: {other}")),
         }
@@ -493,12 +495,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         Some(&root),
     )?
     .is_empty();
-    if changed_ci && !dry_run {
-        return Err(
-            "this PR changes the CI workflow; use --dry-run and review the CI changes separately"
-                .into(),
-        );
-    }
+    require_ci_review(changed_ci, dry_run, reviewed_ci)?;
     let evidence = if changed_ci {
         format!(
             "The API verified the run identity and result below. This PR changes the CI workflow itself. Inspect the workflow diff to assess what the run actually tested.\n{ci_evidence}"
@@ -544,6 +541,13 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         None,
         false,
     )?;
+    Ok(())
+}
+
+fn require_ci_review(changed: bool, dry_run: bool, reviewed_ci: bool) -> Result<()> {
+    if changed && !dry_run && !reviewed_ci {
+        return Err("CI workflow changed; inspect the diff and run, then use --reviewed-ci to allow publication or --dry-run to preview".into());
+    }
     Ok(())
 }
 
@@ -1409,5 +1413,13 @@ mod tests {
         assert!(ci_run_for_pr(&response, 37, &pr()).is_err());
         response["workflow_runs"][0]["pull_requests"][0]["base"]["sha"] = json!("other");
         assert!(ci_run_for_pr(&response, 36, &pr()).is_err());
+    }
+
+    #[test]
+    fn publishing_with_changed_ci_requires_operator_review() {
+        assert!(require_ci_review(true, false, false).is_err());
+        assert!(require_ci_review(true, true, false).is_ok());
+        assert!(require_ci_review(true, false, true).is_ok());
+        assert!(require_ci_review(false, false, false).is_ok());
     }
 }

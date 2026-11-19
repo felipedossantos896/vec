@@ -55,8 +55,9 @@ Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
 omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
 use `--dry-run`.
 
-PRs que alteram `.github/workflows/ci.yml` exigem `--dry-run`. Confira o diff
-do workflow e os passos executados antes de incorporar essas PRs pelo GitHub.
+Para PRs que alteram `.github/workflows/ci.yml`, use `--dry-run` para inspecionar
+o parecer. Quem conferiu o diff do workflow e os passos executados pode usar
+`--reviewed-ci` para habilitar a publicação do parecer independente.
 
 Por segurança pragmática, a publicação autônoma só aceita PR criada pelo dono
 do repositório e cuja branch de origem também pertença a ele. PRs de forks ou
