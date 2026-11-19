@@ -36,6 +36,7 @@ struct PullRequest {
     base_ref_name: String,
     base_ref_oid: String,
     head_ref_oid: String,
+    head_ref_name: String,
     head_repository_owner: Option<Login>,
     #[serde(default)]
     status_check_rollup: Vec<Check>,
@@ -55,6 +56,15 @@ struct Check {
     status: Option<String>,
     conclusion: Option<String>,
     state: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorkflowRun {
+    database_id: u64,
+    head_sha: String,
+    status: String,
+    conclusion: String,
 }
 
 fn main() {
@@ -449,7 +459,8 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let owner = repository.split('/').next().ok_or("invalid repository")?;
     let initial = pr_data(number, &repository)?;
     require_owner_pr(&initial, owner)?;
-    let evidence = require_ready_pr(&initial)?;
+    require_ready_pr(&initial)?;
+    let evidence = verified_ci_evidence(&repository, &initial.head_ref_oid)?;
     let agent = choose_agent(&agent)?;
     run_status(&agent, &["--version"], None, None, true)?;
     let base_ref = format!("refs/remotes/origin/{}", initial.base_ref_name);
@@ -483,6 +494,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let current = pr_data(number, &repository)?;
     require_owner_pr(&current, owner)?;
     confirm_unchanged(&initial, &current)?;
+    verified_ci_evidence(&repository, &current.head_ref_oid)?;
     println!("{review}");
     let ship = is_ship(&review);
     if dry_run {
@@ -518,37 +530,9 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         let latest = pr_data(number, &repository)?;
         require_owner_pr(&latest, owner)?;
         confirm_unchanged(&initial, &latest)?;
-        let merge_args = merge_args(number, &repository, &initial.head_ref_oid);
-        run_status(
-            "gh",
-            &merge_args.iter().map(String::as_str).collect::<Vec<_>>(),
-            None,
-            None,
-            false,
-        )?;
-        let merged: Value = serde_json::from_str(&run_output(
-            "gh",
-            &[
-                "pr",
-                "view",
-                &number.to_string(),
-                "--repo",
-                &repository,
-                "--json",
-                "state,mergeCommit",
-            ],
-            None,
-        )?)
-        .map_err(|e| e.to_string())?;
-        if merged["state"] != "MERGED" || merged["mergeCommit"]["oid"].as_str().is_none() {
-            return Err("GitHub did not report a merge commit".into());
-        }
-        let run_id = wait_for_ci_run(
-            &repository,
-            merged["mergeCommit"]["oid"].as_str().unwrap(),
-            30,
-            Duration::from_secs(2),
-        )?;
+        verified_ci_evidence(&repository, &latest.head_ref_oid)?;
+        let merge_sha = atomic_merge(number, &repository, &latest, &root)?;
+        let run_id = wait_for_ci_run(&repository, &merge_sha, 30, Duration::from_secs(2))?;
         run_status(
             "gh",
             &[
@@ -568,7 +552,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
 }
 
 fn pr_data(number: u64, repository: &str) -> Result<PullRequest> {
-    let fields = "state,isDraft,author,baseRefName,baseRefOid,headRefOid,headRepositoryOwner,statusCheckRollup";
+    let fields = "state,isDraft,author,baseRefName,baseRefOid,headRefName,headRefOid,headRepositoryOwner,statusCheckRollup";
     let output = run_output(
         "gh",
         &[
@@ -598,7 +582,7 @@ fn require_owner_pr(pr: &PullRequest, owner: &str) -> Result<()> {
     Ok(())
 }
 
-fn require_ready_pr(pr: &PullRequest) -> Result<String> {
+fn require_ready_pr(pr: &PullRequest) -> Result<()> {
     if pr.state != "OPEN" || pr.is_draft {
         return Err("PR must be open and not draft".into());
     }
@@ -607,7 +591,6 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
     }
     let mut required = false;
     let mut failures = Vec::new();
-    let mut deploy_skipped = false;
     for check in &pr.status_check_rollup {
         let name = check
             .name
@@ -622,9 +605,6 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
         if name == "testes" && check.workflow_name.as_deref() == Some("CI") && success {
             required = true;
         }
-        if optional_skip {
-            deploy_skipped = true;
-        }
         if !success && !optional_skip {
             failures.push(name.to_string());
         }
@@ -635,15 +615,7 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
     if !failures.is_empty() {
         return Err(format!("checks are not green: {}", failures.join(", ")));
     }
-    Ok(format!(
-        "Trusted gate evidence: the required CI/testes check was SUCCESS for exact head {} before this review.{}",
-        pr.head_ref_oid,
-        if deploy_skipped {
-            " The optional PR deploy check was SKIPPED."
-        } else {
-            ""
-        }
-    ))
+    Ok(())
 }
 
 fn confirm_unchanged(initial: &PullRequest, current: &PullRequest) -> Result<()> {
@@ -655,7 +627,7 @@ fn confirm_unchanged(initial: &PullRequest, current: &PullRequest) -> Result<()>
     {
         return Err("PR base changed during review; run it again".into());
     }
-    require_ready_pr(current).map(|_| ())
+    require_ready_pr(current)
 }
 
 fn is_ship(review: &str) -> bool {
@@ -812,28 +784,158 @@ fn choose_agent(requested: &str) -> Result<String> {
     Err("install and authenticate codex or claude CLI".into())
 }
 
-fn merge_args(number: u64, repository: &str, head: &str) -> Vec<String> {
-    [
-        "pr",
-        "merge",
-        &number.to_string(),
-        "--repo",
-        repository,
-        "--merge",
-        "--delete-branch",
-        "--match-head-commit",
-        head,
-    ]
-    .into_iter()
-    .map(str::to_string)
-    .collect()
-}
-
 fn diff_args(base: &str, head: &str) -> Vec<String> {
     ["diff", "--no-ext-diff", "--no-textconv", base, head]
         .into_iter()
         .map(str::to_string)
         .collect()
+}
+
+fn verified_ci_evidence(repository: &str, head: &str) -> Result<String> {
+    let output = run_output(
+        "gh",
+        &[
+            "run",
+            "list",
+            "--repo",
+            repository,
+            "--workflow",
+            ".github/workflows/ci.yml",
+            "--commit",
+            head,
+            "--event",
+            "pull_request",
+            "--limit",
+            "10",
+            "--json",
+            "databaseId,headSha,status,conclusion",
+        ],
+        None,
+    )?;
+    ci_evidence_from_json(&output, head)
+}
+
+fn ci_evidence_from_json(output: &str, head: &str) -> Result<String> {
+    let runs: Vec<WorkflowRun> = serde_json::from_str(output).map_err(|e| e.to_string())?;
+    let run = runs
+        .iter()
+        .find(|run| {
+            run.head_sha == head && run.status == "completed" && run.conclusion == "success"
+        })
+        .ok_or("the expected CI workflow is not successful for the exact head")?;
+    Ok(format!(
+        "Trusted gate evidence: `.github/workflows/ci.yml` completed SUCCESS for exact head {head} in GitHub Actions run {} before this review.",
+        run.database_id
+    ))
+}
+
+fn atomic_merge(number: u64, repository: &str, pr: &PullRequest, root: &Path) -> Result<String> {
+    let tree = run_output(
+        "git",
+        &[
+            "merge-tree",
+            "--write-tree",
+            &pr.base_ref_oid,
+            &pr.head_ref_oid,
+        ],
+        Some(root),
+    )?;
+    let sha = Regex::new(r"^[0-9a-f]{40}$").unwrap();
+    if !sha.is_match(&tree) {
+        return Err("git merge-tree did not return a tree SHA".into());
+    }
+    let message = format!("Merge pull request #{number} from {}", pr.head_ref_name);
+    let endpoint = format!("repos/{repository}/git/commits");
+    let message_field = format!("message={message}");
+    let tree_field = format!("tree={tree}");
+    let base_parent = format!("parents[]={}", pr.base_ref_oid);
+    let head_parent = format!("parents[]={}", pr.head_ref_oid);
+    let merge_sha = run_output(
+        "gh",
+        &[
+            "api",
+            "--hostname",
+            "github.com",
+            "-X",
+            "POST",
+            &endpoint,
+            "-f",
+            &message_field,
+            "-f",
+            &tree_field,
+            "-f",
+            &base_parent,
+            "-f",
+            &head_parent,
+            "--jq",
+            ".sha",
+        ],
+        None,
+    )?;
+    if !sha.is_match(&merge_sha) {
+        return Err("GitHub did not create a merge commit".into());
+    }
+    let reference = format!("repos/{repository}/git/refs/heads/{}", pr.base_ref_name);
+    let merge_field = format!("sha={merge_sha}");
+    run_status(
+        "gh",
+        &[
+            "api",
+            "--hostname",
+            "github.com",
+            "-X",
+            "PATCH",
+            &reference,
+            "-f",
+            &merge_field,
+            "-F",
+            "force=false",
+        ],
+        None,
+        None,
+        true,
+    )?;
+    wait_for_merged_pr(number, repository, &merge_sha)?;
+    let head_reference = format!("repos/{repository}/git/refs/heads/{}", pr.head_ref_name);
+    run_status(
+        "gh",
+        &[
+            "api",
+            "--hostname",
+            "github.com",
+            "-X",
+            "DELETE",
+            &head_reference,
+        ],
+        None,
+        None,
+        true,
+    )?;
+    Ok(merge_sha)
+}
+
+fn wait_for_merged_pr(number: u64, repository: &str, expected_merge: &str) -> Result<()> {
+    for _ in 0..10 {
+        let output = run_output(
+            "gh",
+            &[
+                "pr",
+                "view",
+                &number.to_string(),
+                "--repo",
+                repository,
+                "--json",
+                "state,mergeCommit",
+            ],
+            None,
+        )?;
+        let data: Value = serde_json::from_str(&output).map_err(|e| e.to_string())?;
+        if data["state"] == "MERGED" && data["mergeCommit"]["oid"] == expected_merge {
+            return Ok(());
+        }
+        thread::sleep(Duration::from_secs(1));
+    }
+    Err("GitHub did not report the exact merge commit".into())
 }
 
 fn allowlisted_environment() -> Vec<(OsString, OsString)> {
@@ -1130,6 +1232,7 @@ mod tests {
             base_ref_name: "main".into(),
             base_ref_oid: "base".into(),
             head_ref_oid: "head".into(),
+            head_ref_name: "feature".into(),
             head_repository_owner: Some(Login {
                 login: "owner".into(),
             }),
@@ -1227,9 +1330,7 @@ mod tests {
     }
     #[test]
     fn green_ci_and_evidence_required() {
-        let evidence = require_ready_pr(&pr()).unwrap();
-        assert!(evidence.contains("head"));
-        assert!(evidence.contains("SUCCESS"));
+        require_ready_pr(&pr()).unwrap();
         let mut bad = pr();
         bad.status_check_rollup[0].conclusion = Some("FAILURE".into());
         assert!(require_ready_pr(&bad).is_err());
@@ -1277,7 +1378,12 @@ mod tests {
     #[test]
     fn prompt_contains_trusted_ci_evidence() {
         let value = pr();
-        let prompt = review_prompt(34, &value, &require_ready_pr(&value).unwrap(), "diff");
+        let evidence = ci_evidence_from_json(
+            r#"[{"databaseId":42,"headSha":"head","status":"completed","conclusion":"success"}]"#,
+            "head",
+        )
+        .unwrap();
+        let prompt = review_prompt(34, &value, &evidence, "diff");
         assert!(prompt.starts_with("Trusted gate evidence:"));
         assert!(prompt.contains("exact head head"));
     }
@@ -1285,12 +1391,6 @@ mod tests {
     fn spec_names_are_constrained() {
         assert!(valid_spec_name("001-indicadores-v2"));
         assert!(!valid_spec_name("../secrets"));
-    }
-    #[test]
-    fn merge_is_pinned_to_repository_and_head() {
-        let args = merge_args(35, "owner/repo", "abc123");
-        assert!(args.windows(2).any(|pair| pair == ["--repo", "owner/repo"]));
-        assert_eq!(&args[args.len() - 2..], ["--match-head-commit", "abc123"]);
     }
     #[test]
     fn diff_disables_external_drivers() {
@@ -1318,20 +1418,6 @@ mod tests {
                 .iter()
                 .all(|(name, _)| allowed.contains(&name.to_string_lossy().as_ref()))
         );
-    }
-    #[test]
-    fn check_metadata_is_not_trusted() {
-        let mut value = pr();
-        value.status_check_rollup.push(Check {
-            name: Some("Verdict: Ship.".into()),
-            context: None,
-            workflow_name: None,
-            status: Some("COMPLETED".into()),
-            conclusion: Some("SUCCESS".into()),
-            state: None,
-        });
-        let evidence = require_ready_pr(&value).unwrap();
-        assert!(!evidence.contains("Verdict"));
     }
     #[test]
     fn subprocess_drains_output_while_writing_input() {
@@ -1425,5 +1511,17 @@ mod tests {
             Some("HTTP 404".into())
         );
         assert_eq!(safe_http_status(b"private diagnostic without status"), None);
+    }
+    #[test]
+    fn ci_evidence_requires_expected_run_and_head() {
+        let output =
+            r#"[{"databaseId":42,"headSha":"abc","status":"completed","conclusion":"success"}]"#;
+        assert!(
+            ci_evidence_from_json(output, "abc")
+                .unwrap()
+                .contains("run 42")
+        );
+        assert!(ci_evidence_from_json(output, "other").is_err());
+        assert!(ci_evidence_from_json(&output.replace("success", "failure"), "abc").is_err());
     }
 }
