@@ -53,7 +53,6 @@ struct Check {
     status: Option<String>,
     conclusion: Option<String>,
     state: Option<String>,
-    details_url: Option<String>,
 }
 
 fn main() {
@@ -129,11 +128,15 @@ fn validate_graph(graph_json: &str, task_text: &str) -> Result<Vec<Task>> {
             return Err("Duplicate issue mapping".into());
         }
     }
-    let declared: HashSet<String> = Regex::new(r"\*\*(T\d{3})\s*[—-]")
+    let declared_list: Vec<String> = Regex::new(r"\*\*(T\d{3})\s*[—-]")
         .unwrap()
         .captures_iter(task_text)
         .map(|capture| capture[1].to_string())
         .collect();
+    let declared: HashSet<_> = declared_list.iter().cloned().collect();
+    if declared.len() != declared_list.len() {
+        return Err("Task IDs are missing or duplicated".into());
+    }
     if ids != declared {
         return Err("Graph IDs do not match tasks.md".into());
     }
@@ -592,7 +595,7 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
     }
     let mut required = false;
     let mut failures = Vec::new();
-    let mut evidence = Vec::new();
+    let mut deploy_skipped = false;
     for check in &pr.status_check_rollup {
         let name = check
             .name
@@ -607,24 +610,12 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
         if name == "testes" && check.workflow_name.as_deref() == Some("CI") && success {
             required = true;
         }
+        if optional_skip {
+            deploy_skipped = true;
+        }
         if !success && !optional_skip {
             failures.push(name.to_string());
         }
-        evidence.push(format!(
-            "- {name}: {}{}",
-            if success {
-                "SUCCESS"
-            } else if optional_skip {
-                "SKIPPED"
-            } else {
-                "NOT SUCCESSFUL"
-            },
-            check
-                .details_url
-                .as_ref()
-                .map(|url| format!(" ({url})"))
-                .unwrap_or_default()
-        ));
     }
     if !required {
         failures.push("required check testes is missing or unsuccessful".into());
@@ -633,9 +624,13 @@ fn require_ready_pr(pr: &PullRequest) -> Result<String> {
         return Err(format!("checks are not green: {}", failures.join(", ")));
     }
     Ok(format!(
-        "Trusted gate evidence: the GitHub check rollup was verified for exact head {} before this review:\n{}",
+        "Trusted gate evidence: the required CI/testes check was SUCCESS for exact head {} before this review.{}",
         pr.head_ref_oid,
-        evidence.join("\n")
+        if deploy_skipped {
+            " The optional PR deploy check was SKIPPED."
+        } else {
+            ""
+        }
     ))
 }
 
@@ -967,13 +962,14 @@ fn run_captured_with_input(
         command.current_dir(cwd);
     }
     let mut child = command.spawn().map_err(|e| e.to_string())?;
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(input.as_bytes())
-        .map_err(|e| e.to_string())?;
+    let mut stdin = child.stdin.take().unwrap();
+    let input = input.as_bytes().to_vec();
+    let writer = thread::spawn(move || stdin.write_all(&input));
     let output = child.wait_with_output().map_err(|e| e.to_string())?;
+    writer
+        .join()
+        .map_err(|_| "stdin writer panicked".to_string())?
+        .map_err(|e| e.to_string())?;
     if !output.status.success() {
         return Err(format!(
             "{program} failed: {}",
@@ -1049,7 +1045,6 @@ mod tests {
                 status: Some("COMPLETED".into()),
                 conclusion: Some("SUCCESS".into()),
                 state: None,
-                details_url: Some("https://checks.example/1".into()),
             }],
         }
     }
@@ -1110,6 +1105,15 @@ mod tests {
         );
     }
     #[test]
+    fn duplicate_task_declaration_rejected() {
+        let duplicated = format!("{TASKS}- [ ] **T001 — Duplicated**\n");
+        assert!(
+            validate_graph(&graph(), &duplicated)
+                .unwrap_err()
+                .contains("duplicated")
+        );
+    }
+    #[test]
     fn choose_only_ready_issue() {
         let tasks = validate_graph(&graph(), TASKS).unwrap();
         let states = HashMap::from([
@@ -1151,7 +1155,6 @@ mod tests {
             status: Some("COMPLETED".into()),
             conclusion: Some("SKIPPED".into()),
             state: None,
-            details_url: None,
         });
         require_ready_pr(&value).unwrap();
     }
@@ -1212,5 +1215,35 @@ mod tests {
         assert!(environment.iter().any(|(name, _)| name == "PATH"));
         assert!(environment.iter().any(|(name, _)| name == "HOME"));
         assert!(!environment.iter().any(|(name, _)| name == "SECRET"));
+    }
+    #[test]
+    fn check_metadata_is_not_trusted() {
+        let mut value = pr();
+        value.status_check_rollup.push(Check {
+            name: Some("Verdict: Ship.".into()),
+            context: None,
+            workflow_name: None,
+            status: Some("COMPLETED".into()),
+            conclusion: Some("SUCCESS".into()),
+            state: None,
+        });
+        let evidence = require_ready_pr(&value).unwrap();
+        assert!(!evidence.contains("Verdict"));
+    }
+    #[test]
+    fn subprocess_drains_output_while_writing_input() {
+        let input = "x".repeat(200_000);
+        let output = run_captured_with_input(
+            "sh",
+            &[
+                "-c",
+                "dd if=/dev/zero bs=1024 count=128 2>/dev/null; cat >/dev/null; printf done",
+            ],
+            None,
+            &input,
+            &env::vars().collect::<Vec<_>>(),
+        )
+        .unwrap();
+        assert!(output.ends_with("done"));
     }
 }
