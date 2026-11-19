@@ -18,7 +18,9 @@ Ambos seguem a mesma fonte de verdade: este arquivo, as ADRs, Specs e Issues.
 - Não executar dois agentes simultaneamente no mesmo working tree.
 - Todo commit feito por agente termina com o trailer do próprio agente
   (`Co-Authored-By: Claude ...` ou `Co-Authored-By: Codex ...`). O `review-pr`
-  usa esses trailers e recusa revisor que seja coautor da PR.
+  usa esses trailers para preferir um revisor de outro modelo; o mesmo modelo
+  é aceito em sessão isolada (só diff e regras) e fica registrado no parecer,
+  para não depender de um único fornecedor.
 - Merge na `main` exige os status `testes` e `revisao-independente` no SHA
   atual; o segundo só é publicado pelo `review-pr` de outro agente.
 

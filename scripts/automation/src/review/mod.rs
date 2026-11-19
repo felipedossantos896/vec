@@ -3,7 +3,7 @@ mod github;
 
 use crate::Result;
 use crate::process::{TempDir, repo_root, require_command, run_output, run_status};
-use agent::{choose_agent, implementers, run_agent};
+use agent::{choose_agent, implementers, reviewer_label, run_agent};
 use github::{
     confirm_unchanged, pr_data, require_owner_pr, require_ready_pr, verified_ci_evidence,
 };
@@ -96,7 +96,8 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         ],
         Some(&root),
     )?;
-    let agent = choose_agent(&agent, &implementers(&messages))?;
+    let (agent, same_model) = choose_agent(&agent, &implementers(&messages))?;
+    let reviewer = reviewer_label(&agent, same_model);
     run_status(&agent, &["--version"], None, None, true)?;
     let temp = TempDir::new(&format!("vec-review-pr-{number}"))?;
     let output = temp.path.join("review.md");
@@ -139,11 +140,11 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         };
     }
     if !ship {
-        publish_status(&repository, &initial.head_ref_oid, false, &agent)?;
+        publish_status(&repository, &initial.head_ref_oid, false, &reviewer)?;
         return Err("review blocked the PR; status revisao-independente set to failure".into());
     }
     let body = format!(
-        "## Revisão independente local ({agent})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
+        "## Revisão independente local ({reviewer})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
         initial.base_ref_name, initial.base_ref_oid, initial.head_ref_oid
     );
     run_status(
@@ -161,16 +162,16 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         None,
         false,
     )?;
-    publish_status(&repository, &initial.head_ref_oid, true, &agent)
+    publish_status(&repository, &initial.head_ref_oid, true, &reviewer)
 }
 
 /// Commit status required by the `main` protection. It is bound to the
 /// reviewed SHA, so any new push needs a new independent review.
-fn publish_status(repository: &str, sha: &str, ship: bool, agent: &str) -> Result<()> {
+fn publish_status(repository: &str, sha: &str, ship: bool, reviewer: &str) -> Result<()> {
     let (state, description) = if ship {
-        ("success", format!("Ship por {agent} no SHA revisado"))
+        ("success", format!("Ship por {reviewer}"))
     } else {
-        ("failure", format!("Bloqueado por {agent}"))
+        ("failure", format!("Bloqueado por {reviewer}"))
     };
     run_status(
         "gh",

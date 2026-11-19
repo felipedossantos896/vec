@@ -144,23 +144,42 @@ pub(super) fn implementers(messages: &str) -> Vec<&'static str> {
     found
 }
 
-/// Picks a reviewer that did not implement the PR.
-pub(super) fn choose_agent(requested: &str, implemented_by: &[&str]) -> Result<String> {
-    if requested != "auto" {
-        if implemented_by.contains(&requested) {
-            return Err(format!(
-                "independent review required: {requested} co-authored commits in this PR; use another agent"
-            ));
-        }
-        require_command(requested)?;
-        return Ok(requested.into());
+/// Reviewer selection. Independence comes from an isolated session that only
+/// receives the diff and the repository rules, so the co-author's model is
+/// allowed (never a hard dependency on one vendor), but `auto` prefers an agent
+/// that did not co-author the PR. Returns the agent and whether it co-authored.
+pub(super) fn select_agent(
+    requested: &str,
+    implemented_by: &[&str],
+    available: impl Fn(&str) -> bool,
+) -> Result<(String, bool)> {
+    let chosen = if requested != "auto" {
+        available(requested).then_some(requested)
+    } else {
+        let candidates = ["codex", "claude"];
+        candidates
+            .iter()
+            .find(|c| !implemented_by.contains(c) && available(c))
+            .or_else(|| candidates.iter().find(|c| available(c)))
+            .copied()
+    };
+    let agent = chosen.ok_or("install and authenticate codex or claude CLI")?;
+    Ok((agent.into(), implemented_by.contains(&agent)))
+}
+
+pub(super) fn choose_agent(requested: &str, implemented_by: &[&str]) -> Result<(String, bool)> {
+    select_agent(requested, implemented_by, |name| {
+        require_command(name).is_ok()
+    })
+}
+
+/// How the reviewer is recorded in the PR comment and commit status.
+pub(super) fn reviewer_label(agent: &str, same_model: bool) -> String {
+    if same_model {
+        format!("{agent}, mesmo modelo do autor em sessão isolada")
+    } else {
+        agent.to_string()
     }
-    for candidate in ["codex", "claude"] {
-        if !implemented_by.contains(&candidate) && require_command(candidate).is_ok() {
-            return Ok(candidate.into());
-        }
-    }
-    Err("no independent reviewer available: install and authenticate an agent that did not co-author this PR".into())
 }
 
 fn diff_args(base: &str, head: &str) -> Vec<String> {
@@ -182,10 +201,33 @@ mod tests {
     }
 
     #[test]
-    fn co_author_cannot_review() {
-        let error = choose_agent("claude", &["claude"]).unwrap_err();
-        assert!(error.contains("independent review required"));
-        assert!(choose_agent("auto", &["claude", "codex"]).is_err());
+    fn reviewer_prefers_other_agent_without_depending_on_it() {
+        let all = |_: &str| true;
+        let only_claude = |name: &str| name == "claude";
+        assert_eq!(
+            select_agent("auto", &["claude"], all).unwrap(),
+            ("codex".into(), false)
+        );
+        assert_eq!(
+            select_agent("auto", &["claude"], only_claude).unwrap(),
+            ("claude".into(), true)
+        );
+        assert_eq!(
+            select_agent("claude", &["claude"], all).unwrap(),
+            ("claude".into(), true)
+        );
+        assert_eq!(
+            select_agent("auto", &[], all).unwrap(),
+            ("codex".into(), false)
+        );
+        assert!(select_agent("codex", &[], only_claude).is_err());
+        assert!(select_agent("auto", &[], |_: &str| false).is_err());
+    }
+
+    #[test]
+    fn same_model_review_is_labelled() {
+        assert_eq!(reviewer_label("codex", false), "codex");
+        assert!(reviewer_label("claude", true).contains("mesmo modelo do autor em sessão isolada"));
     }
 
     #[test]
