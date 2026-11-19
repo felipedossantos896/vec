@@ -25,11 +25,11 @@ function colunas(itens: Coluna[]): string {
 }
 
 function painel(titulo: string, sub: string, corpo: string): string {
-  return `<section class="panel"><header class="panel-head"><h2>${titulo}</h2><p>${sub}</p></header>${corpo}</section>`;
+  return `<section class="panel ui-card"><header class="panel-head"><h2>${titulo}</h2><p>${sub}</p></header>${corpo}</section>`;
 }
 
 function kpi(label: string, valor: string, nota: string): string {
-  return `<div class="stat kpi"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
+  return `<div class="stat kpi ui-kpi"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
 }
 
 // Cadastros recebidos em cada um dos últimos 12 meses, incluindo os meses sem nenhum

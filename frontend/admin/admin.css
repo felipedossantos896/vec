@@ -15,7 +15,7 @@ html { -webkit-text-size-adjust: 100%; }
 /* ── Campos e botões ── */
 .field { margin-bottom: 18px; }
 .label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.95rem; }
-.input { display: block; width: 100%; min-height: 48px; padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--r-sm); background: var(--white); color: var(--ink); font: inherit; transition: border-color 0.15s; }
+.input { display: block; width: 100%; min-height: var(--tap); padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface-control); color: var(--ink); font: inherit; transition: border-color 0.15s; }
 .input:focus { border-color: var(--navy); outline: var(--focus); outline-offset: 2px; }
 .input::placeholder { opacity: 1; color: #8a8ea3; }
 .input:disabled { background: var(--sunken); color: var(--muted); }
