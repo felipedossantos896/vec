@@ -886,8 +886,12 @@ fn wait_for_ci_run(
 }
 
 fn require_command(name: &str) -> Result<()> {
-    let path = env::var_os("PATH").ok_or_else(|| format!("{name} is not installed"))?;
-    if env::split_paths(&path).any(|directory| directory.join(name).is_file()) {
+    let status = Command::new(name)
+        .arg("--version")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    if status.is_ok_and(|status| status.success()) {
         Ok(())
     } else {
         Err(format!("{name} is not installed"))
@@ -913,31 +917,51 @@ fn run_output_timeout(
         command.current_dir(cwd);
     }
     let mut child = command.spawn().map_err(|e| e.to_string())?;
+    let mut stdout = child.stdout.take().unwrap();
+    let mut stderr = child.stderr.take().unwrap();
+    let stdout_reader = thread::spawn(move || {
+        let mut output = Vec::new();
+        stdout.read_to_end(&mut output).map(|_| output)
+    });
+    let stderr_reader = thread::spawn(move || {
+        let mut output = Vec::new();
+        stderr.read_to_end(&mut output).map(|_| output)
+    });
     let deadline = Instant::now() + timeout;
-    loop {
+    let status = loop {
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
-            let mut stdout = Vec::new();
-            child
-                .stdout
-                .take()
-                .unwrap()
-                .read_to_end(&mut stdout)
-                .map_err(|e| e.to_string())?;
-            if !status.success() {
-                return Err(format!("{program} exited with {status}"));
-            }
-            return decode_output(stdout, program).map(|output| output.trim().to_string());
+            break status;
         }
         if Instant::now() >= deadline {
             child.kill().map_err(|e| e.to_string())?;
             child.wait().map_err(|e| e.to_string())?;
+            stdout_reader
+                .join()
+                .map_err(|_| "stdout reader panicked".to_string())?
+                .map_err(|e| e.to_string())?;
+            stderr_reader
+                .join()
+                .map_err(|_| "stderr reader panicked".to_string())?
+                .map_err(|e| e.to_string())?;
             return Err(format!(
                 "{program} timed out after {} seconds",
                 timeout.as_secs()
             ));
         }
         thread::sleep(Duration::from_millis(25));
+    };
+    let stdout = stdout_reader
+        .join()
+        .map_err(|_| "stdout reader panicked".to_string())?
+        .map_err(|e| e.to_string())?;
+    stderr_reader
+        .join()
+        .map_err(|_| "stderr reader panicked".to_string())?
+        .map_err(|e| e.to_string())?;
+    if !status.success() {
+        return Err(format!("{program} exited with {status}"));
     }
+    decode_output(stdout, program).map(|output| output.trim().to_string())
 }
 
 fn run_output_raw(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String> {
@@ -1357,9 +1381,25 @@ mod tests {
     #[test]
     fn command_timeout_terminates_the_child() {
         let started = Instant::now();
-        let error = run_output_timeout("sh", &["-c", "sleep 2"], None, Duration::from_millis(50))
-            .unwrap_err();
+        let error = run_output_timeout(
+            "sh",
+            &["-c", "exec sleep 2"],
+            None,
+            Duration::from_millis(50),
+        )
+        .unwrap_err();
         assert!(error.contains("timed out"));
         assert!(started.elapsed() < Duration::from_secs(1));
+    }
+    #[test]
+    fn timed_command_drains_large_output() {
+        let output = run_output_timeout(
+            "sh",
+            &["-c", "dd if=/dev/zero bs=1024 count=256 2>/dev/null"],
+            None,
+            Duration::from_secs(2),
+        )
+        .unwrap();
+        assert_eq!(output.len(), 256 * 1024);
     }
 }
