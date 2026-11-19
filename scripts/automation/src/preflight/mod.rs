@@ -17,7 +17,7 @@ use rules::{
 use std::collections::BTreeSet;
 use std::env;
 use std::fs;
-use std::net::TcpListener;
+use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -27,15 +27,18 @@ const TIMEOUT: Duration = Duration::from_secs(20);
 
 pub(crate) fn preflight_command() -> Result<()> {
     let root = repo_root()?;
+    let github = resolve_repository().map(|repo| format!("repository {repo}"));
+    // graph also needs GitHub: skip it instead of reporting the same failure twice.
+    let graph = match &github {
+        Ok(_) => graph_check(),
+        Err(_) => Err("skipped until the github check passes".into()),
+    };
     let outcomes = [
         ("git", git_check(&root)),
-        (
-            "github",
-            resolve_repository().map(|repo| format!("repository {repo}")),
-        ),
-        ("graph", graph_check()),
+        ("github", github),
+        ("graph", graph),
         ("tools", tools_check(&root)),
-        ("playwright-mcp", mcp_check()),
+        ("playwright-mcp", mcp_check(&root)),
         ("port", port_check()),
     ];
     let turso = turso_check();
@@ -124,14 +127,25 @@ fn tools_check(root: &Path) -> Result<String> {
     ))
 }
 
-fn mcp_check() -> Result<String> {
+fn mcp_check(root: &Path) -> Result<String> {
     let home = env::var_os("HOME").map(PathBuf::from).unwrap_or_default();
     let codex = env::var_os("CODEX_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| home.join(".codex"))
         .join("config.toml");
+    let claude_dir = env::var_os("CLAUDE_CONFIG_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(".claude"));
     let read = |path: PathBuf| fs::read_to_string(path).unwrap_or_default();
-    if has_playwright_mcp(&read(codex), &read(home.join(".claude.json"))) {
+    // Claude Code may enable it as an MCP server, a plugin or a project server.
+    let claude = [
+        home.join(".claude.json"),
+        claude_dir.join("settings.json"),
+        root.join(".mcp.json"),
+    ]
+    .map(read)
+    .join("\n");
+    if has_playwright_mcp(&read(codex), &claude) {
         Ok("configured for Codex or Claude Code".into())
     } else {
         Err(
@@ -192,7 +206,14 @@ fn port_check() -> Result<String> {
         .unwrap_or_else(|_| "8080".into())
         .parse()
         .map_err(|_| "PORT must be a number between 1 and 65535")?;
+    let in_use = format!("port {port} is in use; stop that process or set PORT");
+    // On macOS SO_REUSEADDR lets a wildcard bind succeed while another
+    // process listens on localhost, so also try to connect.
+    let loopback = SocketAddr::from(([127, 0, 0, 1], port));
+    if TcpStream::connect_timeout(&loopback, Duration::from_millis(300)).is_ok() {
+        return Err(in_use);
+    }
     TcpListener::bind(("0.0.0.0", port))
         .map(|_| format!("{port} is free"))
-        .map_err(|_| format!("port {port} is in use; stop that process or set PORT"))
+        .map_err(|_| in_use)
 }
