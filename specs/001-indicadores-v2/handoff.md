@@ -59,3 +59,14 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Pendências/bloqueios: revisão independente e CI do PR.
 - Próxima ação recomendada: revisar a PR #32 no SHA final; após merge, T006 ainda dependerá também da T005.
 - Estado da Issue confirmado em: aberta em 2026-11-19; dependências T002/#14 e T003/#15 encerradas.
+
+### T005 / Issue #17 — 2026-11-19
+- Agente utilizado: Codex.
+- Branch/PR e commit: `feat/issue-17-central-atencao`; PR #33; implementação em `d7a55ba`.
+- Objetivo e escopo: adicionar central de atenção em Indicadores para jornada incompleta e ausência de discipulador, reutilizando a lista e os filtros existentes de Pessoas.
+- Arquivos alterados: métricas, situações do painel, renderer/JavaScript compilado de Indicadores, CSS e testes frontend.
+- Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (11 testes), `gofmt`, `go vet ./...`, `go test ./...`, `go build ./...` e `git diff --check`; aprovados. Playwright MCP em 390×844 validou setor Norte com 2 jornadas incompletas e 1 pessoa sem discipulador; ambos os cards abriram Pessoas com situação, setor, contagem e chips corretos, sem overflow ou mensagens no console.
+- Decisões e riscos: grupos podem se sobrepor e isso é informado na interface; o drill-down usa `data-sit` e o conjunto já recortado pelo backend, sem endpoint ou autorização nova. Teste visual com dados sintéticos, sem escrita no Turso.
+- Pendências/bloqueios: revisão independente e CI do PR.
+- Próxima ação recomendada: revisar a PR #33 no SHA final; após merge, T006 fica desbloqueada.
+- Estado da Issue confirmado em: aberta em 2026-11-19; dependências T002/#14 e T003/#15 encerradas.
