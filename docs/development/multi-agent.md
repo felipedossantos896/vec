@@ -76,3 +76,32 @@ ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramen
 de shell ou acesso ao checkout. O binário usa as sessões locais de
 `codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
 uma segunda conta GitHub.
+
+## Smoke E2E em `vec-dev` (opt-in)
+
+Validação visual automatizada do painel, fora do CI. Requer `turso auth login`,
+Go, `npm ci` e, uma única vez, `npx playwright install chromium`.
+
+```bash
+npm run test:e2e:dev
+```
+
+O script resolve o banco pelo nome `vec-dev` (recusa qualquer outro), gera um
+token Turso de 1 dia com permissões mínimas (leitura geral; escrita apenas em
+`usuarios`, `usuario_escopos` e `login_falhas`), cria um usuário AREA
+`e2e-<aleatório>` com senha em arquivo `0600`, sobe o servidor em porta livre
+com `AUTO_MIGRATE=0` e valida, em 1440×900 e 390×844 com movimento reduzido:
+login, cinco KPIs de Indicadores, filtro de setor compartilhado entre as abas,
+foco de teclado visível, ausência de overflow horizontal, console e HTTP sem
+erros, estado vazio (resposta simulada, nada é gravado) e logout.
+
+Sempre, inclusive em falha ou Ctrl+C, encerra navegador e servidor, remove o
+usuário e os arquivos temporários e confere que não restou usuário `e2e-*`.
+Nada de token, senha, screenshot ou dado de pessoas é impresso ou gravado.
+`E2E_SIMULAR_FALHA=1` força uma falha após o login para comprovar a limpeza.
+O token expira sozinho em 1 dia; o Turso não permite revogar um token
+isolado sem invalidar todos os do banco.
+
+Se uma execução for morta com `kill -9`, remova o usuário restante com
+`go run ./backend/cmd/e2e-usuario remover -usuario e2e-...`, com
+`TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` do `vec-dev` no ambiente.
