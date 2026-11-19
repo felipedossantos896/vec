@@ -707,7 +707,7 @@ Compare HEAD against the exact base commit {}.
 
 fn review_material(root: &Path, base: &str, head: &str) -> Result<String> {
     let args = diff_args(base, head);
-    let mut material = run_output(
+    let mut material = run_output_raw(
         "git",
         &args.iter().map(String::as_str).collect::<Vec<_>>(),
         Some(root),
@@ -717,7 +717,7 @@ fn review_material(root: &Path, base: &str, head: &str) -> Result<String> {
         ".github/agents/reviewer.md",
         ".agents/skills/ponytail-review/SKILL.md",
     ] {
-        let content = run_output("git", &["show", &format!("{base}:{path}")], Some(root))?;
+        let content = run_output_raw("git", &["show", &format!("{base}:{path}")], Some(root))?;
         material.push_str(&format!("\n--- trusted base policy: {path} ---\n{content}"));
     }
     Ok(material)
@@ -890,6 +890,10 @@ fn require_command(name: &str) -> Result<()> {
 }
 
 fn run_output(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String> {
+    Ok(run_output_raw(program, args, cwd)?.trim().to_string())
+}
+
+fn run_output_raw(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String> {
     let mut command = Command::new(program);
     command.args(args);
     if let Some(cwd) = cwd {
@@ -902,7 +906,7 @@ fn run_output(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String
             String::from_utf8_lossy(&output.stderr).trim()
         ));
     }
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 fn run_status(
@@ -995,7 +999,13 @@ impl TempDir {
             .map_err(|e| e.to_string())?
             .as_nanos();
         let path = env::temp_dir().join(format!("{prefix}-{}-{nonce}", std::process::id()));
-        fs::create_dir(&path).map_err(|e| e.to_string())?;
+        let mut builder = fs::DirBuilder::new();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::DirBuilderExt;
+            builder.mode(0o700);
+        }
+        builder.create(&path).map_err(|e| e.to_string())?;
         Ok(Self { path })
     }
 }
@@ -1245,5 +1255,24 @@ mod tests {
         )
         .unwrap();
         assert!(output.ends_with("done"));
+    }
+    #[test]
+    fn raw_command_output_preserves_trailing_whitespace() {
+        assert_eq!(
+            run_output_raw("sh", &["-c", "printf 'line  \\n'"], None).unwrap(),
+            "line  \n"
+        );
+        assert_eq!(
+            run_output("sh", &["-c", "printf ' value \\n'"], None).unwrap(),
+            "value"
+        );
+    }
+    #[cfg(unix)]
+    #[test]
+    fn review_directory_is_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let directory = TempDir::new("vec-review-permissions").unwrap();
+        let mode = fs::metadata(&directory.path).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o700);
     }
 }
