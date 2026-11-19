@@ -31,11 +31,22 @@
   --danger: #b3261e;
   --danger-bg: #fdecea;
 
+  /* Componentes */
+  --surface-card: var(--cream);
+  --surface-control: var(--white);
+  --border-card: var(--line);
+
   /* Tipografia */
   --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 
   /* Medidas */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
   --tap: 48px;
   --r-lg: 18px;
   --r-md: 12px;
