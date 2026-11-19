@@ -12,6 +12,7 @@ use std::fs;
 
 pub(crate) const BLOCKED_DRY_RUN: &str = "review blocked the PR";
 const REVIEW_CONTEXT: &str = "revisao-independente";
+const PROTECTED_BRANCH: &str = "main";
 
 pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
     let number: u64 = args
@@ -143,6 +144,18 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         publish_status(&repository, &initial.head_ref_oid, false, &reviewer)?;
         return Err("review blocked the PR; status revisao-independente set to failure".into());
     }
+    // The status lives on the head commit and GitHub honours it for any PR
+    // with that head, so success is only granted for the protected branch:
+    // a stacked PR retargeted to main must be reviewed again against main.
+    let protected_base = status_allowed(&initial.base_ref_name);
+    if protected_base {
+        publish_status(&repository, &initial.head_ref_oid, true, &reviewer)?;
+    } else {
+        eprintln!(
+            "base {} is not {PROTECTED_BRANCH}: comment only, no {REVIEW_CONTEXT} status",
+            initial.base_ref_name
+        );
+    }
     let body = format!(
         "## Revisão independente local ({reviewer})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
         initial.base_ref_name, initial.base_ref_oid, initial.head_ref_oid
@@ -162,7 +175,11 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
         None,
         false,
     )?;
-    publish_status(&repository, &initial.head_ref_oid, true, &reviewer)
+    Ok(())
+}
+
+fn status_allowed(base_ref_name: &str) -> bool {
+    base_ref_name == PROTECTED_BRANCH
 }
 
 /// Commit status required by the `main` protection. It is bound to the
@@ -234,6 +251,13 @@ fn safe_review(review: &str) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn success_status_only_for_protected_base() {
+        assert!(status_allowed("main"));
+        assert!(!status_allowed("chore/issue-26-preflight"));
+        assert!(!status_allowed("Main"));
+    }
 
     #[test]
     fn exact_ship_only() {

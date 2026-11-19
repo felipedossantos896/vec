@@ -9,7 +9,10 @@ Revisar alterações independentemente da implementação, contra os critérios 
 - Cobertura dos casos de erro, vazio, escopo e acessibilidade quando aplicável.
 - Sem mudança de stack ou contrato sem decisão aprovada.
 - Rollback descrito e riscos explicitados.
-- Não considerar avaliação do próprio agente como aprovação independente.
+- Não considerar avaliação do próprio agente como aprovação independente. Exceção
+  explícita: o mesmo modelo em sessão isolada do `review-pr` (só diff e regras,
+  sem ferramentas nem histórico de quem implementou) conta como independente,
+  desde que registrado como "mesmo modelo do autor em sessão isolada".
 
 ## Política de integração
 Não contornar branch protection, revisão humana exigida, checks ou ambientes protegidos.

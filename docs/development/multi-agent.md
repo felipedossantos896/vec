@@ -73,7 +73,7 @@ O binário Rust monta o diff diretamente dos objetos Git, sem fazer checkout da 
 executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
 CI, inclui no contexto confiável a evidência dos checks do SHA exato e registra
 no PR somente base, head e aprovação fixa quando o veredito for
-`Ship`. Bloqueios ficam locais para correção. Incorpore a PR pelo GitHub após
+`Ship`. O parecer de bloqueio fica local para correção; apenas o status `failure` é publicado. Incorpore a PR pelo GitHub após
 conferir o parecer e a branch de destino. A `main` exige o check `testes` do
 GitHub Actions, o status `revisao-independente` (veja abaixo) e uma branch
 atualizada. O CLI rejeita `--merge` porque a API
@@ -87,8 +87,10 @@ uma segunda conta GitHub.
 ### Gate de revisão na `main`
 
 Com veredito `Ship`, o `review-pr` publica, além do comentário, o commit status
-`revisao-independente = success` no SHA revisado. Com bloqueio, publica
-`failure`. O status pertence ao SHA, então qualquer novo push ou rebase
+`revisao-independente = success` no SHA revisado, antes do comentário, e só
+quando a base da PR é `main`. PRs empilhadas (base em outra branch) recebem só
+o comentário e precisam de nova revisão após o retarget para `main`. Com
+bloqueio, publica `failure`. O status pertence ao SHA, então qualquer novo push ou rebase
 exige nova revisão. Como o repositório tem um único colaborador e o GitHub não
 permite que o autor aprove a própria PR, o gate usa status obrigatório em vez
 de aprovação formal.
