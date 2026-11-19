@@ -44,6 +44,24 @@ repositório vem do remote `origin` (github.com) e a autenticação vem do
 `gh auth login` já feito. No GitHub Actions as duas variáveis continuam
 tendo prioridade.
 
+### Evidência para PR e handoff
+
+Depois do commit (worktree limpa), gere a evidência das mesmas verificações
+do CI e atualize a PR:
+
+```bash
+cargo run --locked --manifest-path scripts/automation/Cargo.toml -- evidence --visual --pr <n> [--handoff <spec>]
+```
+
+A saída é Markdown entre `<!-- vec-evidencia:inicio -->` e
+`<!-- vec-evidencia:fim -->`, só com resultado e contagens (nunca a saída
+bruta dos comandos), e cita o **commit testado**. `--pr` substitui apenas essa
+seção do corpo e recusa se o head da PR não for o commit testado (faça push
+antes). `--visual` inclui preflight e `npm run test:e2e:dev`; use-o quando a
+tarefa muda a interface. `--handoff` acrescenta o bloco a
+`specs/<spec>/handoff.md`; o commit seguinte altera só o handoff, então não há
+hash autorreferente. O comando falha (exit 1) se qualquer verificação falhar.
+
 ### Preflight local
 
 Antes de implementar ou testar visualmente, rode na branch da tarefa:
