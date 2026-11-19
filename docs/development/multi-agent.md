@@ -56,7 +56,8 @@ omita a opção para preferir um CLI disponível **que não seja coautor da PR**
 (conforme os trailers `Co-Authored-By` dos commits). Se só o modelo coautor
 estiver disponível, ou for pedido explicitamente, a revisão roda mesmo assim:
 a independência vem da sessão isolada, que recebe apenas o diff e as regras,
-sem ferramentas nem o histórico de quem implementou. Nesse caso o comentário e
+sem ferramentas, servidores MCP, conectores da conta, plugins nem o histórico
+de quem implementou (ADR-0009). Nesse caso o comentário e
 o status registram "mesmo modelo do autor em sessão isolada", para que fique
 visível. Assim o fluxo não depende de um único modelo. Para ensaiar sem
 comentar nem publicar status, use `--dry-run`.
@@ -87,7 +88,7 @@ uma segunda conta GitHub.
 ### Gate de revisão na `main`
 
 Com veredito `Ship`, o `review-pr` publica, além do comentário, o commit status
-`revisao-independente = success` no SHA revisado, antes do comentário, e só
+`revisao-independente = success` no SHA revisado, depois do comentário, e só
 quando a base da PR é `main`. PRs empilhadas (base em outra branch) recebem só
 o comentário e precisam de nova revisão após o retarget para `main`. Com
 bloqueio, publica `failure`. O status pertence ao SHA, então qualquer novo push ou rebase

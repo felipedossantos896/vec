@@ -1,5 +1,6 @@
 mod agent;
 mod github;
+mod publish;
 
 use crate::Result;
 use crate::process::{TempDir, repo_root, require_command, run_output, run_status};
@@ -7,12 +8,11 @@ use agent::{choose_agent, implementers, reviewer_label, run_agent};
 use github::{
     confirm_unchanged, pr_data, require_owner_pr, require_ready_pr, verified_ci_evidence,
 };
+use publish::{PROTECTED_BRANCH, REVIEW_CONTEXT, publication, publish_status};
 use regex::Regex;
 use std::fs;
 
 pub(crate) const BLOCKED_DRY_RUN: &str = "review blocked the PR";
-const REVIEW_CONTEXT: &str = "revisao-independente";
-const PROTECTED_BRANCH: &str = "main";
 
 pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
     let number: u64 = args
@@ -133,84 +133,47 @@ pub(crate) fn review_pr_command(args: &[String]) -> Result<()> {
     confirm_unchanged(&initial, &current)?;
     println!("{review}");
     let ship = can_publish_review(&review, changed_ci);
-    if dry_run {
-        return if ship {
-            Ok(())
-        } else {
-            Err(BLOCKED_DRY_RUN.into())
-        };
-    }
-    if !ship {
+    let plan = publication(dry_run, ship, &initial.base_ref_name);
+    if plan.failure_status {
         publish_status(&repository, &initial.head_ref_oid, false, &reviewer)?;
-        return Err("review blocked the PR; status revisao-independente set to failure".into());
     }
-    // The status lives on the head commit and GitHub honours it for any PR
-    // with that head, so success is only granted for the protected branch:
-    // a stacked PR retargeted to main must be reviewed again against main.
-    let protected_base = status_allowed(&initial.base_ref_name);
-    if protected_base {
+    if plan.comment {
+        let body = format!(
+            "## Revisão independente local ({reviewer})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
+            initial.base_ref_name, initial.base_ref_oid, initial.head_ref_oid
+        );
+        run_status(
+            "gh",
+            &[
+                "pr",
+                "comment",
+                &number.to_string(),
+                "--repo",
+                &repository,
+                "--body",
+                &body,
+            ],
+            None,
+            None,
+            false,
+        )?;
+    }
+    // After the comment, so a success status always has its audit trail.
+    if plan.success_status {
         publish_status(&repository, &initial.head_ref_oid, true, &reviewer)?;
-    } else {
+    } else if plan.comment {
         eprintln!(
             "base {} is not {PROTECTED_BRANCH}: comment only, no {REVIEW_CONTEXT} status",
             initial.base_ref_name
         );
     }
-    let body = format!(
-        "## Revisão independente local ({reviewer})\n\nBranch de destino revisada\n\n    {}\n\n**Base:** `{}`  \n**Head:** `{}`\n\nO agente local não encontrou bloqueios no diff exato acima.\n\nVerdict: Ship.",
-        initial.base_ref_name, initial.base_ref_oid, initial.head_ref_oid
-    );
-    run_status(
-        "gh",
-        &[
-            "pr",
-            "comment",
-            &number.to_string(),
-            "--repo",
-            &repository,
-            "--body",
-            &body,
-        ],
-        None,
-        None,
-        false,
-    )?;
-    Ok(())
-}
-
-fn status_allowed(base_ref_name: &str) -> bool {
-    base_ref_name == PROTECTED_BRANCH
-}
-
-/// Commit status required by the `main` protection. It is bound to the
-/// reviewed SHA, so any new push needs a new independent review.
-fn publish_status(repository: &str, sha: &str, ship: bool, reviewer: &str) -> Result<()> {
-    let (state, description) = if ship {
-        ("success", format!("Ship por {reviewer}"))
-    } else {
-        ("failure", format!("Bloqueado por {reviewer}"))
-    };
-    run_status(
-        "gh",
-        &[
-            "api",
-            "--hostname",
-            "github.com",
-            "-X",
-            "POST",
-            &format!("repos/{repository}/statuses/{sha}"),
-            "-f",
-            &format!("state={state}"),
-            "-f",
-            &format!("context={REVIEW_CONTEXT}"),
-            "-f",
-            &format!("description={description}"),
-        ],
-        None,
-        None,
-        true,
-    )
-    .map_err(|error| format!("publishing the {REVIEW_CONTEXT} status: {error}"))
+    match (ship, dry_run) {
+        (true, _) => Ok(()),
+        (false, true) => Err(BLOCKED_DRY_RUN.into()),
+        (false, false) => {
+            Err("review blocked the PR; status revisao-independente set to failure".into())
+        }
+    }
 }
 
 fn can_publish_review(review: &str, changed_ci: bool) -> bool {
@@ -253,18 +216,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn success_status_only_for_protected_base() {
-        assert!(status_allowed("main"));
-        assert!(!status_allowed("chore/issue-26-preflight"));
-        assert!(!status_allowed("Main"));
-    }
-
-    #[test]
     fn exact_ship_only() {
         assert!(is_ship("Summary\n\nVerdict: Ship."));
         assert!(!is_ship("Looks good. Ship."));
         assert!(!is_ship("Verdict: Ship.\nVerdict: blocked."));
     }
+
     #[test]
     fn secrets_rejected() {
         assert!(safe_review("Verdict: Ship.").is_ok());

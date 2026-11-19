@@ -11,8 +11,9 @@ Revisar alterações independentemente da implementação, contra os critérios 
 - Rollback descrito e riscos explicitados.
 - Não considerar avaliação do próprio agente como aprovação independente. Exceção
   explícita: o mesmo modelo em sessão isolada do `review-pr` (só diff e regras,
-  sem ferramentas nem histórico de quem implementou) conta como independente,
-  desde que registrado como "mesmo modelo do autor em sessão isolada".
+  sem ferramentas, MCP, conectores, plugins nem histórico de quem implementou)
+  conta como independente, desde que registrado como "mesmo modelo do autor em
+  sessão isolada". Ver ADR-0009.
 
 ## Política de integração
 Não contornar branch protection, revisão humana exigida, checks ou ambientes protegidos.

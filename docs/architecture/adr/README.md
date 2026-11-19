@@ -19,6 +19,7 @@ Este diretório documenta propostas e decisões para a evolução incremental do
 - [ADR-0006 — Recomendação de anfitriões](./0006-recomendacao-anfitrioes.md)
 - [ADR-0007 — Planejamento de novas células](./0007-planejamento-novas-celulas.md)
 - [ADR-0008 — Privacidade e autorização](./0008-privacidade-autorizacao.md)
+- [ADR-0009 — Revisão independente local e gate de merge](./0009-revisao-independente.md)
 
 ## Contexto técnico observado
 - Go serve o formulário público e o painel.
