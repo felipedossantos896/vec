@@ -7,7 +7,7 @@
 //
 //	e2e-usuario criar -arquivo /tmp/dir/credencial.json
 //	e2e-usuario remover -usuario e2e-1a2b3c4d
-//	e2e-usuario contar [-usuario e2e-1a2b3c4d]
+//	e2e-usuario contar -usuario e2e-1a2b3c4d
 package main
 
 import (
@@ -61,7 +61,7 @@ func main() {
 		_ = flags.Parse(os.Args[2:])
 		err = remover(ctx, db, *usuario)
 	case "contar":
-		usuario := flags.String("usuario", "", "conta só este usuário temporário (padrão: todos)")
+		usuario := flags.String("usuario", "", "usuário temporário a conferir (0 ou 1)")
 		_ = flags.Parse(os.Args[2:])
 		var n int
 		if n, err = contar(ctx, db, *usuario); err == nil {
@@ -150,21 +150,18 @@ func remover(ctx context.Context, db turso.DB, usuario string) error {
 	return err
 }
 
-// contar devolve quantos usuários temporários existem; com usuario, conta só
-// esse (assim execuções simultâneas não se atrapalham).
+// contar confere se o usuário temporário desta execução ainda existe (0 ou 1);
+// conferir só o próprio usuário evita que execuções simultâneas se atrapalhem.
 func contar(ctx context.Context, db turso.DB, usuario string) (int, error) {
-	stmt := turso.Stmt{
-		SQL: `SELECT usuario FROM usuarios WHERE usuario GLOB 'e2e-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'`,
+	if !temporario(usuario) {
+		return 0, errors.New("informe -usuario com um usuário temporário (e2e-xxxxxxxx)")
 	}
-	if usuario != "" {
-		if !temporario(usuario) {
-			return 0, errors.New("só usuários temporários (prefixo e2e-) podem ser contados")
-		}
-		stmt = turso.Stmt{SQL: `SELECT usuario FROM usuarios WHERE usuario = ?`, Args: []any{usuario}}
-	}
-	res, err := db.Do(ctx, stmt)
+	res, err := db.Do(ctx, turso.Stmt{SQL: `SELECT usuario FROM usuarios WHERE usuario = ?`, Args: []any{usuario}})
 	if err != nil {
 		return 0, err
+	}
+	if len(res) == 0 {
+		return 0, errors.New("consulta sem resultado")
 	}
 	return len(res[0].Rows), nil
 }

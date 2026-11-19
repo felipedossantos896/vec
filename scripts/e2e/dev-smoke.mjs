@@ -83,7 +83,7 @@ async function iniciarServidor(porta) {
   estado.servidor = proc;
   const base = `http://127.0.0.1:${porta}`;
   for (let i = 0; i < 100; i++) {
-    if (proc.exitCode !== null) throw new Etapa('servidor encerrou ao iniciar');
+    if (proc.exitCode !== null || proc.signalCode !== null) throw new Etapa('servidor encerrou ao iniciar');
     try {
       if ((await fetch(`${base}/healthz`)).ok) { ok(`servidor no ar na porta ${porta}`); return base; }
     } catch { /* ainda subindo */ }
@@ -137,16 +137,26 @@ async function validarViewport(navegador, base, cred, viewport) {
       ok(`${rotulo}: filtro de setor sem opções no escopo (verificação pulada)`);
     }
 
-    const movimento = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-    movimento ? ok(`${rotulo}: movimento reduzido ativo`) : falha(`${rotulo}: movimento reduzido não aplicado`);
+    // Mede o efeito do CSS do app, não a opção que o próprio teste definiu.
+    const animados = await page.evaluate(() => {
+      const segundos = v => Math.max(...v.split(',').map(t => parseFloat(t) * (t.trim().endsWith('ms') ? 0.001 : 1)));
+      return [...document.querySelectorAll('*')].filter(el => {
+        const s = getComputedStyle(el);
+        return (s.animationName !== 'none' && segundos(s.animationDuration) > 0.001) || segundos(s.transitionDuration) > 0;
+      }).length;
+    });
+    animados === 0 ? ok(`${rotulo}: movimento reduzido respeitado pelo CSS`) : falha(`${rotulo}: ${animados} elemento(s) ainda animados com movimento reduzido`);
 
     await page.locator('#tabIndicadores').focus();
     await page.keyboard.press('Tab');
+    // Exige diferença visual entre o elemento focado pelo teclado e ele sem foco.
     const foco = await page.evaluate(() => {
       const el = document.activeElement;
-      if (!el || el === document.body) return false;
-      const s = getComputedStyle(el);
-      return el.matches(':focus-visible') && (s.outlineStyle !== 'none' || s.boxShadow !== 'none');
+      if (!el || el === document.body || !el.matches(':focus-visible')) return false;
+      const estilo = () => { const s = getComputedStyle(el); return [s.outlineStyle, s.outlineWidth, s.outlineColor, s.boxShadow].join('|'); };
+      const focado = estilo();
+      el.blur();
+      return focado !== estilo();
     });
     foco ? ok(`${rotulo}: foco de teclado visível`) : falha(`${rotulo}: foco de teclado sem indicação visível`);
 
@@ -200,7 +210,7 @@ function limpar() {
 async function executarLimpeza() {
   try { await estado.navegador?.close(); } catch { /* já fechado */ }
   const srv = estado.servidor;
-  if (srv && srv.exitCode === null) {
+  if (srv && srv.exitCode === null && srv.signalCode === null) {
     srv.kill('SIGTERM');
     await Promise.race([new Promise(r => srv.once('exit', r)), new Promise(r => setTimeout(r, 5_000))]);
     if (srv.exitCode === null && srv.signalCode === null) srv.kill('SIGKILL');
