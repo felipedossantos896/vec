@@ -411,7 +411,6 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     }
     let mut agent = "auto".to_string();
     let mut dry_run = false;
-    let mut reviewed_ci = false;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -420,7 +419,6 @@ fn review_pr_command(args: &[String]) -> Result<()> {
                 agent = args.get(i).ok_or("--agent requires a value")?.clone();
             }
             "--dry-run" => dry_run = true,
-            "--reviewed-ci" => reviewed_ci = true,
             "--merge" => return Err("automatic merge is unavailable; run review-pr without --merge and merge the reviewed PR through GitHub".into()),
             other => return Err(format!("unknown option: {other}")),
         }
@@ -495,10 +493,9 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         Some(&root),
     )?
     .is_empty();
-    require_ci_review(changed_ci, dry_run, reviewed_ci)?;
     let evidence = if changed_ci {
         format!(
-            "The API verified the run identity and result below. This PR changes the CI workflow itself. Inspect the workflow diff to assess what the run actually tested.\n{ci_evidence}"
+            "The API verified the run identity and job result below. The candidate changes the CI workflow, so its green result alone does not establish that the expected validations ran. Independently compare the old and new CI steps in the supplied diff. If the new workflow still performs the required validations, include a standalone line `CI workflow: verified.` before the final verdict. Otherwise report the missing validation and block.\n{ci_evidence}"
         )
     } else {
         ci_evidence
@@ -511,7 +508,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     require_owner_pr(&current, owner)?;
     confirm_unchanged(&initial, &current)?;
     println!("{review}");
-    let ship = is_ship(&review);
+    let ship = can_publish_review(&review, changed_ci);
     if dry_run {
         return if ship {
             Ok(())
@@ -544,11 +541,12 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-fn require_ci_review(changed: bool, dry_run: bool, reviewed_ci: bool) -> Result<()> {
-    if changed && !dry_run && !reviewed_ci {
-        return Err("CI workflow changed; inspect the diff and run, then use --reviewed-ci to allow publication or --dry-run to preview".into());
-    }
-    Ok(())
+fn can_publish_review(review: &str, changed_ci: bool) -> bool {
+    is_ship(review)
+        && (!changed_ci
+            || review
+                .lines()
+                .any(|line| line.trim() == "CI workflow: verified."))
 }
 
 fn pr_data(number: u64, repository: &str) -> Result<PullRequest> {
@@ -1416,10 +1414,16 @@ mod tests {
     }
 
     #[test]
-    fn publishing_with_changed_ci_requires_operator_review() {
-        assert!(require_ci_review(true, false, false).is_err());
-        assert!(require_ci_review(true, true, false).is_ok());
-        assert!(require_ci_review(true, false, true).is_ok());
-        assert!(require_ci_review(false, false, false).is_ok());
+    fn publishing_with_changed_ci_requires_independent_workflow_review() {
+        assert!(!can_publish_review("Verdict: Ship.", true));
+        assert!(can_publish_review(
+            "CI workflow: verified.\nVerdict: Ship.",
+            true
+        ));
+        assert!(!can_publish_review(
+            "CI workflow: verified.\nVerdict: blocked.",
+            true
+        ));
+        assert!(can_publish_review("Verdict: Ship.", false));
     }
 }
