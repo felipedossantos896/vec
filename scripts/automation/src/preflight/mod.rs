@@ -25,7 +25,10 @@ const DATABASE: &str = "vec-dev";
 const NODE_MIN: (u64, u64) = (24, 0);
 const TIMEOUT: Duration = Duration::from_secs(20);
 
-pub(crate) fn preflight_command() -> Result<()> {
+pub(crate) type Outcome = (&'static str, Result<String>);
+
+/// Runs every preflight check; also used by `evidence --visual`.
+pub(crate) fn preflight_outcomes() -> Result<Vec<Outcome>> {
     let root = repo_root()?;
     let outcomes = [
         ("git", git_check(&root)),
@@ -43,11 +46,15 @@ pub(crate) fn preflight_command() -> Result<()> {
         Ok(_) => migrations_check(&root),
         Err(_) => Err("skipped until the turso check passes".into()),
     };
-    let outcomes = outcomes
+    Ok(outcomes
         .into_iter()
-        .chain([("turso", turso), ("migrations", migrations)]);
+        .chain([("turso", turso), ("migrations", migrations)])
+        .collect())
+}
+
+pub(crate) fn preflight_command() -> Result<()> {
     let mut failures = 0;
-    for (name, outcome) in outcomes {
+    for (name, outcome) in preflight_outcomes()? {
         match outcome {
             Ok(detail) => println!("ok    {name}: {detail}"),
             Err(problem) => {

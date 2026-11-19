@@ -1,8 +1,10 @@
+mod evidence;
 mod graph;
 mod preflight;
 mod process;
 mod review;
 
+use evidence::evidence_command;
 use graph::{prepare_agent_command, resolve_graph_command, validate_graph_command};
 use preflight::preflight_command;
 use review::{BLOCKED_DRY_RUN, review_pr_command};
@@ -27,9 +29,10 @@ fn execute(args: Vec<String>) -> Result<()> {
         Some("resolve-graph") if args.len() == 1 => resolve_graph_command(),
         Some("prepare-agent") if args.len() == 1 => prepare_agent_command(),
         Some("preflight") if args.len() == 1 => preflight_command(),
+        Some("evidence") => evidence_command(&args[1..]),
         Some("review-pr") => review_pr_command(&args[1..]),
         _ => Err(
-            "usage: vec-automation <validate-graph|resolve-graph|prepare-agent|preflight|review-pr>".into(),
+            "usage: vec-automation <validate-graph|resolve-graph|prepare-agent|preflight|evidence|review-pr>".into(),
         ),
     }
 }
