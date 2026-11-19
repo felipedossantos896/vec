@@ -83,6 +83,7 @@ class ReviewPRTests(unittest.TestCase):
         self.assertFalse(is_ship("Verdict: blocked."))
         self.assertFalse(is_ship("It should ship later."))
         self.assertFalse(is_ship("Verdict: Ship.\n\nVerdict: blocked."))
+        self.assertFalse(is_ship("Verdict: blocked.\n\nVerdict: Ship."))
 
     def test_review_rejects_possible_secrets(self):
         self.assertEqual(safe_review("Verdict: Ship."), "Verdict: Ship.")

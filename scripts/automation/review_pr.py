@@ -28,9 +28,12 @@ def run(command, *, cwd=None, capture=True, env=None, input_text=None):
     )
 
 
-def pr_data(number):
+def pr_data(number, repository=None):
     fields = "number,state,isDraft,author,baseRefName,baseRefOid,headRefName,headRefOid,headRepositoryOwner,statusCheckRollup,url"
-    result = run(["gh", "pr", "view", str(number), "--json", fields])
+    command = ["gh", "pr", "view", str(number), "--json", fields]
+    if repository:
+        command.extend(["--repo", repository])
+    result = run(command)
     return json.loads(result.stdout)
 
 
@@ -71,7 +74,8 @@ def require_ready_pr(data):
 
 def is_ship(review):
     lines = [line.strip() for line in review.splitlines() if line.strip()]
-    return bool(lines) and lines[-1] == "Verdict: Ship."
+    verdicts = [line for line in lines if line in ("Verdict: Ship.", "Verdict: blocked.")]
+    return len(verdicts) == 1 and lines[-1] == "Verdict: Ship."
 
 
 def safe_review(review):
@@ -126,6 +130,9 @@ def run_agent(agent, number, sha, base_sha, repo, output):
         command = [
             "codex", "exec", "--sandbox", "read-only", "--ephemeral",
             "--ignore-user-config", "--disable", "shell_tool", "--disable", "js_repl",
+            "--disable", "apps", "--disable", "plugins", "--disable", "remote_plugin",
+            "--disable", "computer_use", "--disable", "browser_use",
+            "--disable", "standalone_web_search", "--disable", "image_generation",
             "--skip-git-repo-check", "-o", str(output), "-",
         ]
         run(command, cwd=output.parent, env=agent_env, input_text=prompt)
@@ -180,24 +187,26 @@ def main():
 
     repo = Path(run(["git", "rev-parse", "--show-toplevel"]).stdout.strip())
     run(["gh", "auth", "status"])
-    owner = run(["gh", "repo", "view", "--json", "owner", "--jq", ".owner.login"]).stdout.strip()
-    initial = pr_data(args.pr)
+    repository = run(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"]).stdout.strip()
+    owner = repository.split("/", 1)[0]
+    initial = pr_data(args.pr, repository)
     require_owner_pr(initial, owner)
     require_ready_pr(initial)
     agent = choose_agent(args.agent)
     run([agent, "--version"])
     base_ref = f"refs/remotes/origin/{initial['baseRefName']}"
-    run(["git", "fetch", "origin", f"{initial['baseRefName']}:{base_ref}"])
+    remote_url = f"https://github.com/{repository}.git"
+    run(["git", "fetch", remote_url, f"{initial['baseRefName']}:{base_ref}"])
     fetched_base = run(["git", "rev-parse", base_ref]).stdout.strip()
     confirm_fetched_base(initial["baseRefOid"], fetched_base)
-    run(["git", "fetch", "origin", f"pull/{args.pr}/head"])
+    run(["git", "fetch", remote_url, f"pull/{args.pr}/head"])
 
     with tempfile.TemporaryDirectory(prefix=f"vec-review-pr-{args.pr}-") as temp:
         output = trusted_output_path(temp)
         run_agent(agent, args.pr, initial["headRefOid"], initial["baseRefOid"], repo, output)
         review = safe_review(output.read_text(encoding="utf-8"))
 
-        current = pr_data(args.pr)
+        current = pr_data(args.pr, repository)
         require_owner_pr(current, owner)
         confirm_unchanged(initial, current)
         ship = is_ship(review)
@@ -214,7 +223,7 @@ def main():
             "O agente local não encontrou bloqueios no diff exato acima.\n\n"
             "Verdict: Ship."
         )
-        run(["gh", "pr", "comment", str(args.pr), "--body", body], capture=False)
+        run(["gh", "pr", "comment", str(args.pr), "--repo", repository, "--body", body], capture=False)
         return 0
 
 
