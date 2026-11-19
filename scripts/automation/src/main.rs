@@ -37,6 +37,7 @@ struct PullRequest {
     base_ref_oid: String,
     head_ref_oid: String,
     head_ref_name: String,
+    is_cross_repository: bool,
     head_repository_owner: Option<Login>,
     #[serde(default)]
     status_check_rollup: Vec<Check>,
@@ -552,7 +553,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
 }
 
 fn pr_data(number: u64, repository: &str) -> Result<PullRequest> {
-    let fields = "state,isDraft,author,baseRefName,baseRefOid,headRefName,headRefOid,headRepositoryOwner,statusCheckRollup";
+    let fields = "state,isDraft,isCrossRepository,author,baseRefName,baseRefOid,headRefName,headRefOid,headRepositoryOwner,statusCheckRollup";
     let output = run_output(
         "gh",
         &[
@@ -576,8 +577,11 @@ fn require_owner_pr(pr: &PullRequest, owner: &str) -> Result<()> {
             .as_ref()
             .map(|value| value.login.as_str())
             != Some(owner)
+        || pr.is_cross_repository
     {
-        return Err("autonomous review is restricted to owner-authored branches".into());
+        return Err(
+            "autonomous review is restricted to owner-authored branches in this repository".into(),
+        );
     }
     Ok(())
 }
@@ -845,72 +849,53 @@ fn atomic_merge(number: u64, repository: &str, pr: &PullRequest, root: &Path) ->
         return Err("git merge-tree did not return a tree SHA".into());
     }
     let message = format!("Merge pull request #{number} from {}", pr.head_ref_name);
-    let endpoint = format!("repos/{repository}/git/commits");
-    let message_field = format!("message={message}");
-    let tree_field = format!("tree={tree}");
-    let base_parent = format!("parents[]={}", pr.base_ref_oid);
-    let head_parent = format!("parents[]={}", pr.head_ref_oid);
     let merge_sha = run_output(
-        "gh",
+        "git",
         &[
-            "api",
-            "--hostname",
-            "github.com",
-            "-X",
-            "POST",
-            &endpoint,
-            "-f",
-            &message_field,
-            "-f",
-            &tree_field,
-            "-f",
-            &base_parent,
-            "-f",
-            &head_parent,
-            "--jq",
-            ".sha",
+            "-c",
+            "user.name=vec-automation",
+            "-c",
+            "user.email=vec-automation@localhost",
+            "commit-tree",
+            &tree,
+            "-p",
+            &pr.base_ref_oid,
+            "-p",
+            &pr.head_ref_oid,
+            "-m",
+            &message,
         ],
-        None,
+        Some(root),
     )?;
     if !sha.is_match(&merge_sha) {
-        return Err("GitHub did not create a merge commit".into());
+        return Err("git commit-tree did not return a merge commit SHA".into());
     }
-    let reference = format!("repos/{repository}/git/refs/heads/{}", pr.base_ref_name);
-    let merge_field = format!("sha={merge_sha}");
+    let base_update = format!("{merge_sha}:refs/heads/{}", pr.base_ref_name);
+    let head_delete = format!(":refs/heads/{}", pr.head_ref_name);
+    let base_lease = format!(
+        "--force-with-lease=refs/heads/{}:{}",
+        pr.base_ref_name, pr.base_ref_oid
+    );
+    let head_lease = format!(
+        "--force-with-lease=refs/heads/{}:{}",
+        pr.head_ref_name, pr.head_ref_oid
+    );
     run_status(
-        "gh",
+        "git",
         &[
-            "api",
-            "--hostname",
-            "github.com",
-            "-X",
-            "PATCH",
-            &reference,
-            "-f",
-            &merge_field,
-            "-F",
-            "force=false",
+            "push",
+            "--atomic",
+            "origin",
+            &base_update,
+            &head_delete,
+            &base_lease,
+            &head_lease,
         ],
-        None,
+        Some(root),
         None,
         true,
     )?;
     wait_for_merged_pr(number, repository, &merge_sha)?;
-    let head_reference = format!("repos/{repository}/git/refs/heads/{}", pr.head_ref_name);
-    run_status(
-        "gh",
-        &[
-            "api",
-            "--hostname",
-            "github.com",
-            "-X",
-            "DELETE",
-            &head_reference,
-        ],
-        None,
-        None,
-        true,
-    )?;
     Ok(merge_sha)
 }
 
@@ -1233,6 +1218,7 @@ mod tests {
             base_ref_oid: "base".into(),
             head_ref_oid: "head".into(),
             head_ref_name: "feature".into(),
+            is_cross_repository: false,
             head_repository_owner: Some(Login {
                 login: "owner".into(),
             }),
@@ -1327,6 +1313,9 @@ mod tests {
     fn only_owner_branches() {
         require_owner_pr(&pr(), "owner").unwrap();
         assert!(require_owner_pr(&pr(), "other").is_err());
+        let mut fork = pr();
+        fork.is_cross_repository = true;
+        assert!(require_owner_pr(&fork, "owner").is_err());
     }
     #[test]
     fn green_ci_and_evidence_required() {

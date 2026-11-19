@@ -70,9 +70,10 @@ executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA 
 CI, inclui no contexto confiável a evidência dos checks do SHA exato e registra
 no PR somente base, head e aprovação fixa quando o veredito for
 `Ship`; texto livre do modelo nunca é publicado. Bloqueios ficam locais para
-correção. Com `--merge`, reconfirma as travas e atualiza a base sem `force` com
-um merge commit cujos pais são exatamente a base e o head revisados; se a base
-avançar ou a proteção recusar o update, o merge falha fechado. Depois aguarda o
+correção. Com `--merge`, reconfirma as travas e usa um push atômico com leases
+exatos para a base e a branch de origem, com um merge commit cujos pais são a
+base e o head revisados; se qualquer ref avançar ou a proteção recusar o update,
+o merge falha fechado. Depois aguarda o
 workflow pós-merge, incluindo o deploy. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
 de shell ou acesso ao checkout. O binário usa as sessões locais de
