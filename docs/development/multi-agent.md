@@ -51,12 +51,6 @@ dependências ficam fixadas em `scripts/automation/Cargo.lock`.
 cargo run --locked --manifest-path scripts/automation/Cargo.toml -- review-pr <PR> --agent codex
 ```
 
-Para concluir automaticamente após a aprovação e aguardar testes mais deploy:
-
-```bash
-cargo run --locked --manifest-path scripts/automation/Cargo.toml -- review-pr <PR> --agent codex --merge
-```
-
 Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
 omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
 use `--dry-run`.
@@ -69,13 +63,11 @@ O binário Rust monta o diff diretamente dos objetos Git, sem fazer checkout da 
 executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
 CI, inclui no contexto confiável a evidência dos checks do SHA exato e registra
 no PR somente base, head e aprovação fixa quando o veredito for
-`Ship`; texto livre do modelo nunca é publicado. Bloqueios ficam locais para
-correção. Com `--merge`, o CLI reconfirma a base e o head revisados, verifica a
-proteção da `main` e pede ao GitHub para incorporar o SHA aprovado. O GitHub
-exige o check `testes` do GitHub Actions e uma branch atualizada. A API fixa o
-head esperado. A base é conferida pelo CLI antes da chamada e a regra de
-atualização é aplicada pelo GitHub durante o merge. Depois o CLI aguarda o
-workflow pós-merge, incluindo o deploy. O agente recebe somente variáveis de
+`Ship`. Bloqueios ficam locais para correção. Incorpore a PR pelo GitHub após
+conferir o parecer e a branch de destino. A `main` exige o check `testes` do
+GitHub Actions e uma branch atualizada. O CLI rejeita `--merge` porque a API
+do GitHub aceita uma condição para o SHA de origem, mas não para a branch de
+destino revisada. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
 de shell ou acesso ao checkout. O binário usa as sessões locais de
 `codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por

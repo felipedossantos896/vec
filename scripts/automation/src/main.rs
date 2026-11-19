@@ -420,7 +420,6 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     }
     let mut agent = "auto".to_string();
     let mut dry_run = false;
-    let mut merge = false;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -429,13 +428,10 @@ fn review_pr_command(args: &[String]) -> Result<()> {
                 agent = args.get(i).ok_or("--agent requires a value")?.clone();
             }
             "--dry-run" => dry_run = true,
-            "--merge" => merge = true,
+            "--merge" => return Err("automatic merge is unavailable; run review-pr without --merge and merge the reviewed PR through GitHub".into()),
             other => return Err(format!("unknown option: {other}")),
         }
         i += 1;
-    }
-    if dry_run && merge {
-        return Err("--dry-run and --merge cannot be used together".into());
     }
     if !matches!(agent.as_str(), "auto" | "codex" | "claude") {
         return Err("invalid agent".into());
@@ -460,11 +456,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
     let initial = pr_data(number, &repository)?;
     require_owner_pr(&initial, owner)?;
     require_ready_pr(&initial)?;
-    let mut evidence = verified_ci_evidence(&repository, &initial.head_ref_oid)?;
-    if merge {
-        require_merge_protection(&repository, &initial.base_ref_name)?;
-        evidence.push_str("\nGitHub main branch protection was verified: strict required GitHub Actions testes check, enforced for administrators, with force pushes and deletions disabled.");
-    }
+    let evidence = verified_ci_evidence(&repository, &initial.head_ref_oid)?;
     let agent = choose_agent(&agent)?;
     run_status(&agent, &["--version"], None, None, true)?;
     let base_ref = format!("refs/remotes/origin/{}", initial.base_ref_name);
@@ -530,29 +522,6 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         None,
         false,
     )?;
-    if merge {
-        let latest = pr_data(number, &repository)?;
-        require_owner_pr(&latest, owner)?;
-        confirm_unchanged(&initial, &latest)?;
-        verified_ci_evidence(&repository, &latest.head_ref_oid)?;
-        require_merge_protection(&repository, &latest.base_ref_name)?;
-        let merge_sha = merge_pr(number, &repository, &latest.head_ref_oid)?;
-        let run_id = wait_for_ci_run(&repository, &merge_sha, 30, Duration::from_secs(2))?;
-        run_status(
-            "gh",
-            &[
-                "run",
-                "watch",
-                &run_id.to_string(),
-                "--repo",
-                &repository,
-                "--exit-status",
-            ],
-            None,
-            None,
-            false,
-        )?;
-    }
     Ok(())
 }
 
@@ -836,63 +805,6 @@ fn ci_evidence_from_json(output: &str, head: &str) -> Result<String> {
     ))
 }
 
-fn require_merge_protection(repository: &str, base: &str) -> Result<()> {
-    if base != "main" {
-        return Err("automatic merge is restricted to protected main".into());
-    }
-    let endpoint = format!("repos/{repository}/branches/main/protection");
-    let json = run_output("gh", &["api", "--hostname", "github.com", &endpoint], None)?;
-    validate_merge_protection(&json)
-}
-
-fn validate_merge_protection(json: &str) -> Result<()> {
-    let protection: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-    let required = &protection["required_status_checks"];
-    let actions_ci = required["checks"].as_array().is_some_and(|checks| {
-        checks
-            .iter()
-            .any(|check| check["context"] == "testes" && check["app_id"] == 15368)
-    });
-    if required["strict"] != true
-        || protection["enforce_admins"]["enabled"] != true
-        || protection["allow_force_pushes"]["enabled"] != false
-        || protection["allow_deletions"]["enabled"] != false
-        || !actions_ci
-    {
-        return Err(
-            "main must enforce strict GitHub Actions testes protection for all users".into(),
-        );
-    }
-    Ok(())
-}
-
-fn merge_pr(number: u64, repository: &str, head: &str) -> Result<String> {
-    let endpoint = format!("repos/{repository}/pulls/{number}/merge");
-    let output = run_output(
-        "gh",
-        &[
-            "api",
-            "--hostname",
-            "github.com",
-            "--method",
-            "PUT",
-            &endpoint,
-            "-f",
-            &format!("sha={head}"),
-            "-f",
-            "merge_method=merge",
-        ],
-        None,
-    )?;
-    let result: Value = serde_json::from_str(&output).map_err(|e| e.to_string())?;
-    if result["merged"] == true
-        && let Some(sha) = result["sha"].as_str()
-    {
-        return Ok(sha.into());
-    }
-    Err("GitHub did not confirm the PR merge".into())
-}
-
 fn allowlisted_environment() -> Vec<(OsString, OsString)> {
     const ALLOWED: &[&str] = &[
         "HOME",
@@ -909,42 +821,6 @@ fn allowlisted_environment() -> Vec<(OsString, OsString)> {
         .iter()
         .filter_map(|name| env::var_os(name).map(|value| (OsString::from(name), value)))
         .collect()
-}
-
-fn wait_for_ci_run(
-    repository: &str,
-    merge_sha: &str,
-    attempts: usize,
-    delay: Duration,
-) -> Result<u64> {
-    for _ in 0..attempts {
-        let output = run_output(
-            "gh",
-            &[
-                "run",
-                "list",
-                "--repo",
-                repository,
-                "--commit",
-                merge_sha,
-                "--workflow",
-                "ci.yml",
-                "--event",
-                "push",
-                "--limit",
-                "1",
-                "--json",
-                "databaseId",
-            ],
-            None,
-        )?;
-        let runs: Vec<Value> = serde_json::from_str(&output).map_err(|e| e.to_string())?;
-        if let Some(id) = runs.first().and_then(|run| run["databaseId"].as_u64()) {
-            return Ok(id);
-        }
-        thread::sleep(delay);
-    }
-    Err("post-merge CI run was not found".into())
 }
 
 fn require_command(name: &str) -> Result<()> {
@@ -1481,22 +1357,5 @@ mod tests {
         );
         assert!(ci_evidence_from_json(output, "other").is_err());
         assert!(ci_evidence_from_json(&output.replace("success", "failure"), "abc").is_err());
-    }
-
-    #[test]
-    fn merge_requires_strict_protection_from_github_actions() {
-        let protection = json!({
-            "required_status_checks": {"strict": true, "checks": [{"context": "testes", "app_id": 15368}]},
-            "enforce_admins": {"enabled": true},
-            "allow_force_pushes": {"enabled": false},
-            "allow_deletions": {"enabled": false},
-        });
-        validate_merge_protection(&protection.to_string()).unwrap();
-        let mut loose = protection.clone();
-        loose["required_status_checks"]["strict"] = json!(false);
-        assert!(validate_merge_protection(&loose.to_string()).is_err());
-        let mut wrong_app = protection;
-        wrong_app["required_status_checks"]["checks"][0]["app_id"] = json!(123);
-        assert!(validate_merge_protection(&wrong_app.to_string()).is_err());
     }
 }
