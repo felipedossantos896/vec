@@ -45,6 +45,6 @@ credenciais, dados de membros ou conteúdo confidencial.
 - Arquivos alterados: tokens CSS, estilos do painel, markup dos filtros, renderer de Indicadores, JavaScript compilado e teste de contrato visual.
 - Testes realmente executados e resultados: `npm run typecheck`, `npm run build`, `npm run test:frontend` (8 testes), `gofmt`, `go vet ./...`, `go test ./...`, `go build ./...` e `git diff --check`; aprovados. Playwright MCP validou 1440×900 e 390×844 com dados sintéticos: 4 KPIs, 6 cards, grupos de filtros nomeados, foco visível, movimento reduzido, abas Acompanhar/Pessoas/Indicadores, sem overflow horizontal e console sem warnings/erros.
 - Decisões e riscos: componentes novos coexistem com seletores antigos para migração incremental; nenhuma mudança de API, autorização, banco ou regra de métrica. A validação visual não usou dados reais nem escreveu no Turso.
-- Pendências/bloqueios: revisão independente e CI do PR antes de considerar a tarefa concluída.
-- Próxima ação recomendada: revisar o SHA final da PR #31 e confirmar o CI antes do merge.
+- Pendências/bloqueios: primeira revisão independente pediu fortalecer o teste do rótulo de cada grupo; correção aplicada. CI da PR #31 passou no SHA `aae438a` antes desse ajuste final; novo CI e revisão ainda pendentes.
+- Próxima ação recomendada: confirmar o CI e revisar o novo SHA final da PR #31 antes do merge.
 - Estado da Issue confirmado em: aberta em 2026-11-18; T001/#13, sua única dependência, encerrada.
