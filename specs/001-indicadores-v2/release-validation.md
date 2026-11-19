@@ -55,7 +55,7 @@ Se os Indicadores V2 precisarem ser revertidos depois da publicação:
 2. executar a mesma matriz de typecheck, build, testes frontend e Go;
 3. obter revisão independente e aguardar os checks obrigatórios;
 4. incorporar a PR, acompanhar o deploy e verificar `/healthz` e as abas Acompanhar, Pessoas e Indicadores;
-5. confirmar que a versão anterior `b29a05f` voltou a ser servida.
+5. confirmar que o SHA servido é o merge da PR de rollback e que o comportamento das abas afetadas corresponde ao da base funcional `b29a05f`.
 
 Não usar reset da `main`, não reescrever histórico e não executar rollback de banco: a entrega não contém migration nem mudança de dados. Se somente uma regressão isolada for confirmada, reverter apenas o merge responsável é preferível à reversão completa.
 
