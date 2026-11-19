@@ -44,31 +44,35 @@ Peça para continuar a mesma Issue a partir do handoff, do diff e dos commits.
 Depois que o CI do PR estiver verde, outro agente local pode revisar o SHA e,
 se não houver bloqueio, registrar o parecer no PR:
 
-```bash
-python3 scripts/automation/review_pr.py <PR> --agent codex
-```
-
-Para concluir automaticamente após a aprovação e aguardar testes mais deploy:
+O CLI requer Rust 1.100 ou compatível. Instale o toolchain uma vez; as
+dependências ficam fixadas em `scripts/automation/Cargo.lock`.
 
 ```bash
-python3 scripts/automation/review_pr.py <PR> --agent codex --merge
+cargo run --locked --manifest-path scripts/automation/Cargo.toml -- review-pr <PR> --agent codex
 ```
 
 Use `--agent claude` quando o Claude Code estiver instalado e autenticado, ou
 omita a opção para escolher o primeiro CLI disponível. Para ensaiar sem comentar,
 use `--dry-run`.
 
+Para PRs que alteram `.github/workflows/ci.yml`, o revisor também compara as
+etapas do workflow e confirma que as validações obrigatórias foram preservadas
+antes de o CLI publicar o parecer.
+
 Por segurança pragmática, a publicação autônoma só aceita PR criada pelo dono
 do repositório e cuja branch de origem também pertença a ele. PRs de forks ou
 outros autores devem seguir revisão humana.
 
-O script monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
+O binário Rust monta o diff diretamente dos objetos Git, sem fazer checkout da PR,
 executa o agente em modo de revisão, exige veredito explícito, reconfirma SHA e
-CI e registra no PR somente base, head e aprovação fixa quando o veredito for
-`Ship`; texto livre do modelo nunca é publicado. Bloqueios ficam locais para
-correção. Com `--merge`, reconfirma as travas, exige o head aprovado no merge e
-aguarda o workflow pós-merge, incluindo o deploy. O agente recebe somente variáveis de
+CI, inclui no contexto confiável a evidência dos checks do SHA exato e registra
+no PR somente base, head e aprovação fixa quando o veredito for
+`Ship`. Bloqueios ficam locais para correção. Incorpore a PR pelo GitHub após
+conferir o parecer e a branch de destino. A `main` exige o check `testes` do
+GitHub Actions e uma branch atualizada. O CLI rejeita `--merge` porque a API
+do GitHub aceita uma condição para o SHA de origem, mas não para a branch de
+destino revisada. O agente recebe somente variáveis de
 ambiente necessárias à sessão local e recebe o diff por entrada, sem ferramentas
-de shell ou acesso ao checkout. O script usa as sessões locais de
+de shell ou acesso ao checkout. O binário usa as sessões locais de
 `codex`/`claude` e `gh`: não requer API key nem cria uma falsa aprovação por
 uma segunda conta GitHub.
