@@ -96,12 +96,15 @@ fn check(
     eprintln!("… {label}");
     let started = Instant::now();
     let outcome = run_output_timeout(program, args, Some(root), TIMEOUT);
-    let seconds = started.elapsed().as_secs();
+    let seconds = match started.elapsed().as_secs() {
+        0 => "<1s".to_string(),
+        n => format!("{n}s"),
+    };
     match outcome {
         Ok(output) => {
             let detail = count(counter, &output)
-                .map(|c| format!("{c}, {seconds}s"))
-                .unwrap_or(format!("{seconds}s"));
+                .map(|c| format!("{c}, {seconds}"))
+                .unwrap_or(seconds);
             CheckResult {
                 label,
                 command,
