@@ -11,6 +11,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 type Result<T> = std::result::Result<T, String>;
+const BLOCKED_DRY_RUN: &str = "review blocked the PR";
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 struct Task {
@@ -58,8 +59,12 @@ struct Check {
 fn main() {
     if let Err(error) = execute(env::args().skip(1).collect()) {
         eprintln!("{error}");
-        std::process::exit(1);
+        std::process::exit(exit_code(&error));
     }
+}
+
+fn exit_code(error: &str) -> i32 {
+    if error == BLOCKED_DRY_RUN { 2 } else { 1 }
 }
 
 fn execute(args: Vec<String>) -> Result<()> {
@@ -477,7 +482,7 @@ fn review_pr_command(args: &[String]) -> Result<()> {
         return if ship {
             Ok(())
         } else {
-            Err("review blocked the PR".into())
+            Err(BLOCKED_DRY_RUN.into())
         };
     }
     if !ship {
@@ -901,12 +906,9 @@ fn run_output_raw(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<St
     }
     let output = command.output().map_err(|e| e.to_string())?;
     if !output.status.success() {
-        return Err(format!(
-            "{program} failed: {}",
-            String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        return Err(format!("{program} exited with {}", output.status));
     }
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    decode_output(output.stdout, program)
 }
 
 fn run_status(
@@ -975,12 +977,13 @@ fn run_captured_with_input(
         .map_err(|_| "stdin writer panicked".to_string())?
         .map_err(|e| e.to_string())?;
     if !output.status.success() {
-        return Err(format!(
-            "{program} failed: {}",
-            String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        return Err(format!("{program} exited with {}", output.status));
     }
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    decode_output(output.stdout, program)
+}
+
+fn decode_output(output: Vec<u8>, program: &str) -> Result<String> {
+    String::from_utf8(output).map_err(|_| format!("{program} output is not valid UTF-8"))
 }
 
 fn sorted(values: HashSet<String>) -> Vec<String> {
@@ -1274,5 +1277,31 @@ mod tests {
         let directory = TempDir::new("vec-review-permissions").unwrap();
         let mode = fs::metadata(&directory.path).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o700);
+    }
+    #[test]
+    fn invalid_utf8_is_rejected() {
+        assert!(
+            decode_output(vec![0xff], "git")
+                .unwrap_err()
+                .contains("not valid UTF-8")
+        );
+    }
+    #[test]
+    fn failed_subprocess_does_not_replay_stderr() {
+        let error = run_captured_with_input(
+            "sh",
+            &["-c", "printf 'sensitive diagnostic' >&2; exit 7"],
+            None,
+            "",
+            &env::vars().collect::<Vec<_>>(),
+        )
+        .unwrap_err();
+        assert!(error.contains("sh exited with"));
+        assert!(!error.contains("sensitive"));
+    }
+    #[test]
+    fn blocked_dry_run_has_distinct_exit_code() {
+        assert_eq!(exit_code(BLOCKED_DRY_RUN), 2);
+        assert_eq!(exit_code("operational failure"), 1);
     }
 }
