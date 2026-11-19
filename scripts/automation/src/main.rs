@@ -3,12 +3,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::env;
+use std::ffi::OsString;
 use std::fs;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 type Result<T> = std::result::Result<T, String>;
 const BLOCKED_DRY_RUN: &str = "review blocked the PR";
@@ -218,8 +219,9 @@ fn issue_state(repository: &str, number: u64) -> Result<String> {
         return Err("GITHUB_REPOSITORY and GH_TOKEN required for issue resolution".into());
     }
     let path = format!("repos/{repository}/issues/{number}");
-    let data: Value = serde_json::from_str(&run_output("gh", &["api", &path], None)?)
-        .map_err(|e| e.to_string())?;
+    let response = run_output_timeout("gh", &["api", &path], None, Duration::from_secs(15))
+        .map_err(|error| format!("Issue #{number}: {error}"))?;
+    let data: Value = serde_json::from_str(&response).map_err(|e| e.to_string())?;
     let state = data
         .get("state")
         .and_then(Value::as_str)
@@ -742,7 +744,7 @@ fn run_agent(
         evidence,
         &review_material(root, &pr.base_ref_oid, &pr.head_ref_oid)?,
     );
-    let environment = allowlisted_environment(env::vars());
+    let environment = allowlisted_environment();
     if agent == "codex" {
         let args = [
             "exec",
@@ -829,9 +831,7 @@ fn diff_args(base: &str, head: &str) -> Vec<String> {
         .collect()
 }
 
-fn allowlisted_environment(
-    values: impl IntoIterator<Item = (String, String)>,
-) -> Vec<(String, String)> {
+fn allowlisted_environment() -> Vec<(OsString, OsString)> {
     const ALLOWED: &[&str] = &[
         "HOME",
         "PATH",
@@ -843,9 +843,9 @@ fn allowlisted_environment(
         "XDG_CONFIG_HOME",
         "CODEX_HOME",
     ];
-    values
-        .into_iter()
-        .filter(|(name, _)| ALLOWED.contains(&name.as_str()))
+    ALLOWED
+        .iter()
+        .filter_map(|name| env::var_os(name).map(|value| (OsString::from(name), value)))
         .collect()
 }
 
@@ -898,6 +898,48 @@ fn run_output(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String
     Ok(run_output_raw(program, args, cwd)?.trim().to_string())
 }
 
+fn run_output_timeout(
+    program: &str,
+    args: &[&str],
+    cwd: Option<&Path>,
+    timeout: Duration,
+) -> Result<String> {
+    let mut command = Command::new(program);
+    command
+        .args(args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    if let Some(cwd) = cwd {
+        command.current_dir(cwd);
+    }
+    let mut child = command.spawn().map_err(|e| e.to_string())?;
+    let deadline = Instant::now() + timeout;
+    loop {
+        if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
+            let mut stdout = Vec::new();
+            child
+                .stdout
+                .take()
+                .unwrap()
+                .read_to_end(&mut stdout)
+                .map_err(|e| e.to_string())?;
+            if !status.success() {
+                return Err(format!("{program} exited with {status}"));
+            }
+            return decode_output(stdout, program).map(|output| output.trim().to_string());
+        }
+        if Instant::now() >= deadline {
+            child.kill().map_err(|e| e.to_string())?;
+            child.wait().map_err(|e| e.to_string())?;
+            return Err(format!(
+                "{program} timed out after {} seconds",
+                timeout.as_secs()
+            ));
+        }
+        thread::sleep(Duration::from_millis(25));
+    }
+}
+
 fn run_output_raw(program: &str, args: &[&str], cwd: Option<&Path>) -> Result<String> {
     let mut command = Command::new(program);
     command.args(args);
@@ -915,7 +957,7 @@ fn run_status(
     program: &str,
     args: &[&str],
     cwd: Option<&Path>,
-    input: Option<(&str, &[(String, String)])>,
+    input: Option<(&str, &[(OsString, OsString)])>,
     quiet: bool,
 ) -> Result<()> {
     let mut command = Command::new(program);
@@ -954,7 +996,7 @@ fn run_captured_with_input(
     args: &[&str],
     cwd: Option<&Path>,
     input: &str,
-    environment: &[(String, String)],
+    environment: &[(OsString, OsString)],
 ) -> Result<String> {
     let mut command = Command::new(program);
     command
@@ -1219,15 +1261,23 @@ mod tests {
     }
     #[test]
     fn agent_environment_is_allowlisted() {
-        let values = vec![
-            ("PATH".into(), "/bin".into()),
-            ("HOME".into(), "/tmp/home".into()),
-            ("SECRET".into(), "nope".into()),
+        let allowed = [
+            "HOME",
+            "PATH",
+            "TMPDIR",
+            "LANG",
+            "LC_ALL",
+            "TERM",
+            "NO_COLOR",
+            "XDG_CONFIG_HOME",
+            "CODEX_HOME",
         ];
-        let environment = allowlisted_environment(values);
-        assert!(environment.iter().any(|(name, _)| name == "PATH"));
-        assert!(environment.iter().any(|(name, _)| name == "HOME"));
-        assert!(!environment.iter().any(|(name, _)| name == "SECRET"));
+        let environment = allowlisted_environment();
+        assert!(
+            environment
+                .iter()
+                .all(|(name, _)| allowed.contains(&name.to_string_lossy().as_ref()))
+        );
     }
     #[test]
     fn check_metadata_is_not_trusted() {
@@ -1254,7 +1304,7 @@ mod tests {
             ],
             None,
             &input,
-            &env::vars().collect::<Vec<_>>(),
+            &allowlisted_environment(),
         )
         .unwrap();
         assert!(output.ends_with("done"));
@@ -1293,7 +1343,7 @@ mod tests {
             &["-c", "printf 'sensitive diagnostic' >&2; exit 7"],
             None,
             "",
-            &env::vars().collect::<Vec<_>>(),
+            &allowlisted_environment(),
         )
         .unwrap_err();
         assert!(error.contains("sh exited with"));
@@ -1303,5 +1353,13 @@ mod tests {
     fn blocked_dry_run_has_distinct_exit_code() {
         assert_eq!(exit_code(BLOCKED_DRY_RUN), 2);
         assert_eq!(exit_code("operational failure"), 1);
+    }
+    #[test]
+    fn command_timeout_terminates_the_child() {
+        let started = Instant::now();
+        let error = run_output_timeout("sh", &["-c", "sleep 2"], None, Duration::from_millis(50))
+            .unwrap_err();
+        assert!(error.contains("timed out"));
+        assert!(started.elapsed() < Duration::from_secs(1));
     }
 }
