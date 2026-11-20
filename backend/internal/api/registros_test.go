@@ -20,6 +20,7 @@ type painelDB struct {
 	afetadas int64
 	escritas []turso.Stmt
 	foto     []byte // foto guardada do cadastro 7 (nil = nenhuma)
+	endereco []any  // endereço guardado do cadastro 7 (nil = nenhum)
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -45,6 +46,18 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			}
 		case strings.HasPrefix(st.SQL, "UPDATE respostas SET discipulador_id = NULL"), strings.HasPrefix(st.SQL, "UPDATE respostas SET discipulador = ("):
 		case strings.HasPrefix(st.SQL, "UPDATE respostas"):
+			d.escritas = append(d.escritas, st)
+			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "SELECT id FROM respostas WHERE id = ?"):
+			// cadastro visível no escopo quando o teste espera linhas afetadas
+			if d.afetadas > 0 {
+				out[i].Rows = [][]any{{st.Args[0]}}
+			}
+		case strings.HasPrefix(st.SQL, "SELECT cep"):
+			if d.endereco != nil && d.afetadas > 0 {
+				out[i].Rows = [][]any{d.endereco}
+			}
+		case strings.HasPrefix(st.SQL, "INSERT INTO enderecos"), strings.HasPrefix(st.SQL, "DELETE FROM enderecos"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
 		case strings.HasPrefix(st.SQL, "INSERT INTO fotos"):
