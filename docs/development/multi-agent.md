@@ -33,9 +33,38 @@ Peça para continuar a mesma Issue a partir do handoff, do diff e dos commits.
    o novo agente conheça o chat anterior.
 5. Abra um PR por tarefa, sem mesclar branches não relacionadas.
 
+Para listar as tarefas prontas, bloqueadas e concluídas de uma spec:
+
+```bash
+SPEC_NAME=001-indicadores-v2 cargo run --locked --manifest-path scripts/automation/Cargo.toml -- resolve-graph
+```
+
+Localmente não é preciso exportar `GH_TOKEN` nem `GITHUB_REPOSITORY`: o
+repositório vem do remote `origin` (github.com) e a autenticação vem do
+`gh auth login` já feito. No GitHub Actions as duas variáveis continuam
+tendo prioridade.
+
+### Preflight local
+
+Antes de implementar ou testar visualmente, rode na branch da tarefa:
+
+```bash
+ISSUE_NUMBER=<n> cargo run --locked --manifest-path scripts/automation/Cargo.toml -- preflight
+```
+
+Ele executa todas as verificações e lista `ok`/`FAIL` com a ação sugerida:
+worktree limpa fora da `main`; `gh` autenticado e repositório; Issue pronta
+no grafo (sem `ISSUE_NUMBER`, apenas lista as prontas); Node ≥ 24, Go do
+`go.mod` e `npm ci` feito; Playwright MCP configurado no Codex ou no Claude
+Code; `turso` autenticado e banco exatamente `vec-dev`; migrations do
+repositório iguais às aplicadas em `vec-dev` (consulta somente leitura);
+porta `PORT` (padrão 8080) livre. O comando não lê `.env`, não imprime
+tokens nem dados de membros, não aplica migrations e nunca consulta
+`vec-prod`.
+
 ## CI e governança
-- O workflow `agent-execute.yml` do GitHub Actions é um piloto **Codex remoto**,
-  não uma exigência para uso local e não executa Claude Code.
+- Não há execução remota de agentes no GitHub Actions: os pilotos
+  `agent-dispatch.yml`/`agent-execute.yml` foram removidos. Agentes rodam localmente.
 - Nenhum agente deve contornar CI, revisões ou permissões de produção.
 - O handoff documenta fatos, mas não prova que uma tarefa foi concluída.
 
