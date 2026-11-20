@@ -67,3 +67,17 @@
   .btn-sec.perigo:hover { background: #8f1d17; }
   .sn-o input:not(:checked) + span:hover { color: var(--ink); }
 }
+
+/* Endereço na ficha (Spec 002) */
+.end-linhas { font-style: normal; display: grid; gap: 2px; margin-bottom: 8px; }
+.end-acoes { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; }
+.end-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 12px; }
+.end-grid .field { grid-column: span 6; margin-bottom: 12px; }
+.end-grid .end-cep, .end-grid .end-numero { grid-column: span 2; }
+.end-grid .end-complemento { grid-column: span 4; }
+.end-grid .end-cidade { grid-column: span 4; }
+.end-grid .end-uf { grid-column: span 2; }
+.end-grid .field.invalid .input { border-color: var(--danger); }
+.end-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; }
+.end-consent input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+@media (max-width: 480px) { .end-grid .field { grid-column: span 6; } }
