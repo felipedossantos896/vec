@@ -1,6 +1,6 @@
 # ADR-0008 — Privacidade e autorização de localização
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-20 pelo responsável. Decisões de aplicação ao endereço registradas na Spec 002.
 - Data: 2026-11-18
 
 ## Contexto
