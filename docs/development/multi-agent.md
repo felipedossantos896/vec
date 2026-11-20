@@ -33,6 +33,17 @@ Peça para continuar a mesma Issue a partir do handoff, do diff e dos commits.
    o novo agente conheça o chat anterior.
 5. Abra um PR por tarefa, sem mesclar branches não relacionadas.
 
+Para listar as tarefas prontas, bloqueadas e concluídas de uma spec:
+
+```bash
+SPEC_NAME=001-indicadores-v2 cargo run --locked --manifest-path scripts/automation/Cargo.toml -- resolve-graph
+```
+
+Localmente não é preciso exportar `GH_TOKEN` nem `GITHUB_REPOSITORY`: o
+repositório vem do remote `origin` (github.com) e a autenticação vem do
+`gh auth login` já feito. No GitHub Actions as duas variáveis continuam
+tendo prioridade.
+
 ## CI e governança
 - Não há execução remota de agentes no GitHub Actions: os pilotos
   `agent-dispatch.yml`/`agent-execute.yml` foram removidos. Agentes rodam localmente.

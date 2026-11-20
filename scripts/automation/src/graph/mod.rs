@@ -1,8 +1,10 @@
+mod repository;
 mod rules;
 
 use crate::Result;
 use crate::process::{repo_root, run_output_timeout};
 use regex::Regex;
+use repository::resolve_repository;
 use rules::{Task, choose_task, load_graph, ready_tasks, valid_spec_name};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
@@ -16,10 +18,6 @@ fn spec_name() -> String {
 }
 
 fn issue_state(repository: &str, number: u64) -> Result<String> {
-    let repo_re = Regex::new(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").unwrap();
-    if !repo_re.is_match(repository) || env::var("GH_TOKEN").unwrap_or_default().is_empty() {
-        return Err("GITHUB_REPOSITORY and GH_TOKEN required for issue resolution".into());
-    }
     let path = format!("repos/{repository}/issues/{number}");
     let response = run_output_timeout(
         "gh",
@@ -40,7 +38,7 @@ fn issue_state(repository: &str, number: u64) -> Result<String> {
 }
 
 fn issue_states(tasks: &[Task]) -> Result<HashMap<u64, String>> {
-    let repository = env::var("GITHUB_REPOSITORY").unwrap_or_default();
+    let repository = resolve_repository()?;
     tasks
         .iter()
         .map(|task| Ok((task.issue, issue_state(&repository, task.issue)?)))
