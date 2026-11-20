@@ -44,6 +44,24 @@ repositório vem do remote `origin` (github.com) e a autenticação vem do
 `gh auth login` já feito. No GitHub Actions as duas variáveis continuam
 tendo prioridade.
 
+### Preflight local
+
+Antes de implementar ou testar visualmente, rode na branch da tarefa:
+
+```bash
+ISSUE_NUMBER=<n> cargo run --locked --manifest-path scripts/automation/Cargo.toml -- preflight
+```
+
+Ele executa todas as verificações e lista `ok`/`FAIL` com a ação sugerida:
+worktree limpa fora da `main`; `gh` autenticado e repositório; Issue pronta
+no grafo (sem `ISSUE_NUMBER`, apenas lista as prontas); Node ≥ 24, Go do
+`go.mod` e `npm ci` feito; Playwright MCP configurado no Codex ou no Claude
+Code; `turso` autenticado e banco exatamente `vec-dev`; migrations do
+repositório iguais às aplicadas em `vec-dev` (consulta somente leitura);
+porta `PORT` (padrão 8080) livre. O comando não lê `.env`, não imprime
+tokens nem dados de membros, não aplica migrations e nunca consulta
+`vec-prod`.
+
 ## CI e governança
 - Não há execução remota de agentes no GitHub Actions: os pilotos
   `agent-dispatch.yml`/`agent-execute.yml` foram removidos. Agentes rodam localmente.

@@ -1,4 +1,4 @@
-mod repository;
+pub(crate) mod repository;
 mod rules;
 
 use crate::Result;
@@ -156,6 +156,28 @@ pub(crate) fn resolve_graph_command() -> Result<()> {
         println!("No ready tasks; nothing to dispatch.");
     }
     Ok(())
+}
+
+/// Summarises graph readiness for preflight: the given Issue must be ready,
+/// otherwise the currently ready tasks are listed (none is not a failure).
+pub(crate) fn readiness(issue: Option<u64>) -> Result<String> {
+    let root = repo_root()?;
+    let name = spec_name();
+    let (tasks, _) = load_graph(&root, &name)?;
+    let states = issue_states(&tasks)?;
+    if let Some(issue) = issue {
+        let task = choose_task(&tasks, &states, issue)?;
+        return Ok(format!("{name}: {} (Issue #{issue}) is ready", task.id));
+    }
+    let ready: Vec<_> = ready_tasks(&tasks, &states)
+        .iter()
+        .map(|task| format!("{} (#{})", task.id, task.issue))
+        .collect();
+    Ok(if ready.is_empty() {
+        format!("{name}: no ready tasks")
+    } else {
+        format!("{name}: ready {}", ready.join(", "))
+    })
 }
 
 pub(crate) fn prepare_agent_command() -> Result<()> {
