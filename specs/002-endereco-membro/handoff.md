@@ -14,3 +14,20 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
   aplicada em SQLite local; os CHECK de CEP e UF recusam valores inválidos.
 - Pendente: aplicar a 0010 em `vec-dev` depois do merge (em produção ela sai no deploy).
 - Próximo: T003 / #49, a API com validação e consentimento.
+
+### T003 / Issue #49 — 2026-11-20
+- Agente: Claude Code. Branch `feat/issue-49-endereco-api`.
+- Feito: `api/enderecos.go` com as ações `endereco_ler`, `endereco_salvar` e
+  `endereco_excluir`, registradas no `handleAPI`; `adminReq` ganhou `endereco` e
+  `consentimento`. Validação: CEP de 8 dígitos (aceita máscara), UF entre as 27
+  siglas, campos obrigatórios, tamanhos máximos (recusa em vez de cortar) e "s/n"
+  normalizado. Sem consentimento devolve `consentimento_endereco`. Cadastro
+  inexistente ou fora do escopo devolve `nao_encontrado`. O log registra só a
+  linha e o autor.
+- Testes: normalização e gravação no escopo; 11 casos de validação sem gravar;
+  fora do escopo em ler, salvar e remover; leitura sem endereço; remoção;
+  endereço ausente de `store.Campos` (base da lista e do CSV); log sem o
+  conteúdo. Mutações que ignoram o consentimento ou registram a rua no log foram
+  detectadas.
+- Pendente: a 0010 em `vec-dev` (comando no PR #54) antes do teste de tela da T004.
+- Próximo: T004 / #50, o endereço na ficha.

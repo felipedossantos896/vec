@@ -197,6 +197,9 @@ type adminReq struct {
 	Linha  int64                      `json:"linha"`
 	Imagem string                     `json:"imagem"` // foto de perfil em base64
 	Dados  map[string]json.RawMessage `json:"dados"`
+	// Endereço da pessoa (Spec 002): consentimento marcado agora por quem salva
+	Endereco      *enderecoIn `json:"endereco"`
+	Consentimento bool        `json:"consentimento"`
 }
 
 func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
@@ -268,6 +271,12 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.fotoSalvar(ctx, req)
 		case "foto_excluir":
 			rep = s.fotoExcluir(ctx, req)
+		case "endereco_ler":
+			rep = s.enderecoLer(ctx, req)
+		case "endereco_salvar":
+			rep = s.enderecoSalvar(ctx, req)
+		case "endereco_excluir":
+			rep = s.enderecoExcluir(ctx, req)
 		case "usuarios_listar":
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":
