@@ -1,6 +1,6 @@
 # Plano técnico — Endereço do membro
 
-- Status: **Proposto**
+- Status: **Aprovado** (2026-11-20)
 
 ## Referências e premissas verificadas
 - `respostas` guarda o cadastro; a exclusão é lógica (`excluido_em`, migration 0005).

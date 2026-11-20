@@ -1,6 +1,6 @@
 # ADR-0004 — Endereços e geocodificação de membros
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-20 pelo responsável. A Spec 002 implementa o endereço; a geocodificação fica para a Spec 003.
 - Data: 2026-11-18
 
 ## Contexto

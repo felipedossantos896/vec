@@ -1,6 +1,6 @@
 # Tarefas — Endereço do membro
 
-As Issues e o `graph.json` serão criados após a aprovação da spec e dos ADRs 0004/0008.
+Issues: T001 #53, T002 #48, T003 #49, T004 #50, T005 #51, T006 #52 (ver `graph.json`).
 
 - [x] **T001 — Decisões de privacidade**: respostas registradas na spec em 2026-11-20
   (quem vê, entrada, busca por CEP, texto do consentimento). Retenção fica para a T006.
@@ -34,4 +34,4 @@ As Issues e o `graph.json` serão criados após a aprovação da spec e dos ADRs
     decisão de retenção registrada.
 
 ## Dependências
-T001 precede T002; T002 precede T003; T003 precede T004; T005 e T006 vêm depois de T004.
+T001 precede T002; T002 precede T003; T003 precede T004; T005 depende de T004; T006 depende de T004 e T005.

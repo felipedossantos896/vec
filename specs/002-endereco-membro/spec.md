@@ -1,8 +1,8 @@
 # Spec 002 — Endereço do membro
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-20)
 - Data: 2026-11-20
-- ADRs: [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (ambos **Propostos**; esta spec depende da aprovação deles)
+- ADRs: [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (ambos **Aceitos** em 2026-11-20)
 - Próximas specs que dependem desta: mapa (ADR-0005), anfitriões (ADR-0006), novas células (ADR-0007)
 
 ## Problema e objetivo
