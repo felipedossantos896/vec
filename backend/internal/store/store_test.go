@@ -9,13 +9,19 @@ import (
 )
 
 type recordingDB struct {
-	doCalls  [][]turso.Stmt
-	txCalls  [][]turso.Stmt
-	txResult []*turso.Result
+	doCalls   [][]turso.Stmt
+	txCalls   [][]turso.Stmt
+	txResult  []*turso.Result
+	doResults [][]*turso.Result // respostas de Do, em ordem; vazio = resultados em branco
 }
 
 func (d *recordingDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
 	d.doCalls = append(d.doCalls, append([]turso.Stmt(nil), stmts...))
+	if len(d.doResults) > 0 {
+		next := d.doResults[0]
+		d.doResults = d.doResults[1:]
+		return next, nil
+	}
 	results := make([]*turso.Result, len(stmts))
 	for i := range results {
 		results[i] = &turso.Result{}

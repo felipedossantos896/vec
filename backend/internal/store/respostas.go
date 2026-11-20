@@ -270,6 +270,11 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 			SQL:  `DELETE FROM fotos WHERE resposta_id = ? AND EXISTS (SELECT 1 FROM respostas WHERE id = ? AND excluido_em IS NOT NULL)`,
 			Args: []any{id, id},
 		},
+		// O endereço também: dado de finalidade específica, apagado de fato (Spec 002)
+		turso.Stmt{
+			SQL:  `DELETE FROM enderecos WHERE resposta_id = ? AND EXISTS (SELECT 1 FROM respostas WHERE id = ? AND excluido_em IS NOT NULL)`,
+			Args: []any{id, id},
+		},
 	)
 	if err != nil {
 		return false, err
