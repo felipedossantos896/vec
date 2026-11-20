@@ -45,8 +45,8 @@ repositório vem do remote `origin` (github.com) e a autenticação vem do
 tendo prioridade.
 
 ## CI e governança
-- O workflow `agent-execute.yml` do GitHub Actions é um piloto **Codex remoto**,
-  não uma exigência para uso local e não executa Claude Code.
+- Não há execução remota de agentes no GitHub Actions: os pilotos
+  `agent-dispatch.yml`/`agent-execute.yml` foram removidos. Agentes rodam localmente.
 - Nenhum agente deve contornar CI, revisões ou permissões de produção.
 - O handoff documenta fatos, mas não prova que uma tarefa foi concluída.
 

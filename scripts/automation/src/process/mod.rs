@@ -224,6 +224,9 @@ impl Drop for TempDir {
 pub(crate) fn allowlisted_environment() -> Vec<(OsString, OsString)> {
     const ALLOWED: &[&str] = &[
         "HOME",
+        // USER/LOGNAME: the claude CLI needs them to read its macOS Keychain login.
+        "USER",
+        "LOGNAME",
         "PATH",
         "TMPDIR",
         "LANG",
