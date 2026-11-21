@@ -4,7 +4,9 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"time"
 
+	"vec/backend/internal/geo"
 	"vec/backend/internal/store"
 )
 
@@ -141,6 +143,7 @@ func (s *Server) enderecoSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("nao_encontrado")
 	}
 	s.Log.Info("endereço salvo", "linha", req.Linha, "por", a.user.Usuario)
+	s.geocodificarDepois(req.Linha, e)
 	return s.enderecoLer(ctx, req)
 }
 
@@ -164,4 +167,35 @@ func (s *Server) enderecoExcluir(ctx context.Context, req adminReq) reply {
 	}
 	s.Log.Info("endereço removido", "linha", req.Linha, "por", a.user.Usuario)
 	return okReply(nil)
+}
+
+// Geocodificador é o que a API precisa do pacote geo (substituível nos testes).
+type Geocodificador interface {
+	Geocodificar(ctx context.Context, e store.Endereco) (geo.Resultado, error)
+}
+
+// geocodificarDepois busca a coordenada em segundo plano: o salvamento já respondeu
+// e nunca espera nem falha por causa disso. Falha deixa o endereço pendente para a
+// carga única. O log tem só a linha e o resultado, nunca o endereço.
+func (s *Server) geocodificarDepois(linha int64, e store.Endereco) {
+	if s.Geo == nil {
+		return
+	}
+	s.geoWG.Add(1)
+	go func() {
+		defer s.geoWG.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+		r, err := s.Geo.Geocodificar(ctx, e)
+		if err != nil {
+			s.Log.Warn("geocodificação adiada", "linha", linha, "motivo", err.Error())
+			return
+		}
+		ok, err := s.Store.GravarCoordenada(ctx, linha, e, r.Lat, r.Lng, geo.Fonte, r.Precisao, s.Now())
+		if err != nil {
+			s.Log.Warn("geocodificação não gravada", "linha", linha)
+			return
+		}
+		s.Log.Info("endereço geocodificado", "linha", linha, "precisao", r.Precisao, "gravado", ok)
+	}()
 }

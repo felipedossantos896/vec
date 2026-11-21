@@ -44,7 +44,7 @@
 
 ## Segurança e privacidade
 - O escopo vai no SQL, e a coordenada exata nunca sai do servidor.
-- Para o Nominatim seguem só rua, bairro, cidade, UF e CEP, por HTTPS.
+- Para o Nominatim seguem só rua, bairro, cidade e UF, por HTTPS (sem CEP).
 - Logs da geocodificação: só `linha` e o resultado (precisão), sem endereço nem
   coordenada.
 

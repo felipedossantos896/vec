@@ -35,9 +35,14 @@ type Server struct {
 	Now    func() time.Time
 	Log    *slog.Logger
 
+	// Geo transforma endereço em coordenada em segundo plano (Spec 003). nil =
+	// desligado (GEOCODER=off ou testes).
+	Geo Geocodificador
+
 	dummyHash string
 	cache     listasCache
 	loginRate loginRate
+	geoWG     sync.WaitGroup // tarefas de geocodificação em andamento (testes esperam)
 }
 
 // New cria o servidor. Calcula um hash fictício para igualar o tempo de resposta
