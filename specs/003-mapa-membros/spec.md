@@ -1,8 +1,8 @@
 # Spec 003 — Mapa de membros
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-21)
 - Data: 2026-11-21
-- ADRs: [0005](../../docs/architecture/adr/0005-mapa-membros.md) (Proposto), [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
+- ADRs: [0005](../../docs/architecture/adr/0005-mapa-membros.md) (Aceito em 2026-11-21), [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
 - Depende de: [Spec 002](../002-endereco-membro/spec.md) (entregue)
 
 ## Problema e objetivo
@@ -98,7 +98,11 @@ são botões acessíveis, e a lista equivalente funciona sem o mapa.
   Nominatim falso (`httptest`).
 - Migration nova e aditiva.
 
-## Questões em aberto
-- **Contato no User-Agent:** qual e-mail ou URL do responsável usar (ver T001).
-- **Retenção (herdada da Spec 002):** reavaliar a revisão periódica agora que o
-  endereço passa a ser usado no mapa.
+## Decisões do responsável (2026-11-21)
+1. **Geocodificação:** Nominatim/OpenStreetMap, no servidor, em nível de rua.
+2. **Precisão:** aproximada no mapa (grupos de ~300 m); endereço exato só na ficha.
+3. **Mapa:** Leaflet versionado no repositório, com tiles do OpenStreetMap.
+4. **Acesso:** todo o escopo, como a ficha.
+5. **Contato no User-Agent:** a URL pública do repositório, sem e-mail:
+   `VEC-AreaVEC/<versão> (+https://github.com/felipedossantos896/vec)`.
+6. **Retenção:** mantida sem prazo (decisão da Spec 002 confirmada com o uso no mapa).

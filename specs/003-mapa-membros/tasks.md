@@ -1,8 +1,8 @@
 # Tarefas — Mapa de membros
 
-As Issues e o `graph.json` serão criados após a aprovação da spec e do ADR-0005.
+Issues: T001 #60, T002 #61, T003 #62, T004 #63, T005 #64, T006 #65 (ver `graph.json`).
 
-- [ ] **T001 — Decisões e políticas**: registrar as decisões do responsável, o contato
+- [x] **T001 — Decisões e políticas**: registrar as decisões do responsável, o contato
   do User-Agent e a reconferência das políticas Nominatim/OSM; ADR-0005 para Aceito.
   - Dependências: nenhuma.
   - Verificação: spec sem questões bloqueantes; ADR atualizado.

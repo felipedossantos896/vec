@@ -1,6 +1,6 @@
 # Plano técnico — Mapa de membros
 
-- Status: **Proposto**
+- Status: **Aprovado** (2026-11-21)
 
 ## Referências e premissas verificadas
 - `enderecos` (migration 0010) tem um endereço por pessoa e é lido sempre com
@@ -21,7 +21,7 @@
   `PontosMapa(sc)` devolve, com escopo, `linha`, `nome`, `setor`, `celula`, `lat`,
   `lng` e `precisao`.
 - `internal/geo`, pacote novo:
-  - cliente Nominatim com `net/http` e User-Agent `VEC-AreaVEC/<versão> (<contato>)`;
+  - cliente Nominatim com `net/http` e User-Agent `VEC-AreaVEC/<versão> (+https://github.com/felipedossantos896/vec)`;
   - limitador global de 1 req/s, timeout de 10 s e cache em memória por consulta;
   - fallback de rua para bairro e depois cidade;
   - `GEOCODER=off` desliga.
@@ -60,8 +60,7 @@
   tiles simulados.
 
 ## Implantação e rollback
-- A migration aplica no deploy. `GEOCODER` vem ligado em produção só depois da
-  T001 (contato do User-Agent). A carga única roda manualmente uma vez.
+- A migration aplica no deploy. A carga única roda manualmente uma vez, na T006.
 - Rollback: `GEOCODER=off` imediato, e depois reverter os PRs. As colunas novas
   podem ficar.
 
