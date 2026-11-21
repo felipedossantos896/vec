@@ -1,8 +1,8 @@
 # Spec 004 — Recomendação de anfitriões
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-21)
 - Data: 2026-11-21
-- ADRs: [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Proposto), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
+- ADRs: [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Aceito), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Depende de: [Spec 002](../002-endereco-membro/spec.md) e [Spec 003](../003-mapa-membros/spec.md) (entregues)
 
 ## Problema e objetivo
@@ -76,10 +76,12 @@ membros, com a explicação de cada posição. A decisão final é sempre do lí
 - Nenhuma dependência nova; o cálculo fica no servidor, em Go.
 - Testes só com dados fictícios. Migration nova e aditiva.
 
-## Questões em aberto (com proposta)
-- **Texto da confirmação:** "A pessoa confirmou que pode receber a célula em casa e
-  pode desistir a qualquer momento." (proposto)
-- **Dias:** seleção de segunda a domingo, sem horário. O horário vai na observação.
-  (proposto)
-- **Quantas casas mostrar:** todas as elegíveis, com as 3 primeiras em destaque.
-  (proposto)
+## Decisões do responsável (2026-11-21)
+1. **Distância:** linha reta (Haversine), sem serviço de rotas.
+2. **Elegíveis:** quem marcou interesse e teve a confirmação registrada pelo líder.
+3. **Uso:** ranking para uma célula existente.
+4. **Acesso:** todo o escopo, como a ficha e o mapa.
+5. **Texto da confirmação:** "A pessoa confirmou que pode receber a célula em casa e
+   pode desistir a qualquer momento."
+6. **Dias:** seleção de segunda a domingo, sem horário. O horário vai na observação.
+7. **Lista:** todas as casas elegíveis, com as 3 primeiras em destaque.

@@ -1,6 +1,6 @@
 # Plano técnico — Recomendação de anfitriões
 
-- Status: **Proposto**
+- Status: **Aprovado** (2026-11-21)
 
 ## Referências e premissas verificadas
 - `respostas.interesse_anfitriao` ('S'/'N'/'') já existe e vem do formulário.

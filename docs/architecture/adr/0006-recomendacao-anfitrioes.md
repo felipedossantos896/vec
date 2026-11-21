@@ -1,6 +1,6 @@
 # ADR-0006 — Recomendação de anfitriões
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-21 pelo responsável. A Spec 004 implementa a primeira versão: distância em linha reta (Haversine) como aproximação, só anfitriões com confirmação registrada pelo líder, ranking por média e pela maior distância, e a decisão final com a liderança. Tempo de trajeto e preferências de transporte ficam para depois.
 - Data: 2026-11-18
 
 ## Contexto
