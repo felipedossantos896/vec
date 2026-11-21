@@ -47,3 +47,20 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
   e a no máximo meio passo dos membros, escopo no SQL, JSON sem coordenada exata
   nem número, complemento, rua ou CEP, e listas vazias como `[]`.
 - Próximo: T005 / #64, a visão Mapa.
+
+### T005 / Issue #64 — 2026-11-21
+- Agente: Claude Code. Branch `feat/issue-64-visao-mapa`.
+- Feito: aba **Mapa** com Leaflet 1.9.4 versionado em `frontend/admin/vendor/leaflet`
+  (integridade do npm conferida, hashes em `VERSAO.txt`, licença BSD-2) e tiles do
+  OSM com atribuição e link "Reportar erro no mapa". Marcadores por área (~300 m)
+  com contagem são focáveis e têm rótulo; a janela do marcador lista os nomes, que
+  abrem a ficha. Há uma lista equivalente (áreas, só pela cidade, não localizados,
+  aguardando, sem endereço), e os filtros `mSetor`/`mCelula` são compartilhados.
+  Zoom máximo 16. Com movimento reduzido, o Leaflet fica sem animações. Se o Leaflet
+  não carregar, a página avisa e mostra só a lista.
+- Testes: `npm run test:frontend` com 26 testes (4 novos). Tela em 390×844, em
+  1440×900 e sem Leaflet, com login real em `vec-dev` e ação `mapa` e tiles
+  simulados: marcadores dentro da área visível, atribuição, tiles com Referer,
+  foco e Enter abrindo os nomes, nome abrindo a ficha, lista equivalente, filtro
+  compartilhado, sem overflow e console limpo.
+- Próximo: T006 / #65, a carga única em produção e a validação.

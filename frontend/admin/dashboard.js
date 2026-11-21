@@ -79,7 +79,7 @@ function distintos(chave, base) {
     return [...set];
 }
 // Setor e célula valem para Pessoas, Indicadores e Acompanhar: cada aba tem seus seletores (f…, g… e a…), com o mesmo estado
-const SELETORES = ['f', 'g', 'a'].flatMap((p) => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
+const SELETORES = ['f', 'g', 'a', 'm'].flatMap((p) => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
 function montarFiltros() {
     SELETORES.forEach(([id, chave, todos]) => {
         const sel = $(id);
@@ -107,6 +107,7 @@ function renderTudo() {
     renderLista();
     renderAcompanhar();
     renderIndicadores();
+    renderMapa();
     if (estado.aba === 'estrutura')
         renderEstrutura(); // depois dos cadastros, para contar as pessoas
 }

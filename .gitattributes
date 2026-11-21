@@ -3,3 +3,6 @@
 *.go text eol=lf
 *.sql text eol=lf
 *.html text eol=lf
+
+# Bibliotecas de terceiros: bytes exatos do pacote (hashes em VERSAO.txt)
+frontend/admin/vendor/** -text
