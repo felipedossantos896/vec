@@ -64,3 +64,13 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
   foco e Enter abrindo os nomes, nome abrindo a ficha, lista equivalente, filtro
   compartilhado, sem overflow e console limpo.
 - Próximo: T006 / #65, a carga única em produção e a validação.
+
+### T006 / Issue #65 — 2026-11-21
+- Agente: Claude Code. Branch `docs/issue-65-validacao-mapa`.
+- Feito: carga inicial em produção (0 pendentes, porque a produção não tem
+  endereços), `release-validation.md` com os 8 cenários, e spec marcada como Entregue.
+- Testes: ponta a ponta em `vec-dev` com Nominatim real e endereço público (Praça
+  da Sé/SP). A pessoa entrou no mapa no centro de SP; a resposta só tinha centros
+  de 4 casas, sem rua, número nem CEP; trocar o número manteve a posição; remover o
+  endereço tirou a pessoa do mapa. `vec-dev` terminou com 0 endereços.
+- Pendente: nada na Spec 003.
