@@ -62,6 +62,11 @@ func (s *Store) Endereco(ctx context.Context, sc Scope, respostaID int64) (e End
 	}, true, true, nil
 }
 
+// mesmaConsultaGeo é verdadeira quando mudam só número, complemento ou
+// consentimento: a coordenada (em nível de rua) continua valendo. Na atualização do
+// upsert, os nomes sem prefixo são os valores antigos da linha.
+const mesmaConsultaGeo = `(cep = excluded.cep AND logradouro = excluded.logradouro AND bairro = excluded.bairro AND cidade = excluded.cidade AND uf = excluded.uf)`
+
 // SalvarEndereco grava ou troca o endereço de um cadastro do escopo, registrando o
 // consentimento informado agora por quem salva. Devolve false se o cadastro não
 // existe, foi excluído ou está fora do escopo.
@@ -74,7 +79,12 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `INSERT INTO enderecos (resposta_id, ` + enderecoCols + `)
 		      SELECT id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM respostas WHERE id = ? AND excluido_em IS NULL AND ` + cond + `
-		      ON CONFLICT(resposta_id) DO UPDATE SET cep = excluded.cep, logradouro = excluded.logradouro,
+		      ON CONFLICT(resposta_id) DO UPDATE SET
+		      lat = CASE WHEN ` + mesmaConsultaGeo + ` THEN lat END, lng = CASE WHEN ` + mesmaConsultaGeo + ` THEN lng END,
+		      geo_fonte = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_fonte END,
+		      geo_precisao = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_precisao END,
+		      geo_em = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_em END,
+		      cep = excluded.cep, logradouro = excluded.logradouro,
 		      numero = excluded.numero, complemento = excluded.complemento, bairro = excluded.bairro,
 		      cidade = excluded.cidade, uf = excluded.uf,
 		      consentimento_em = excluded.consentimento_em, consentimento_por = excluded.consentimento_por,
@@ -106,4 +116,99 @@ func (s *Store) ExcluirEndereco(ctx context.Context, sc Scope, respostaID int64)
 		return false, err
 	}
 	return len(res[0].Rows) > 0, nil
+}
+
+// ---------------------------------------------------------------------------
+// Coordenadas (Spec 003)
+// ---------------------------------------------------------------------------
+
+// Precisões possíveis da geocodificação.
+const (
+	GeoRua           = "rua"
+	GeoBairro        = "bairro"
+	GeoCidade        = "cidade"
+	GeoNaoEncontrado = "nao_encontrado"
+)
+
+// PendenteGeo é um endereço ainda sem geocodificação, só com o que vai para a consulta.
+type PendenteGeo struct {
+	Linha int64
+	Endereco
+}
+
+// GravarCoordenada grava o resultado da geocodificação, mas só se o endereço
+// consultado ainda é o atual (o líder pode ter trocado no meio). Uso interno do
+// servidor: não há escopo porque nada é devolvido a um usuário.
+func (s *Store) GravarCoordenada(ctx context.Context, respostaID int64, consultado Endereco, lat, lng *float64, fonte, precisao string, now time.Time) (bool, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `UPDATE enderecos SET lat = ?, lng = ?, geo_fonte = ?, geo_precisao = ?, geo_em = ?
+		      WHERE resposta_id = ? AND cep = ? AND logradouro = ? AND bairro = ? AND cidade = ? AND uf = ?`,
+		Args: []any{numOuNulo(lat), numOuNulo(lng), fonte, precisao, iso(now), respostaID,
+			consultado.CEP, consultado.Logradouro, consultado.Bairro, consultado.Cidade, consultado.UF},
+	})
+	if err != nil {
+		return false, err
+	}
+	return res[0].Affected > 0, nil
+}
+
+// PendentesGeo lista até limite endereços de cadastros ativos ainda não geocodificados.
+func (s *Store) PendentesGeo(ctx context.Context, limite int) ([]PendenteGeo, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `SELECT e.resposta_id, e.cep, e.logradouro, e.bairro, e.cidade, e.uf FROM enderecos e
+		      JOIN respostas r ON r.id = e.resposta_id
+		      WHERE r.excluido_em IS NULL AND e.geo_em IS NULL ORDER BY e.resposta_id LIMIT ?`,
+		Args: []any{limite},
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]PendenteGeo, 0, len(res[0].Rows))
+	for _, r := range res[0].Rows {
+		id, _ := r[0].(int64)
+		out = append(out, PendenteGeo{Linha: id, Endereco: Endereco{
+			CEP: turso.Str(r, 1), Logradouro: turso.Str(r, 2), Bairro: turso.Str(r, 3), Cidade: turso.Str(r, 4), UF: turso.Str(r, 5)}})
+	}
+	return out, nil
+}
+
+// PontoMapa é a coordenada de uma pessoa do escopo. Só o servidor a vê; a API do
+// mapa a converte no centro de uma grade antes de responder.
+type PontoMapa struct {
+	Linha    int64
+	Lat, Lng float64
+	Precisao string
+}
+
+// PontosMapa devolve as coordenadas das pessoas do escopo que já têm posição.
+func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
+	cond, args, ok := escopoSQL(sc)
+	if !ok {
+		return nil, nil
+	}
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao FROM enderecos e
+		      WHERE e.lat IS NOT NULL AND e.lng IS NOT NULL AND e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
+		Args: args,
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]PontoMapa, 0, len(res[0].Rows))
+	for _, r := range res[0].Rows {
+		id, _ := r[0].(int64)
+		lat, ok1 := r[1].(float64)
+		lng, ok2 := r[2].(float64)
+		if ok1 && ok2 {
+			out = append(out, PontoMapa{Linha: id, Lat: lat, Lng: lng, Precisao: turso.Str(r, 3)})
+		}
+	}
+	return out, nil
+}
+
+func numOuNulo(v *float64) any {
+	if v == nil {
+		return nil
+	}
+	return *v
 }
