@@ -1,0 +1,14 @@
+/* Mapa de membros (Spec 003) */
+.mapa-canvas { height: min(62vh, 560px); min-height: 320px; border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-md, 12px); overflow: hidden; margin: 12px 0 20px; z-index: 0; }
+.mapa-grupo { display: grid; place-items: center; }
+.mapa-grupo span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--navy, #1a2340); color: #fff; font-weight: 700; font-size: 0.95rem; border: 3px solid #fff; box-shadow: 0 1px 4px rgb(0 0 0 / 0.35); }
+.mapa-grupo:focus-visible { outline: none; }
+.mapa-grupo:focus-visible span { outline: 3px solid var(--gold, #c9a84c); outline-offset: 2px; }
+.mapa-pop-t { font-weight: 700; margin: 0 0 6px; }
+.mapa-nomes { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.mapa-nomes li { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.mapa-h { font-size: 1.05rem; margin: 18px 0 8px; }
+.mapa-sec { border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-sm, 8px); padding: 10px 12px; margin-bottom: 8px; background: var(--surface-card, #fff); }
+.mapa-sec summary { cursor: pointer; font-weight: 600; }
+.leaflet-container { font: inherit; }
+.leaflet-control-attribution { font-size: 0.75rem; }

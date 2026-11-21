@@ -47,6 +47,7 @@ function mostrarAba(aba: string) {
   $('acompanharView').classList.toggle('hidden', aba !== 'acompanhar');
   $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
   $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
+  $('mapaView').classList.toggle('hidden', aba !== 'mapa');
   $('configView').classList.toggle('hidden', naNav !== 'config');
   $('usersView').classList.toggle('hidden', aba !== 'usuarios');
   $('estruturaView').classList.toggle('hidden', aba !== 'estrutura');
@@ -54,6 +55,7 @@ function mostrarAba(aba: string) {
   atualizarConfig();
   if (aba === 'estrutura') renderEstrutura();
   if (aba === 'usuarios' && !estado.usuariosCarregados) carregarUsuarios();
+  if (aba === 'mapa') abrirMapa();
 }
 
 // Configurações aparece para quem pode ver ao menos uma das duas partes
