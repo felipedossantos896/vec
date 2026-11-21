@@ -14,8 +14,8 @@ revelar a casa de ninguém.
 ## Escopo
 ### Incluído
 - Geocodificação **no servidor** ao salvar o endereço, com Nominatim
-  (OpenStreetMap), em nível de rua: a consulta leva rua, bairro, cidade, UF e CEP,
-  **sem número nem complemento**.
+  (OpenStreetMap), em nível de rua: a consulta leva rua, bairro, cidade e UF,
+  **sem número, complemento nem CEP**.
 - Coordenadas guardadas junto do endereço, com fonte, precisão e data.
 - Comando de carga única para os endereços já cadastrados, respeitando o limite
   do Nominatim.
@@ -63,7 +63,9 @@ revelar a casa de ninguém.
 - Cache obrigatório: a coordenada fica no banco e a mesma consulta não se repete.
 - Um interruptor por variável de ambiente (`GEOCODER=off`) desliga a geocodificação
   sem nova versão, como a política exige.
-- Nenhum nome, número, complemento ou outro dado do cadastro é enviado.
+- Nenhum nome, número, complemento, CEP ou outro dado do cadastro é enviado (o CEP
+  ficou de fora porque os dados de CEP do OSM no Brasil são incompletos e ele só
+  aumentaria a exposição).
 - Os tiles seguem a política do OpenStreetMap: atribuição visível, Referer enviado,
   sem pré-carga nem uso offline, e cache do navegador respeitado.
 

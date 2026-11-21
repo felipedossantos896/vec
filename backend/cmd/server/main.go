@@ -17,6 +17,7 @@ import (
 
 	"vec/backend/internal/api"
 	"vec/backend/internal/config"
+	"vec/backend/internal/geo"
 	"vec/backend/internal/store"
 	"vec/backend/internal/turso"
 	"vec/backend/migrations"
@@ -54,6 +55,12 @@ func main() {
 	srv, err := api.New(&store.Store{DB: api.WrapDB(db)}, []byte(secret), log)
 	if err != nil {
 		fatal(log, "servidor", err)
+	}
+	// Geocodificação dos endereços (Spec 003); GEOCODER=off desliga sem nova versão.
+	if geo.Desligado() {
+		log.Info("geocodificação desligada (GEOCODER=off)")
+	} else {
+		srv.Geo = geo.Novo(version)
 	}
 
 	root := http.NewServeMux()
