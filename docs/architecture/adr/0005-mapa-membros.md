@@ -1,6 +1,6 @@
 # ADR-0005 — Mapa de membros e células
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-21 pelo responsável. A Spec 003 implementa o mapa com posição aproximada (grupos de ~300 m), Nominatim no servidor e Leaflet com OpenStreetMap.
 - Data: 2026-11-18
 
 ## Contexto
