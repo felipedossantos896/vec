@@ -172,23 +172,26 @@ func (s *Store) PendentesGeo(ctx context.Context, limite int) ([]PendenteGeo, er
 	return out, nil
 }
 
-// PontoMapa é a coordenada de uma pessoa do escopo. Só o servidor a vê; a API do
-// mapa a converte no centro de uma grade antes de responder.
+// PontoMapa é a situação de geocodificação de uma pessoa do escopo que tem
+// endereço. Só o servidor vê a coordenada; a API do mapa a converte no centro de
+// uma grade antes de responder. Pendente = ainda sem tentativa de geocodificação.
 type PontoMapa struct {
 	Linha    int64
-	Lat, Lng float64
+	Lat, Lng *float64
 	Precisao string
+	Pendente bool
 }
 
-// PontosMapa devolve as coordenadas das pessoas do escopo que já têm posição.
+// PontosMapa devolve, no escopo, todas as pessoas com endereço e a situação da
+// coordenada (com posição, sem posição ou pendente).
 func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
 	cond, args, ok := escopoSQL(sc)
 	if !ok {
 		return nil, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao FROM enderecos e
-		      WHERE e.lat IS NOT NULL AND e.lng IS NOT NULL AND e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
+		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao, e.geo_em IS NULL FROM enderecos e
+		      WHERE e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
 		Args: args,
 	})
 	if err != nil {
@@ -197,11 +200,15 @@ func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
 	out := make([]PontoMapa, 0, len(res[0].Rows))
 	for _, r := range res[0].Rows {
 		id, _ := r[0].(int64)
+		p := PontoMapa{Linha: id, Precisao: turso.Str(r, 3)}
 		lat, ok1 := r[1].(float64)
 		lng, ok2 := r[2].(float64)
 		if ok1 && ok2 {
-			out = append(out, PontoMapa{Linha: id, Lat: lat, Lng: lng, Precisao: turso.Str(r, 3)})
+			p.Lat, p.Lng = &lat, &lng
 		}
+		pend, _ := r[4].(int64)
+		p.Pendente = pend == 1
+		out = append(out, p)
 	}
 	return out, nil
 }

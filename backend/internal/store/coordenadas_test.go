@@ -71,12 +71,19 @@ func TestPendentesGeoSoDeCadastrosAtivosSemTentativa(t *testing.T) {
 	}
 }
 
-func TestPontosMapaUsaEscopoEIgnoraSemCoordenada(t *testing.T) {
+func TestPontosMapaUsaEscopoEDevolveASituacao(t *testing.T) {
 	sc := Scope{Celulas: []string{"Hope"}}
-	db := &recordingDB{doResults: [][]*turso.Result{{{Rows: [][]any{{int64(7), -3.7, -38.5, "rua"}, {int64(8), nil, nil, "nao_encontrado"}}}}}}
+	db := &recordingDB{doResults: [][]*turso.Result{{{Rows: [][]any{
+		{int64(7), -3.7, -38.5, "rua", int64(0)},
+		{int64(8), nil, nil, "nao_encontrado", int64(0)},
+		{int64(9), nil, nil, nil, int64(1)},
+	}}}}}
 	pts, err := (&Store{DB: db}).PontosMapa(context.Background(), sc)
-	if err != nil || len(pts) != 1 || pts[0].Linha != 7 || pts[0].Lat != -3.7 {
+	if err != nil || len(pts) != 3 {
 		t.Fatalf("pontos = %#v, err %v", pts, err)
+	}
+	if pts[0].Lat == nil || *pts[0].Lat != -3.7 || pts[0].Pendente || pts[1].Lat != nil || pts[1].Precisao != GeoNaoEncontrado || !pts[2].Pendente {
+		t.Fatalf("situações lidas errado: %#v %#v %#v", pts[0], pts[1], pts[2])
 	}
 	cond, args, _ := escopoSQL(sc)
 	st := db.doCalls[0][0]

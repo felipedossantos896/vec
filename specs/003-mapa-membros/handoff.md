@@ -34,3 +34,16 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
   com endereço público (Praça da Sé, SP) retornou precisão `rua` dentro de São Paulo.
 - Pendente: a carga única em produção fica para a T006.
 - Próximo: T004 / #63, a API do mapa.
+
+### T004 / Issue #63 — 2026-11-21
+- Agente: Claude Code. Branch `feat/issue-63-api-mapa`.
+- Feito: ação `mapa`, sempre no escopo do usuário. Agrupa no servidor numa grade
+  de 0,003° (~330 m) e devolve só o centro da célula, com 4 casas decimais, mais os
+  ids do grupo e quantos foram localizados só pelo bairro. Posições só pela cidade
+  vão para `soCidade` (não entram no mapa, para não empilhar todos no centro da
+  cidade); `naoLocalizados` e `pendentes` vêm separados. `PontosMapa` agora devolve
+  todos os endereços do escopo com a situação da geocodificação.
+- Testes: agrupamento e classificação, centro diferente de qualquer coordenada real
+  e a no máximo meio passo dos membros, escopo no SQL, JSON sem coordenada exata
+  nem número, complemento, rua ou CEP, e listas vazias como `[]`.
+- Próximo: T005 / #64, a visão Mapa.
