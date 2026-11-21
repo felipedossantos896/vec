@@ -63,3 +63,12 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
 - Pendente: validação de tela com o ViaCEP simulado, bloqueada porque a sessão do
   `turso` CLI expirou (`turso auth login`).
 - Próximo: T006 / #52, validação e release.
+
+### T006 / Issue #52 — 2026-11-21
+- Agente: Claude Code. Branch `docs/issue-52-validacao-endereco`.
+- Feito: `release-validation.md` com os 8 cenários; spec marcada como Entregue;
+  decisão de retenção registrada (sem prazo, reavaliar na Spec 003).
+- Testes: ponta a ponta em `vec-dev`, com interface e API reais e endereço
+  fictício gravado e removido (10 checagens); `vec-dev` terminou com 0 endereços e
+  o usuário temporário foi removido. Migration 0010 aplicada em `vec-dev`.
+- Pendente: nada na Spec 002. Próximo passo sugerido: Spec 003 (mapa, ADR-0005).

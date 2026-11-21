@@ -1,6 +1,6 @@
 # Spec 002 — Endereço do membro
 
-- Status: **Aprovada** (2026-11-20)
+- Status: **Entregue** (v1.23.0, 2026-11-21). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-20
 - ADRs: [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (ambos **Aceitos** em 2026-11-20)
 - Próximas specs que dependem desta: mapa (ADR-0005), anfitriões (ADR-0006), novas células (ADR-0007)
@@ -98,6 +98,6 @@ overflow em 390 px e com movimento reduzido respeitado.
    organização das células e pode pedir a remoção a qualquer momento." O sistema
    registra a data e quem marcou.
 
-## Questões em aberto (não bloqueiam T002–T005)
-- **Retenção:** além da remoção a pedido e da exclusão do cadastro, haverá prazo
-  para revisar endereços antigos? Decidir até o release (T006).
+5. **Retenção (2026-11-21):** sem prazo por enquanto. O endereço fica enquanto a
+   pessoa estiver cadastrada e não pedir a remoção. Revisão periódica será
+   reavaliada na Spec 003.
