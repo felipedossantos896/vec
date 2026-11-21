@@ -282,6 +282,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.enderecoSalvar(ctx, req)
 		case "endereco_excluir":
 			rep = s.enderecoExcluir(ctx, req)
+		case "mapa":
+			rep = s.mapa(ctx, req)
 		case "usuarios_listar":
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":
