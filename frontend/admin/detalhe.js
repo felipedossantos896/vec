@@ -26,6 +26,7 @@ function abrirDetalhe(r) {
         ]) +
         (interesses.length ? secao('Quer servir como', interesses.map(([, l]) => [l, pill('S')])) : '');
     const ficha = secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]]) +
+        blocoEndereco() +
         secao('Célula e serviço', [
             ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
             ['Congrega com frequência', pill(r.frequentaCultos)],
@@ -53,6 +54,7 @@ function abrirDetalhe(r) {
     $('detBody').scrollTop = 0;
     d.scrollTop = 0;
     carregarNotasDe(r);
+    carregarEnderecoDe(r);
 }
 function mostrarAbaDetalhe(k, focar = false) {
     abaDetalhe = k;

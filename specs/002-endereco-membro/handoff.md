@@ -31,3 +31,20 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
   detectadas.
 - Pendente: a 0010 em `vec-dev` (comando no PR #54) antes do teste de tela da T004.
 - Próximo: T004 / #50, o endereço na ficha.
+
+### T004 / Issue #50 — 2026-11-20
+- Agente: Claude Code. Branch `feat/issue-50-endereco-ficha`.
+- Feito: seção Endereço na aba "Ficha completa", carregada sob demanda
+  (`endereco_ler`). Estados: carregando, vazio, visualização (com autorização e
+  autor), edição, erro e removido. O formulário tem rótulos e `autocomplete`, erro
+  por campo com `aria-invalid`/`aria-describedby`, foco no primeiro inválido e
+  consentimento desmarcado a cada edição. A remoção pede confirmação. Regras puras
+  em `endereco-regras.ts`. Os novos `.js` foram registrados no `index.html`, no
+  `embed.go` e na conferência de compilados do CI.
+- Testes: `npm run typecheck`, `npm run build`, `npm run test:frontend` (18, sendo
+  6 novos), `go test ./...`. Tela em 390×844 e 1440×900, com login e ficha reais em
+  `vec-dev` e respostas de endereço simuladas: 11 checagens por tamanho e console
+  sem erros.
+- Pendente: aplicar a 0010 em `vec-dev` para um teste ponta a ponta com banco real
+  (produção já tem a 0010).
+- Próximo: T005 / #51, a busca pelo CEP.
