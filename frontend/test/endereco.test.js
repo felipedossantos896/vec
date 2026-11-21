@@ -48,3 +48,31 @@ test('a ficha carrega o endereço sob demanda e fora da lista', () => {
   const csv = fs.readFileSync('frontend/src/admin/admin.ts', 'utf8').match(/const CSV_COLS[\s\S]*?\];/)[0];
   assert.doesNotMatch(csv, /cep|logradouro|bairro|endereco/i);
 });
+
+test('a busca pelo CEP envia só o CEP', () => {
+  assert.equal(regras.urlViaCep('60.000-000'), 'https://viacep.com.br/ws/60000000/json/');
+  assert.equal(regras.urlViaCep('6000'), null);
+});
+
+test('aplica a resposta do ViaCEP sem tocar em número e complemento', () => {
+  const form = { ...valido(), numero: '10', complemento: 'Casa B', logradouro: '', bairro: '', cidade: '', uf: '' };
+  const r = regras.aplicarViaCep(form, { logradouro: 'Rua Pública', bairro: 'Centro', localidade: 'Fortaleza', uf: 'ce' });
+  assert.deepEqual([...r.preenchidos], ['logradouro', 'bairro', 'cidade', 'uf']);
+  assert.equal(r.form.logradouro, 'Rua Pública');
+  assert.equal(r.form.uf, 'CE');
+  assert.equal(r.form.numero, '10');
+  assert.equal(r.form.complemento, 'Casa B');
+});
+
+test('CEP de cidade inteira preenche só cidade e UF', () => {
+  const r = regras.aplicarViaCep({ ...valido(), logradouro: 'Rua Digitada' }, { logradouro: '', bairro: '', localidade: 'Cidade Exemplo', uf: 'CE' });
+  assert.deepEqual([...r.preenchidos], ['cidade', 'uf']);
+  assert.equal(r.form.logradouro, 'Rua Digitada');
+});
+
+test('CEP inexistente ou resposta estranha não muda nada', () => {
+  assert.equal(regras.aplicarViaCep(valido(), { erro: 'true' }), null);
+  assert.equal(regras.aplicarViaCep(valido(), null), null);
+  assert.equal(regras.aplicarViaCep(valido(), 'html'), null);
+  assert.equal(regras.aplicarViaCep(valido(), { uf: 'XX' }), null);
+});
