@@ -48,3 +48,18 @@ Estado verificável entre agentes. Não substitui `graph.json`, Issues, CI nem r
 - Pendente: aplicar a 0010 em `vec-dev` para um teste ponta a ponta com banco real
   (produção já tem a 0010).
 - Próximo: T005 / #51, a busca pelo CEP.
+
+### T005 / Issue #51 — 2026-11-21
+- Agente: Claude Code. Branch `feat/issue-51-busca-cep`.
+- Feito: ao digitar um CEP de 8 dígitos, o navegador consulta o ViaCEP enviando só
+  o CEP (sem referrer nem cookies, limite de 5 s) e preenche rua, bairro, cidade e
+  UF quando o serviço traz o valor; número e complemento nunca são alterados. CEP
+  inexistente, resposta estranha, falha ou demora geram um aviso
+  (`aria-live="polite"`) sem bloquear o preenchimento manual. Respostas atrasadas
+  de um CEP anterior são descartadas.
+- Testes: `npm run test:frontend` com 22 testes (4 novos: URL só com o CEP, resposta
+  aplicada sem tocar em número/complemento, CEP de cidade inteira, CEP inexistente
+  ou resposta inválida).
+- Pendente: validação de tela com o ViaCEP simulado, bloqueada porque a sessão do
+  `turso` CLI expirou (`turso auth login`).
+- Próximo: T006 / #52, validação e release.

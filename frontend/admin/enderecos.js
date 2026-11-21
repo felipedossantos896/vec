@@ -35,8 +35,10 @@ function formEndereco() {
         const corpo = k === 'uf'
             ? `<select class="input" ${attrs}><option value="">—</option>${regrasEndereco.UFS.map(u => `<option${u === e.uf ? ' selected' : ''}>${u}</option>`).join('')}</select>`
             : `<input class="input" ${attrs}${k === 'cep' ? ' inputmode="numeric" placeholder="00000-000"' : ''}${regrasEndereco.MAX[k] ? ` maxlength="${regrasEndereco.MAX[k]}"` : ''} value="${esc(k === 'cep' ? regrasEndereco.fmtCep(e.cep) : e[k])}">`;
-        return `<div class="field end-${k}"><label class="label" for="${id}">${label}</label>${corpo}<p class="msg" id="${id}_erro"></p></div>`;
+        const busca = k === 'cep' ? '<p class="field-hint" id="end_cep_busca" aria-live="polite"></p>' : '';
+        return `<div class="field end-${k}"><label class="label" for="${id}">${label}</label>${corpo}${busca}<p class="msg" id="${id}_erro"></p></div>`;
     };
+    cepBuscado = regrasEndereco.soDigitosCep(e.cep); // não rebusca o CEP já salvo ao abrir
     $('endCorpo').innerHTML = `<form id="endForm" class="end-form" novalidate>
     <div class="end-grid">${CAMPOS_ENDERECO.map(campoEnd).join('')}</div>
     <div class="field"><label class="end-consent"><input type="checkbox" id="end_consentimento" aria-describedby="end_consentimento_erro"><span>${TEXTO_CONSENTIMENTO}</span></label><p class="msg" id="end_consentimento_erro"></p></div>
@@ -109,6 +111,56 @@ async function carregarEnderecoDe(r) {
     enderecoAtual = res.endereco || null;
     renderEndereco();
 }
+// ── Busca pelo CEP (T005) ──
+// Preenche rua, bairro, cidade e UF; falha ou demora nunca impede o preenchimento manual.
+let cepBuscado = '';
+async function buscarCep(cep) {
+    const url = regrasEndereco.urlViaCep(cep);
+    const aviso = document.getElementById('end_cep_busca');
+    if (!url || !aviso || cep === cepBuscado)
+        return;
+    cepBuscado = cep;
+    aviso.textContent = 'Buscando endereço do CEP…';
+    const pararEm = new AbortController();
+    const prazo = setTimeout(() => pararEm.abort(), 5000);
+    try {
+        const res = await fetch(url, { signal: pararEm.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
+        const json = res.ok ? await res.json() : null;
+        if (cepBuscado !== cep || !document.getElementById('endForm'))
+            return; // outro CEP digitado ou formulário fechado
+        const aplicado = regrasEndereco.aplicarViaCep(lerFormEndereco(), json);
+        if (!aplicado) {
+            aviso.textContent = 'CEP não encontrado. Preencha o endereço à mão.';
+            return;
+        }
+        for (const k of aplicado.preenchidos)
+            $(`end_${k}`).value = aplicado.form[k];
+        aviso.textContent = aplicado.preenchidos.includes('logradouro')
+            ? 'Endereço preenchido pelo CEP. Confira e informe o número.'
+            : 'Cidade preenchida pelo CEP. Informe a rua e o número.';
+    }
+    catch {
+        if (cepBuscado === cep && document.getElementById('end_cep_busca'))
+            aviso.textContent = 'Não foi possível buscar o CEP agora. Preencha o endereço à mão.';
+    }
+    finally {
+        clearTimeout(prazo);
+    }
+}
+$('detBody').addEventListener('input', e => {
+    const alvo = e.target;
+    if (alvo.id !== 'end_cep')
+        return;
+    const d = regrasEndereco.soDigitosCep(alvo.value);
+    if (d.length === 8)
+        buscarCep(d);
+    else {
+        cepBuscado = '';
+        const aviso = document.getElementById('end_cep_busca');
+        if (aviso)
+            aviso.textContent = '';
+    }
+});
 $('detBody').addEventListener('submit', async (e) => {
     if (e.target.id !== 'endForm')
         return;
