@@ -275,6 +275,11 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 			SQL:  `DELETE FROM enderecos WHERE resposta_id = ? AND EXISTS (SELECT 1 FROM respostas WHERE id = ? AND excluido_em IS NOT NULL)`,
 			Args: []any{id, id},
 		},
+		// E a confirmação de anfitrião, apagada de fato (Spec 004)
+		turso.Stmt{
+			SQL:  `DELETE FROM anfitrioes WHERE resposta_id = ? AND EXISTS (SELECT 1 FROM respostas WHERE id = ? AND excluido_em IS NOT NULL)`,
+			Args: []any{id, id},
+		},
 	)
 	if err != nil {
 		return false, err
