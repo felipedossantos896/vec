@@ -12,17 +12,18 @@ import (
 
 // painelDB responde como o banco para um usuário de célula e para as listas.
 type painelDB struct {
-	hash     string
-	perfil   string // perfil do usuário ("" = CELULA)
-	tx       []turso.Stmt
-	cadastro int64 // cadastro ligado ao login (0 = nenhum)
-	escopos  [][]any
-	afetadas int64
-	escritas []turso.Stmt
-	foto     []byte       // foto guardada do cadastro 7 (nil = nenhuma)
-	endereco []any        // endereço guardado do cadastro 7 (nil = nenhum)
-	pontos   [][]any      // situação de geocodificação devolvida ao mapa
-	leituras []turso.Stmt // consultas do mapa, para conferir o escopo
+	hash      string
+	perfil    string // perfil do usuário ("" = CELULA)
+	tx        []turso.Stmt
+	cadastro  int64 // cadastro ligado ao login (0 = nenhum)
+	escopos   [][]any
+	afetadas  int64
+	escritas  []turso.Stmt
+	foto      []byte       // foto guardada do cadastro 7 (nil = nenhuma)
+	endereco  []any        // endereço guardado do cadastro 7 (nil = nenhum)
+	pontos    [][]any      // situação de geocodificação devolvida ao mapa
+	leituras  []turso.Stmt // consultas do mapa, para conferir o escopo
+	anfitriao []any        // confirmação de anfitrião do cadastro 7 (nil = nenhuma)
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -63,6 +64,13 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 				out[i].Rows = [][]any{d.endereco}
 			}
 		case strings.HasPrefix(st.SQL, "INSERT INTO enderecos"), strings.HasPrefix(st.SQL, "DELETE FROM enderecos"), strings.HasPrefix(st.SQL, "UPDATE enderecos"):
+			d.escritas = append(d.escritas, st)
+			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "SELECT capacidade"):
+			if d.anfitriao != nil && d.afetadas > 0 {
+				out[i].Rows = [][]any{d.anfitriao}
+			}
+		case strings.HasPrefix(st.SQL, "INSERT INTO anfitrioes"), strings.HasPrefix(st.SQL, "DELETE FROM anfitrioes"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
 		case strings.HasPrefix(st.SQL, "INSERT INTO fotos"):
