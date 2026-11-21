@@ -1,6 +1,6 @@
 # Spec 003 — Mapa de membros
 
-- Status: **Aprovada** (2026-11-21)
+- Status: **Entregue** (v1.27.0, 2026-11-21). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-21
 - ADRs: [0005](../../docs/architecture/adr/0005-mapa-membros.md) (Aceito em 2026-11-21), [0004](../../docs/architecture/adr/0004-enderecos-geocodificacao.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
 - Depende de: [Spec 002](../002-endereco-membro/spec.md) (entregue)
