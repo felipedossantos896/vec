@@ -69,7 +69,7 @@ function distintos(chave: string, base: string[]): string[] {
 }
 
 // Setor e célula valem para Pessoas, Indicadores e Acompanhar: cada aba tem seus seletores (f…, g… e a…), com o mesmo estado
-const SELETORES: [string, 'setor' | 'celula', string][] = ['f', 'g', 'a', 'm'].flatMap((p): [string, 'setor' | 'celula', string][] => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
+const SELETORES: [string, 'setor' | 'celula', string][] = ['f', 'g', 'a'].flatMap((p): [string, 'setor' | 'celula', string][] => [[p + 'Setor', 'setor', 'Todos os setores'], [p + 'Celula', 'celula', 'Todas as células']]);
 
 function montarFiltros() {
   SELETORES.forEach(([id, chave, todos]) => {

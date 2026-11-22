@@ -90,7 +90,7 @@ function $(id) {
 const estado = {
     regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
     escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-    gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false
+    gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false, lente: 'cuidado'
 };
 function rotulo(e) {
     if (!e || e.todos)
