@@ -186,9 +186,12 @@ minutos após 5 senhas erradas; limite de 10 tentativas de login por minuto no
 processo; permissões aplicadas no servidor; textos validados e limitados;
 proteção contra fórmulas em CSV; painel sem cache e fora do Google.
 
-Ainda falta (ideias para as próximas etapas): proteção contra robôs no formulário
-público (por exemplo Cloudflare Turnstile), política de CSP e paginação do painel
+Ainda falta (ideias para as próximas etapas): política de CSP e paginação do painel
 quando passar de alguns milhares de cadastros.
+
+Formulário público: campo-armadilha, marca de tempo assinada pelo servidor (envio
+pelo menos 3 s depois de abrir) e limite de 60 envios em 10 minutos por IP, sem
+serviço externo nem cookie (Spec 007).
 
 Backup: o workflow **Backup** gera todo dia uma cópia do banco de produção,
 criptografada com `age` (só abre com a chave privada do responsável, fora do
