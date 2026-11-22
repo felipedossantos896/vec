@@ -86,7 +86,7 @@ function mapaJornada(base: Registro[]): string {
       const n = rs.filter(r => r[k] === 'S').length;
       const tom = TONS[Math.min(4, Math.floor((rs.length ? n / rs.length : 0) * 5))];
       const dica = esc(`${nome} · ${etapa}: ${n} de ${rs.length} concluíram`);
-      const attrs = `class="mc${tom >= 72 ? ' hi' : ''}" style="--t:${tom}%" data-tip="${dica}" aria-label="${dica}"`;
+      const attrs = `class="mc${tom >= 72 ? ' hi' : ''}" data-t="${tom}" data-tip="${dica}" aria-label="${dica}"`;
       return `<td>${alvo === null ? `<span ${attrs}>${n}</span>` : `<button type="button" ${attrs} data-sit="${sitEtapa(k)}" ${alvo}>${n}</button>`}</td>`;
     }).join('')}</tr>`;
 
@@ -114,7 +114,7 @@ function mapaJornada(base: Registro[]): string {
   return painel('Mapa da jornada', 'Quantos concluíram cada etapa. Toque num número para ver quem ainda falta.',
     `<table class="mapa"><thead><tr><td></td>${JORNADA.map(([, etapa], i) => `<th scope="col" aria-label="${etapa}">${i + 1}</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
      <ol class="mapa-leg">${JORNADA.map(([, etapa]) => `<li>${etapa}</li>`).join('')}</ol>
-     <p class="escala" aria-hidden="true">menos${TONS.map(t => `<i style="--t:${t}%"></i>`).join('')}mais gente concluiu</p>`);
+     <p class="escala" aria-hidden="true">menos${TONS.map(t => `<i data-t="${t}"></i>`).join('')}mais gente concluiu</p>`);
 }
 
 // Quem falta fazer o treinamento aparece primeiro, com a etiqueta; quem já fez vem depois, sem ela
@@ -124,7 +124,7 @@ function potencial(base: Registro[]): string {
     const g = base.filter(SITUACOES[sit].f).sort((a, b) => Number(pronto(a)) - Number(pronto(b)) || a.nome.localeCompare(b.nome, 'pt-BR'));
     const feitos = g.filter(pronto).length;
     const sub = !g.length ? 'Ninguém marcou esse interesse.' : treino ? `${feitos} de ${g.length} já fizeram o ${nomeTreino}.` : `${plural(g.length, 'pessoa disposta', 'pessoas dispostas')} a abrir a casa.`;
-    const barra = treino && g.length ? `<span class="cell-bar progresso" aria-hidden="true"><i style="width:${(feitos / g.length) * 100}%"></i></span>` : '';
+    const barra = treino && g.length ? `<span class="cell-bar progresso" aria-hidden="true"><i data-w="${(feitos / g.length) * 100}"></i></span>` : '';
     const vis = g.slice(0, 6);
     const lista = vis.map((r, i) => (treino && pronto(r) && i > 0 && !pronto(vis[i - 1]) ? `<li class="lista-sep">Já fizeram o ${nomeTreino}</li>` : '') +
       pessoa(r, esc(r.celula || 'Sem célula'), pronto(r) ? '' : `<em class="tag">Falta o ${nomeTreino}</em>`)).join('');

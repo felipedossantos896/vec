@@ -105,7 +105,7 @@ function renderTudo() {
 // Uma linha de medidor: nome, quantidade, percentual e barra
 function medidor(label: string, n: number, total: number): string {
   const pct = total ? Math.round((n / total) * 100) : 0;
-  return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
+  return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i data-w="${pct}"></i></span></li>`;
 }
 
 const pips = (r: Registro): string => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;

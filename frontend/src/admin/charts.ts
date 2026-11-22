@@ -19,7 +19,7 @@ function colunas(itens: Coluna[], rotulo: string): string {
   const max = Math.max(1, ...itens.map(i => i.n));
   return `<div class="chart-scroll" role="region" aria-label="${esc(rotulo)}" tabindex="0"><ol class="cols">${itens.map(i => `
     <li tabindex="0" data-tip="${esc(i.titulo)}" aria-label="${esc(i.titulo)}">
-      <span class="col-plot" aria-hidden="true"><span class="col-v">${i.n || ''}</span><i style="--h:${i.n / max}"></i></span>
+      <span class="col-plot" aria-hidden="true"><span class="col-v">${i.n || ''}</span><i data-h="${i.n / max}"></i></span>
       <span class="col-x" aria-hidden="true">${i.rotulo}<small>${i.sub || ''}</small></span>
     </li>`).join('')}</ol></div>`;
 }

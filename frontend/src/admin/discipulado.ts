@@ -90,7 +90,7 @@ function painelDiscipulado(base: Registro[], resumoGrupo: string): string {
     const dica = `${nomeDe(id)}: ${plural(n, 'discípulo', 'discípulos')}`;
     return `<button type="button" class="cell-row" data-disc="${id}" data-tip="${esc(dica)}" aria-label="${esc(dica)}">
       <span class="cell-name com-av">${avatarDe(id, nomeDe(id), 'av-s')}<span>${esc(curto(nomeDe(id)))}</span>${n > MUITOS_DISCIPULOS ? ` <em class="tag">mais de ${MUITOS_DISCIPULOS}</em>` : ''}</span>
-      <span class="cell-bar"><i style="width:${(n / max) * 100}%"></i></span><span class="cell-n">${n}</span></button>`;
+      <span class="cell-bar"><i data-w="${(n / max) * 100}"></i></span><span class="cell-n">${n}</span></button>`;
   }).join('');
   const resumo = ids.length ? `${plural(ids.length, 'discipulador acompanha', 'discipuladores acompanham')} ${plural(vinculados, 'pessoa', 'pessoas')}; ${base.length - vinculados} sem vínculo.` : 'Nenhum discipulador vinculado ainda.';
 
