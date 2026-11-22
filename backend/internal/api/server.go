@@ -210,6 +210,8 @@ type adminReq struct {
 	Confirmacao bool         `json:"confirmacao"`
 	// Ranking de anfitriões (Spec 004): célula escolhida pelo líder
 	Celula string `json:"celula"`
+	// Multiplicação (Spec 005): divisão ajustada pelo líder, dois grupos de cadastros
+	Grupos [][]int64 `json:"grupos"`
 }
 
 func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
@@ -293,6 +295,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.anfitriaoSalvar(ctx, req)
 		case "anfitriao_excluir":
 			rep = s.anfitriaoExcluir(ctx, req)
+		case "multiplicacao":
+			rep = s.multiplicacao(ctx, req)
 		case "anfitrioes_ranking":
 			rep = s.anfitrioesRanking(ctx, req)
 		case "mapa":
