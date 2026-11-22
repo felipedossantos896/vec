@@ -23,6 +23,7 @@ type painelDB struct {
 	endereco     []any        // endereço guardado do cadastro 7 (nil = nenhum)
 	pontos       [][]any      // situação de geocodificação devolvida ao mapa
 	leituras     []turso.Stmt // consultas do mapa, para conferir o escopo
+	anfitriao    []any        // confirmação de anfitrião do cadastro 7 (nil = nenhuma)
 	membros      [][]any      // membros da célula (id, lat, lng) para o ranking
 	casas        [][]any      // candidatos a anfitrião (id, nome, capacidade, dias, lat, lng, peloBairro)
 	interessados int64        // interessados sem confirmação
@@ -75,6 +76,13 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 				out[i].Rows = [][]any{d.endereco}
 			}
 		case strings.HasPrefix(st.SQL, "INSERT INTO enderecos"), strings.HasPrefix(st.SQL, "DELETE FROM enderecos"), strings.HasPrefix(st.SQL, "UPDATE enderecos"):
+			d.escritas = append(d.escritas, st)
+			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "SELECT capacidade"):
+			if d.anfitriao != nil && d.afetadas > 0 {
+				out[i].Rows = [][]any{d.anfitriao}
+			}
+		case strings.HasPrefix(st.SQL, "INSERT INTO anfitrioes"), strings.HasPrefix(st.SQL, "DELETE FROM anfitrioes"):
 			d.escritas = append(d.escritas, st)
 			out[i].Affected = d.afetadas
 		case strings.HasPrefix(st.SQL, "INSERT INTO fotos"):
