@@ -74,10 +74,18 @@ func (g *gzipWriter) close() {
 	}
 }
 
+// CSP é a política de conteúdo das páginas (Spec 008): só scripts, estilos e
+// fontes do próprio app (nada inline), tiles do OpenStreetMap no mapa e a busca de
+// CEP no ViaCEP. Rotas com política própria (a foto) sobrescrevem o cabeçalho.
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; " +
+	"img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://viacep.com.br; " +
+	"frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
 // Seguranca adiciona cabeçalhos de proteção básicos a todas as respostas.
 func Seguranca(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
+		h.Set("Content-Security-Policy", CSP)
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")

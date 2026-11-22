@@ -108,6 +108,8 @@ async function sair(page) {
 function vigiar(page, base, problemas) {
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') problemas.push(`console ${m.type()}`); });
   page.on('pageerror', () => problemas.push('erro de JavaScript'));
+  // CSP (Spec 008): qualquer violação reprova o smoke, com a diretiva no motivo.
+  page.on('console', m => { if (/Content Security Policy/i.test(m.text())) problemas.push('violação de CSP'); });
   page.on('response', r => { if (r.url().startsWith(base) && r.status() >= 400) problemas.push(`HTTP ${r.status()}`); });
 }
 
