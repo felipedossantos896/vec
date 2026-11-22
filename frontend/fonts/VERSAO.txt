@@ -1,6 +1,6 @@
 Origem: Google Fonts (css2, 2026-11-22), arquivos woff2 variáveis.
 
-fraunces-latin-ext.woff2  sha256=f120089b9440f3e35a980a2137347b1851ad46ee4b8ad5c63b6c07e053fa40e2  59540 bytes  <- https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxCFTeP2Xz5fU8w.woff2
-fraunces-latin.woff2  sha256=48282a415ec22e31beaf0a0666e6fae0c8cbddcd0b1f6e729f27c3ade8a64e43  67388 bytes  <- https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeP2Xz5c.woff2
-source-sans-3-latin-ext.woff2  sha256=ed3571ea9ff752f1c846f1c9ad2b0006de42f478a2db9163a74db0729a4eb281  60048 bytes  <- https://fonts.gstatic.com/s/sourcesans3/v20/nwpStKy2OAdR1K-IwhWudF-R3wEaZejf5HdF8Q.woff2
-source-sans-3-latin.woff2  sha256=587435ca9d90732b8c1ce4958222c6ad3ade2b875500188e1d318efbcb61f4c5  28804 bytes  <- https://fonts.gstatic.com/s/sourcesans3/v20/nwpStKy2OAdR1K-IwhWudF-R3w8aZejf5Hc.woff2
+bricolage-grotesque-latin-ext.woff2  sha256=1d04719f1325400ea4267e630dba29b02af87eb094d7d71d2e4d80a05479d07a  30636 bytes  <- https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGGInHWVyNJtvI.woff2
+bricolage-grotesque-latin.woff2  sha256=85f55a58a31e61a2e19e8bb25fed503181bf2a6b4cab76c589992cfaac377447  76868 bytes  <- https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInHWVyNJ.woff2
+instrument-sans-latin-ext.woff2  sha256=21fac8da552a915e7a9fb84c5afaeb85d35507b2616346d592e78128c1cfe3e0  11092 bytes  <- https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0She1ZuWi3hKpA.woff2
+instrument-sans-latin.woff2  sha256=6219bc4bfdfc5d9b2201dcdf046218b122a758f932e25ed5f168f929b7ca2311  29904 bytes  <- https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0SZe1ZuWi3g.woff2

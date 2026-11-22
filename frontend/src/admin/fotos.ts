@@ -14,12 +14,16 @@ function iniciais(nome: string): string {
 }
 
 // Círculo com a foto ou as iniciais; o nome ao lado é que dá o significado
-function avatar(p: { nome: string; fotoUrl?: string }, classe = ''): string {
-  return `<i class="av ${classe}" aria-hidden="true">${p.fotoUrl ? `<img src="${esc(p.fotoUrl)}" alt="" loading="lazy" decoding="async">` : esc(iniciais(p.nome))}</i>`;
+// Foto da ficha ou, sem foto, o rosto ilustrado gerado pelo número do cadastro (Spec 009).
+// Sem número (caso raro), ficam as iniciais.
+function avatar(p: { nome: string; fotoUrl?: string; linha?: number }, classe = ''): string {
+  const corpo = p.fotoUrl ? `<img src="${esc(p.fotoUrl)}" alt="" loading="lazy" decoding="async">`
+    : p.linha ? regrasAvatar.svg(p.linha) : esc(iniciais(p.nome));
+  return `<i class="av ${classe}${!p.fotoUrl && p.linha ? ' av-ilustrado' : ''}" aria-hidden="true">${corpo}</i>`;
 }
 // Cadastro de alguém da área que esteja na visão de quem entrou (para pegar a foto)
 const avatarDe = (id: number, nome: string, classe = ''): string =>
-  avatar({ nome, fotoUrl: estado.regs.find(r => r.linha === id)?.fotoUrl }, classe);
+  avatar({ nome, fotoUrl: estado.regs.find(r => r.linha === id)?.fotoUrl, linha: id }, classe);
 
 function renderFotoDetalhe(r: Registro) {
   $('detFoto').innerHTML = `${avatar(r, 'av-g')}<button type="button" class="foto-btn" id="fotoBtn" aria-haspopup="${r.fotoUrl ? 'menu' : 'false'}" aria-label="${r.fotoUrl ? 'Trocar ou remover a foto' : 'Adicionar foto'}">

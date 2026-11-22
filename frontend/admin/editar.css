@@ -27,7 +27,7 @@
 .sn-o input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .sn-o span { display: flex; align-items: center; justify-content: center; min-height: 38px; border-radius: 7px; color: var(--muted); font-weight: 700; font-size: 0.92rem; transition: background 0.15s, color 0.15s; }
 .sn-o abbr { text-decoration: none; }
-.sn-o input:checked + span { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(26, 35, 64, 0.16); }
+.sn-o input:checked + span { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, 0.16); }
 .sn-o input[value="S"]:checked + span { background: var(--navy); color: var(--white); box-shadow: none; }
 .sn-o input[value=""]:checked + span { background: none; color: var(--ink); box-shadow: none; } /* sem resposta não disputa atenção */
 .sn-o input:focus-visible + span { outline: var(--focus); outline-offset: 2px; }
@@ -37,7 +37,7 @@
 @media (max-width: 639px) { .det-whats { width: 44px; padding: 0; } .det-whats span { display: none; } }
 .det-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin: 0 0 18px; padding: 3px; border-radius: var(--r-md); background: var(--sunken); }
 .det-tabs button { min-height: 42px; padding: 0 6px; border-radius: 9px; color: var(--muted); font-weight: 700; font-size: 0.92rem; line-height: 1.15; transition: background 0.15s, color 0.15s; }
-.det-tabs button[aria-selected="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(26, 35, 64, 0.16); }
+.det-tabs button[aria-selected="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, 0.16); }
 .det-tabs button:focus-visible { outline: var(--focus); outline-offset: 1px; }
 .det-pane[hidden] { display: none; }
 

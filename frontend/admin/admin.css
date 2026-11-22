@@ -17,7 +17,7 @@ html { -webkit-text-size-adjust: 100%; }
 .label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.95rem; }
 .input { display: block; width: 100%; min-height: var(--tap); padding: 10px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface-control); color: var(--ink); font: inherit; transition: border-color 0.15s; }
 .input:focus { border-color: var(--navy); outline: var(--focus); outline-offset: 2px; }
-.input::placeholder { opacity: 1; color: #8a8ea3; }
+.input::placeholder { opacity: 1; color: #8f929c; }
 .input:disabled { background: var(--sunken); color: var(--muted); }
 select.input { -webkit-appearance: none; appearance: none; min-width: 0; padding-right: 38px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235a6080' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; text-overflow: ellipsis; }
 .pass-wrap { position: relative; }
@@ -35,7 +35,7 @@ select.input { -webkit-appearance: none; appearance: none; min-width: 0; padding
 .msg { color: var(--danger); font-weight: 700; font-size: 0.95rem; }
 .msg:not(:empty) { margin-bottom: 14px; padding: 10px 14px; border-radius: var(--r-sm); background: var(--danger-bg); }
 .msg.info:not(:empty) { background: var(--sunken); color: var(--ink); font-weight: 600; }
-.spinner { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(26, 35, 64, 0.18); border-top-color: var(--navy); animation: spin 0.8s linear infinite; }
+.spinner { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(21, 23, 28, 0.18); border-top-color: var(--navy); animation: spin 0.8s linear infinite; }
 .btn-primary .spinner { border-color: rgba(255, 255, 255, 0.3); border-top-color: var(--white); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty, .loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 48px 20px; color: var(--muted); text-align: center; }
