@@ -12,10 +12,30 @@ let dadosMapa = null;
 let mapaCarregadoEm = 0;
 let mapaLeaflet = null;
 let camadaGrupos = null;
+let camadaFerr = null; // casas e linhas da ferramenta aberta (Spec 009)
 const regDe = (id) => estado.regs.find(r => r.linha === id);
 function nomesMapa(ids) {
     const regs = ids.map(regDe).filter((r) => Boolean(r)).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}">${esc(r.nome)}</button> <span class="nota-fraca">${celulaChip(r.celula)}</span></li>`).join('')}</ul>`;
+}
+// Casas do ranking aberto (até 4), na posição aproximada da área de quem recebe.
+function casasNoMapa() {
+    if (estado.ferramenta !== 'anfPainel' || !dadosMapa)
+        return [];
+    const d = rankingCache.get(celulaDoRanking())?.dados;
+    if (!d)
+        return [];
+    return (d.casas || []).slice(0, 4).map(c => {
+        const g = dadosMapa.grupos.find(x => x.linhas.includes(c.linha));
+        return g ? { lat: g.lat, lng: g.lng, nome: regDe(c.linha)?.nome || `Cadastro nº ${c.linha}` } : null;
+    }).filter((x) => Boolean(x));
+}
+// Grupo (A ou B) de quem está no ponto, quando a multiplicação está aberta.
+function grupoMult(linha) {
+    if (estado.ferramenta !== 'multPainel' || !multAtual || linha === undefined)
+        return '';
+    const i = multAtual.grupos.findIndex(g => g.linhas.includes(linha));
+    return i < 0 ? '' : i === 0 ? 'A' : 'B';
 }
 // Popup: rosto, nome, célula, o motivo de cuidado e as ações.
 function pessoasPopup(rs) {
@@ -76,6 +96,7 @@ function iniciarLeaflet() {
     L.tileLayer(TILES_OSM, { maxZoom: ZOOM_MAX, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
     mapaLeaflet.attributionControl.setPrefix(false);
     camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
+    camadaFerr = L.layerGroup().addTo(mapaLeaflet);
     return true;
 }
 function renderMapa() {
@@ -93,10 +114,16 @@ function renderMapa() {
     $('mapaStatus').textContent = regrasMapa.resumo(f);
     if (iniciarLeaflet()) {
         camadaGrupos.clearLayers();
+        camadaFerr.clearLayers();
+        const casas = casasNoMapa();
         // A vista vem antes dos marcadores: sem ela o Leaflet não cria o elemento e o
-        // rótulo acessível não teria onde ficar.
-        if (f.grupos.length)
-            mapaLeaflet.fitBounds(L.latLngBounds(f.grupos.map(g => [g.lat, g.lng])).pad(0.25), { maxZoom: 15 });
+        // rótulo acessível não teria onde ficar. Com a ferramenta de anfitrião, as casas entram.
+        const pontos = [...f.grupos.map(g => [g.lat, g.lng]), ...casas.map(c => [c.lat, c.lng])];
+        // Os painéis ficam por cima do mapa no computador: o enquadramento desconta o espaço deles.
+        const largo = matchMedia('(min-width: 721px)').matches;
+        const folga = largo ? { paddingTopLeft: [340, 40], paddingBottomRight: [estado.ferramenta ? 440 : 40, 40] } : { padding: [36, 36] };
+        if (pontos.length)
+            mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_MAX, ...folga });
         else
             mapaLeaflet.setView([-14.2, -51.9], 4);
         f.grupos.forEach((g, i) => {
@@ -107,7 +134,9 @@ function renderMapa() {
             const acesas = pessoas.filter(r => naLente(estado.lente, r));
             const cuidado = pessoas.some(r => naLente('cuidado', r));
             const rotulo = `Área ${i + 1}: ${pessoas.map(r => r.nome).join(', ') || regrasMapa.pessoas(g.linhas.length)}`;
-            const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corDaCelula(r.celula)}">${avatar(r, 'av-pin')}</span>`).join('');
+            const grupo = grupoMult(pessoas[0]?.linha);
+            const corPino = (r) => grupo === 'B' ? '#15171c' : corDaCelula(r.celula);
+            const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
             const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
                 `<span class="rp-nome">${esc(regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
             const larg = 44 + Math.max(0, Math.min(pessoas.length, 3) - 1) * 18 + (pessoas.length > 3 ? 22 : 0);
@@ -119,6 +148,18 @@ function renderMapa() {
             m.addTo(camadaGrupos);
             m.getElement()?.setAttribute('aria-label', rotulo);
         });
+        // Anfitrião: casas numeradas (no centro da área de ~300 m de quem recebe) e linhas da
+        // casa 1 até as áreas dos membros. Distância em linha reta, como no ranking.
+        if (casas.length) {
+            const c1 = casas[0];
+            f.grupos.forEach(g => L.polyline([[c1.lat, c1.lng], [g.lat, g.lng]], { color: '#c43a1f', weight: 2, dashArray: '4 6', opacity: 0.8, interactive: false }).addTo(camadaFerr));
+            casas.forEach((c, i) => {
+                const rot = `Casa ${i + 1}: ${c.nome}`;
+                const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: `casa-n${i === 0 ? ' top' : ''}`, html: `<span class="casa-pin"><b>${i + 1}</b></span>`, iconSize: i === 0 ? [44, 44] : [36, 36], iconAnchor: i === 0 ? [22, 50] : [18, 42] }), keyboard: true, title: rot, zIndexOffset: 1000 - i });
+                m.addTo(camadaFerr);
+                m.getElement()?.setAttribute('aria-label', rot);
+            });
+        }
     }
     const secao = (titulo, ids, nota = '') => ids.length
         ? `<details class="mapa-sec"><summary>${titulo} · ${regrasMapa.pessoas(ids.length)}</summary>${nota ? `<p class="field-hint">${nota}</p>` : ''}${nomesMapa(ids)}</details>` : '';

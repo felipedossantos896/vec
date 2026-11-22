@@ -63,10 +63,23 @@ $('areaPainel').addEventListener('click', e => {
     return;
   }
   const ferr = alvo?.closest<HTMLElement>('[data-ferr]');
-  if (ferr) {
-    const d = $<HTMLDetailsElement>(ferr.dataset.ferr || '');
-    d.open = true;
-    d.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-    d.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
-  }
+  if (ferr) abrirFerramenta(ferr.dataset.ferr || '');
 });
+
+// Ferramenta no mapa (Spec 009): o painel abre ao lado do mapa e o mapa desenha as casas
+// (anfitrião) ou os grupos (multiplicação). Uma de cada vez.
+function abrirFerramenta(id: string) {
+  estado.ferramenta = id;
+  const aberta = id === 'anfPainel' || id === 'multPainel';
+  ['anfPainel', 'multPainel'].forEach(k => { const d = $<HTMLDetailsElement>(k); d.open = k === id; d.hidden = !!aberta && k !== id; });
+  $('areaFerrPainel').hidden = !aberta;
+  document.querySelector('.area-palco')?.classList.toggle('modo-ferr', aberta);
+  renderMapa();
+  if (aberta) $<HTMLDetailsElement>(id).querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
+  else $('areaPainel').querySelector<HTMLElement>('[data-ferr]')?.focus();
+}
+$('areaFerrPainel').addEventListener('click', e => {
+  if (e.target instanceof Element && e.target.closest('[data-ferr-sair]')) abrirFerramenta('');
+});
+// O resumo do painel não fecha a ferramenta: quem sai é o "Voltar ao mapa".
+['anfPainel', 'multPainel'].forEach(k => $(k).querySelector('summary')?.addEventListener('click', e => { if (estado.ferramenta === k) e.preventDefault(); }));

@@ -178,6 +178,7 @@ async function carregarRanking(celula: string) {
     }
     rankingCache.set(celula, { em: Date.now(), dados: res });
     desenharRanking(res);
+    if (estado.ferramenta === 'anfPainel') renderMapa(); // casas numeradas no mapa
   } catch (err) {
     if (rankingPedido === celula) $('anfStatus').textContent = 'Não foi possível conectar. Verifique a internet.';
   }
