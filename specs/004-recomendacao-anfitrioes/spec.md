@@ -1,6 +1,6 @@
 # Spec 004 — Recomendação de anfitriões
 
-- Status: **Aprovada** (2026-11-21)
+- Status: **Entregue** (v1.31.0, 2026-11-22). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-21
 - ADRs: [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Aceito), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Depende de: [Spec 002](../002-endereco-membro/spec.md) e [Spec 003](../003-mapa-membros/spec.md) (entregues)
