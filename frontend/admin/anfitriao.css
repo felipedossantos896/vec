@@ -27,3 +27,13 @@
 .anf-tag { font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; background: var(--navy, #1a2340); color: #fff; }
 .anf-tag.alerta { background: var(--danger, #b42318); }
 .anf-expl { margin: 6px 0 0; padding-left: 1.2rem; font-size: 0.92rem; display: grid; gap: 2px; }
+
+/* Planejar multiplicação (Spec 005) */
+.mult-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.mult-grupo { border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-sm, 8px); padding: 10px 12px; min-width: 0; }
+.mult-grupo h3 { font-size: 1rem; margin: 0 0 8px; }
+.mult-grupo h3:focus { outline: 3px solid var(--gold, #c9a84c); outline-offset: 2px; }
+.mult-h { font-size: 0.95rem; margin: 12px 0 6px; }
+.mult-pessoas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mult-pessoas li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
+.mult-mover { min-height: 44px; font-size: 0.9rem; }

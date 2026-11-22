@@ -44,11 +44,12 @@ const regrasAnfitriao = {
         return `${n} ${n === 1 ? 'membro' : 'membros'}`;
     },
     // A explicação de uma casa, em frases completas (é o que o leitor de tela lê).
-    explicar(c, membrosCelula) {
+    // grupo=true quando a casa é sugerida para um grupo da multiplicação (Spec 005).
+    explicar(c, membrosCelula, grupo = false) {
         const linhas = [
             `Média de ${regrasAnfitriao.km(c.mediaKm)} até os membros; o mais longe fica a ${regrasAnfitriao.km(c.maxKm)}.`,
             `${c.considerados} de ${regrasAnfitriao.membros(membrosCelula)} no cálculo.`,
-            c.comporta ? `Cabem ${c.capacidade} pessoas.` : `Não comporta o grupo: cabem ${c.capacidade} pessoas e a célula tem ${regrasAnfitriao.membros(membrosCelula)}.`,
+            c.comporta ? `Cabem ${c.capacidade} pessoas.` : `Não comporta o grupo: cabem ${c.capacidade} pessoas e ${grupo ? 'o grupo' : 'a célula'} tem ${regrasAnfitriao.membros(membrosCelula)}.`,
             `Dias: ${regrasAnfitriao.fmtDias(c.dias).toLowerCase()}.`
         ];
         if (c.peloBairro)

@@ -44,6 +44,7 @@ async function carregarMapa() {
 // Chamado ao abrir a aba: recarrega se os dados estiverem velhos.
 function abrirMapa() {
     renderPainelAnfitriao();
+    renderPainelMultiplicacao();
     if (!dadosMapa || Date.now() - mapaCarregadoEm > RECARREGAR_APOS_MS)
         carregarMapa();
     else
@@ -71,6 +72,7 @@ function renderMapa() {
         return;
     if (!dadosMapa) {
         renderPainelAnfitriao();
+        renderPainelMultiplicacao();
         return;
     }
     const f = regrasMapa.filtrar(dadosMapa, new Set(baseIndicadores().map(r => r.linha)));
@@ -105,6 +107,7 @@ function renderMapa() {
             secao('Aguardando localização', f.pendentes, 'A posição é calculada logo depois de salvar o endereço.') +
             secao('Sem endereço cadastrado', f.semEndereco);
     renderPainelAnfitriao();
+    renderPainelMultiplicacao();
 }
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
 document.addEventListener('click', e => {
