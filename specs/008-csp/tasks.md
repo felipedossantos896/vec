@@ -3,12 +3,12 @@
 Issues #109 a #113; dependências em [`graph.json`](graph.json).
 
 - [x] **T001 (#109) — Decisões**: spec com as decisões do responsável.
-- [ ] **T002 (#110) — Fontes locais**: woff2, licença, `@font-face`; sem Google Fonts.
+- [x] **T002 (#110) — Fontes locais**: woff2, licença, `@font-face`; sem Google Fonts.
   - Dependências: T001.
-- [ ] **T003 (#111) — Sem estilos inline**: classes e estilos aplicados por JavaScript.
+- [x] **T003 (#111) — Sem estilos inline**: classes e estilos aplicados por JavaScript.
   - Dependências: T001.
-- [ ] **T004 (#112) — Cabeçalho CSP**: aplicado em todas as páginas, com o teste de telas
+- [x] **T004 (#112) — Cabeçalho CSP**: aplicado em todas as páginas, com o teste de telas
   que falha a qualquer violação.
   - Dependências: T002, T003.
-- [ ] **T005 (#113) — Validação**: cenários 1 a 5 em produção.
+- [x] **T005 (#113) — Validação**: cenários 1 a 5 em produção.
   - Dependências: T004.

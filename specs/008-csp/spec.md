@@ -1,6 +1,6 @@
 # Spec 008 — Política de segurança de conteúdo (CSP)
 
-- Status: **Aprovada** (2026-11-22)
+- Status: **Entregue** (v1.39.0, 2026-11-22). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-22
 - ADRs: [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Roteiro: Fase 4 de [`ROADMAP-REFATORACAO.md`](../../docs/ROADMAP-REFATORACAO.md)

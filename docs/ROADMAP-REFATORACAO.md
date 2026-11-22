@@ -202,9 +202,8 @@ teste contra um banco de produção.
   (Spec 006, `ops/backup/RESTAURAR.md`).
 - [x] Proteção contra robôs no formulário público: armadilha, marca de tempo
   assinada e limite por IP, sem serviço externo (Spec 007).
-- CSP ainda aparece como item pendente no README. Planejar sua implantação conforme
-  risco, sem assumir que CSP é apenas um cabeçalho: os scripts e estilos inline
-  atuais precisam ser tratados.
+- [x] CSP estrito (sem `unsafe-inline`), fontes locais e estilos sem inline
+  (Spec 008); o smoke de dev reprova qualquer violação.
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

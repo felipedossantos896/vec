@@ -186,8 +186,11 @@ minutos após 5 senhas erradas; limite de 10 tentativas de login por minuto no
 processo; permissões aplicadas no servidor; textos validados e limitados;
 proteção contra fórmulas em CSV; painel sem cache e fora do Google.
 
-Ainda falta (ideias para as próximas etapas): política de CSP e paginação do painel
-quando passar de alguns milhares de cadastros.
+Ainda falta (ideias para as próximas etapas): paginação do painel quando passar de
+alguns milhares de cadastros.
+
+CSP: política estrita em todas as páginas (scripts, estilos e fontes só do próprio
+app; tiles do OpenStreetMap e ViaCEP liberados), sem Google Fonts (Spec 008).
 
 Formulário público: campo-armadilha, marca de tempo assinada pelo servidor (envio
 pelo menos 3 s depois de abrir) e limite de 60 envios em 10 minutos por IP, sem
