@@ -1,0 +1,83 @@
+# Backup diário do banco de produção (Spec 006).
+#
+#  - Todo dia às 06:17 UTC (03:17 em Fortaleza) e manualmente (Actions > Backup).
+#  - Lê o vec-prod com um token SÓ DE LEITURA (segredo TURSO_BACKUP_TOKEN).
+#  - Confere que o dump carrega num SQLite descartável com as mesmas contagens.
+#  - Criptografa com age para a chave pública de ops/backup/age-recipient.txt:
+#    o repositório é público e os artefatos podem ser baixados por qualquer conta.
+#    Só quem tem a chave privada (fora do repositório) abre o backup.
+#  - Guarda o arquivo .age como artefato por 30 dias.
+#
+# Os logs não mostram dados, contagens, URL nem token. Restauração:
+# ops/backup/RESTAURAR.md.
+name: Backup
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.mod
+
+      - name: Instalar age e sqlite3
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age sqlite3 >/dev/null
+
+      - name: Conferir a chave pública
+        run: grep -Eq '^age1[0-9a-z]{58}$' ops/backup/age-recipient.txt
+
+      - name: Gerar o dump
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_BACKUP_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_BACKUP_TOKEN }}
+          ENV_FILE: /dev/null
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/bk"
+          go run ./backend/cmd/backup -saida "$RUNNER_TEMP/bk/dump.sql" -manifesto "$RUNNER_TEMP/bk/contagens.json"
+
+      - name: Conferir a restauração
+        run: |
+          umask 077
+          sqlite3 "$RUNNER_TEMP/bk/restaurado.db" < "$RUNNER_TEMP/bk/dump.sql"
+          python3 ops/backup/verificar.py "$RUNNER_TEMP/bk/restaurado.db" "$RUNNER_TEMP/bk/contagens.json"
+
+      - name: Criptografar
+        id: cripto
+        run: |
+          umask 077
+          nome="vec-prod-$(date -u +%Y-%m-%dT%H%MZ)"
+          mkdir -p "$RUNNER_TEMP/saida"
+          tar -C "$RUNNER_TEMP/bk" -czf - dump.sql contagens.json \
+            | age -R ops/backup/age-recipient.txt -o "$RUNNER_TEMP/saida/$nome.tar.gz.age"
+          echo "nome=$nome" >> "$GITHUB_OUTPUT"
+          echo "backup criptografado"
+
+      - name: Apagar os arquivos em texto claro
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/bk"
+
+      - name: Guardar o backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.cripto.outputs.nome }}
+          path: ${{ runner.temp }}/saida/*.age
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
