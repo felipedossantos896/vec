@@ -12,18 +12,21 @@ import (
 
 // painelDB responde como o banco para um usuário de célula e para as listas.
 type painelDB struct {
-	hash      string
-	perfil    string // perfil do usuário ("" = CELULA)
-	tx        []turso.Stmt
-	cadastro  int64 // cadastro ligado ao login (0 = nenhum)
-	escopos   [][]any
-	afetadas  int64
-	escritas  []turso.Stmt
-	foto      []byte       // foto guardada do cadastro 7 (nil = nenhuma)
-	endereco  []any        // endereço guardado do cadastro 7 (nil = nenhum)
-	pontos    [][]any      // situação de geocodificação devolvida ao mapa
-	leituras  []turso.Stmt // consultas do mapa, para conferir o escopo
-	anfitriao []any        // confirmação de anfitrião do cadastro 7 (nil = nenhuma)
+	hash         string
+	perfil       string // perfil do usuário ("" = CELULA)
+	tx           []turso.Stmt
+	cadastro     int64 // cadastro ligado ao login (0 = nenhum)
+	escopos      [][]any
+	afetadas     int64
+	escritas     []turso.Stmt
+	foto         []byte       // foto guardada do cadastro 7 (nil = nenhuma)
+	endereco     []any        // endereço guardado do cadastro 7 (nil = nenhum)
+	pontos       [][]any      // situação de geocodificação devolvida ao mapa
+	leituras     []turso.Stmt // consultas do mapa, para conferir o escopo
+	anfitriao    []any        // confirmação de anfitrião do cadastro 7 (nil = nenhuma)
+	membros      [][]any      // membros da célula (id, lat, lng) para o ranking
+	casas        [][]any      // candidatos a anfitrião (id, nome, capacidade, dias, lat, lng, peloBairro)
+	interessados int64        // interessados sem confirmação
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -56,6 +59,15 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			if d.afetadas > 0 {
 				out[i].Rows = [][]any{{st.Args[0]}}
 			}
+		case strings.HasPrefix(st.SQL, "SELECT r.id, CASE"):
+			d.leituras = append(d.leituras, st)
+			out[i].Rows = d.membros
+		case strings.HasPrefix(st.SQL, "SELECT a.resposta_id"):
+			d.leituras = append(d.leituras, st)
+			out[i].Rows = d.casas
+		case strings.HasPrefix(st.SQL, "SELECT COUNT(*) FROM respostas WHERE interesse_anfitriao"):
+			d.leituras = append(d.leituras, st)
+			out[i].Rows = [][]any{{d.interessados}}
 		case strings.HasPrefix(st.SQL, "SELECT e.resposta_id, e.lat"):
 			d.leituras = append(d.leituras, st)
 			out[i].Rows = d.pontos
