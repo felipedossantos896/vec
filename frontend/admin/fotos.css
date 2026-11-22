@@ -2,7 +2,8 @@
 
 /* Círculo com a foto ou as iniciais; o tamanho vem de --av */
 .av { --av: 36px; display: inline-grid; place-items: center; flex: none; width: var(--av); height: var(--av); border-radius: 50%; background: var(--gold-soft); color: var(--navy); font: 700 calc(var(--av) * 0.36)/1 var(--sans); font-style: normal; letter-spacing: 0.02em; overflow: hidden; user-select: none; }
-.av img { width: 100%; height: 100%; object-fit: cover; }
+.av img, .av svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av-ilustrado { background: #f3efe7; }
 .av-xs { --av: 22px; font-size: 0.6rem; }
 .av-s { --av: 28px; }
 .av-g { --av: 64px; font-family: var(--serif); font-weight: 500; letter-spacing: 0; box-shadow: 0 0 0 3px var(--cream), 0 0 0 4px var(--gold-soft); }

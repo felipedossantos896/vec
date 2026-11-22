@@ -10,7 +10,7 @@ module.exports = {
         'vec-ink': 'var(--ink)'
       },
       fontFamily: {
-        sans: ["'Source Sans 3'", '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif']
+        sans: ["'Instrument Sans'", '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif']
       }
     }
   },

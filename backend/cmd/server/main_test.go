@@ -32,7 +32,7 @@ func TestVersionHandler(t *testing.T) {
 // As fontes saem do próprio app (Spec 008), com tipo de fonte e sem ir ao Google.
 func TestFontesServidasPeloApp(t *testing.T) {
 	h := noCacheHTML(http.FileServerFS(frontend.FS))
-	for _, caminho := range []string{"/fonts/fraunces-latin.woff2", "/fonts/source-sans-3-latin-ext.woff2", "/fonts/fonts.css"} {
+	for _, caminho := range []string{"/fonts/bricolage-grotesque-latin.woff2", "/fonts/instrument-sans-latin-ext.woff2", "/fonts/fonts.css"} {
 		res := httptest.NewRecorder()
 		h.ServeHTTP(res, httptest.NewRequest(http.MethodGet, caminho, nil))
 		if res.Code != http.StatusOK {

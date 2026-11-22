@@ -59,7 +59,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 }
 .form-page textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
 .form-page input[type="text"]:focus, .form-page input[type="tel"]:focus, .form-page textarea:focus { border-color: var(--navy); outline: var(--focus); outline-offset: 2px; }
-.form-page input::placeholder, .form-page textarea::placeholder { opacity: 1; color: #8a8ea3; }
+.form-page input::placeholder, .form-page textarea::placeholder { opacity: 1; color: #8f929c; }
 .field.invalid input { border-color: var(--danger); background: var(--danger-bg); }
 .err { display: none; margin-top: 6px; color: var(--danger); font-size: 0.95rem; font-weight: 700; }
 .field.invalid .err { display: block; }
@@ -128,7 +128,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 .btn-back, .btn-again { border: 1.5px solid var(--line-strong); background: var(--cream); color: var(--navy); }
-.btn-next, .btn-send { flex: 1; border: 0; background: var(--navy); color: var(--white); box-shadow: 0 6px 18px rgba(26, 35, 64, 0.22); }
+.btn-next, .btn-send { flex: 1; border: 0; background: var(--navy); color: var(--white); box-shadow: 0 6px 18px rgba(21, 23, 28, 0.22); }
 .btn-send { color: var(--gold-soft); }
 .btn-next:active, .btn-send:active:not(:disabled) { transform: scale(0.99); }
 .btn-send:disabled { opacity: 0.75; cursor: wait; }
