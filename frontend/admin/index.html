@@ -118,11 +118,8 @@
         <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com as pessoas da área, em áreas de cerca de 300 m"></div>
         <aside class="area-painel" id="areaPainel" aria-label="Lentes e ferramentas do mapa"></aside>
         <p class="area-priv">Posições aproximadas (áreas de ~300 m). Endereço só na ficha.</p>
-      </section>
-      <p class="field-hint" id="mapaStatus" role="status"></p>
-      <p class="msg" id="mapaAviso"></p>
-      <section class="fale" id="faleCom" aria-labelledby="faleTitulo"></section>
-      <div class="area-ferr" id="areaFerramentas">
+        <aside class="area-ferr-painel" id="areaFerrPainel" hidden aria-label="Ferramenta do mapa">
+          <button type="button" class="afp-voltar" data-ferr-sair>← Voltar ao mapa</button>
       <details class="anf-painel" id="anfPainel">
         <summary id="anfResumo">Escolher anfitrião</summary>
         <p class="field-hint" id="anfStatus" role="status"></p>
@@ -133,7 +130,12 @@
         <p class="field-hint" id="multStatus" role="status"></p>
         <div id="multCorpo"></div>
       </details>
-      </div>
+        </aside>
+
+      </section>
+      <p class="field-hint" id="mapaStatus" role="status"></p>
+      <p class="msg" id="mapaAviso"></p>
+      <section class="fale" id="faleCom" aria-labelledby="faleTitulo"></section>
       <details class="mapa-sec area-lista"><summary>Lista das áreas do mapa</summary><div id="mapaLista" class="mapa-lista"></div></details>
       <div id="aConteudo"></div>
     </div>

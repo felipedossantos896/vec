@@ -57,6 +57,8 @@ async function carregarMultiplicacao(celula, grupos, movido) {
         if (!grupos)
             multProposta = res.grupos.map(g => [...g.linhas]);
         desenharMultiplicacao();
+        if (estado.ferramenta === 'multPainel')
+            renderMapa(); // grupos A e B no mapa
         if (movido) {
             $('multStatus').textContent = regrasMult.anuncio(nomeMult(movido.linha), movido.destino, res.grupos.map(g => g.linhas));
             document.querySelector(`#multCorpo [data-mult="mover"][data-linha="${movido.linha}"]`)?.focus();
