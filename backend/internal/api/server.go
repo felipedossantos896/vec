@@ -42,6 +42,7 @@ type Server struct {
 	dummyHash string
 	cache     listasCache
 	loginRate loginRate
+	envios    limiteEnvios   // envios do formulário público por IP (Spec 007)
 	geoWG     sync.WaitGroup // tarefas de geocodificação em andamento (testes esperam)
 }
 
@@ -251,7 +252,7 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 	var rep reply
 	if acao == "" {
 		acao = "formulario" // o formulário público não manda "acao"
-		rep = s.formulario(ctx, body)
+		rep = s.formulario(ctx, body, ipCliente(r))
 	} else {
 		var req adminReq
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -259,6 +260,9 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		switch acao {
+		case "formulario_marca":
+			// Público: a página pede ao abrir (Spec 007). Só horário e assinatura.
+			rep = okReply(map[string]any{"marca": s.marcaFormulario(s.Now())})
 		case "login":
 			rep = s.login(ctx, req)
 		case "logout":

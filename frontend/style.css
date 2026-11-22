@@ -184,3 +184,6 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 .aceite-box input { flex-shrink: 0; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--navy); cursor: pointer; }
 .aceite-box:has(input:checked) { border-color: var(--navy); background: var(--gold-wash); }
 .field.invalid .aceite-box { border-color: var(--danger); background: var(--danger-bg); }
+
+/* Armadilha para robôs (Spec 007): existe no formulário, mas pessoas não a veem nem alcançam. */
+.hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }

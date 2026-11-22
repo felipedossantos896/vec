@@ -6,8 +6,32 @@ const MSG_ENVIO = {
     nascimento_invalido: 'Confira a data de nascimento.',
     telefone_invalido: 'Confira o número de WhatsApp.',
     consentimento: 'Marque a autorização de uso dos dados para enviar.',
-    dados_invalidos: 'Alguma resposta não foi aceita. Atualize a página e tente de novo.'
+    dados_invalidos: 'Alguma resposta não foi aceita. Atualize a página e tente de novo.',
+    // Proteção contra robôs (Spec 007): nada do que foi preenchido se perde.
+    envio_recusado: 'Não foi possível enviar. Recarregue a página e tente de novo.',
+    envio_expirado: 'A página ficou aberta por muito tempo. Toque em Enviar novamente.',
+    envio_rapido: 'Envio rápido demais. Confira os dados e envie de novo.',
+    muitos_envios: 'Muitos envios desta rede agora. Aguarde alguns minutos e tente de novo.'
 };
+// Marca de tempo assinada pelo servidor ao abrir a página (Spec 007). Só tem o
+// horário e a assinatura; sem ela o envio é recusado como expirado.
+let marcaFormulario = '';
+async function pedirMarca() {
+    try {
+        const resp = await fetch(FORM_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'formulario_marca' })
+        });
+        const r = await resp.json().catch(() => null);
+        if (resp.ok && r && r.ok && typeof r.marca === 'string')
+            marcaFormulario = r.marca;
+    }
+    catch {
+        // Sem rede agora: tenta de novo na hora de enviar.
+    }
+}
+pedirMarca();
 const PERGUNTAS = {
     fe: [
         ['recebeuJesus', 'Já recebeu Jesus como Senhor e Salvador da sua vida?']
@@ -211,6 +235,8 @@ function validar() {
 function coletar() {
     const d = {
         _requestId: requestId,
+        _marca: marcaFormulario,
+        _site: byId('_site').value, // armadilha: pessoas não veem este campo
         nome: valor('nome'),
         nascimento: paraISO(valor('nascimento')),
         // O setor vem do grupo em que a célula escolhida está
@@ -253,6 +279,8 @@ form.addEventListener('submit', async (e) => {
     btnSend.disabled = true;
     btnSend.innerHTML = '<span class="spinner" aria-hidden="true"></span> Enviando...';
     try {
+        if (!marcaFormulario)
+            await pedirMarca();
         const resp = await fetch(FORM_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -260,6 +288,8 @@ form.addEventListener('submit', async (e) => {
         });
         const r = await resp.json().catch(() => null);
         if (!resp.ok || !r || !r.ok) {
+            if (r && r.erro === 'envio_expirado')
+                await pedirMarca(); // a próxima tentativa já vai com uma marca nova
             mostrarErro(MSG_ENVIO[r && r.erro] || 'Não foi possível enviar agora. Tente novamente em instantes.');
             return;
         }
