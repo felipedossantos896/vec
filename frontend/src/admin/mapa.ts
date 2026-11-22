@@ -44,6 +44,7 @@ async function carregarMapa() {
 
 // Chamado ao abrir a aba: recarrega se os dados estiverem velhos.
 function abrirMapa() {
+  renderPainelAnfitriao();
   if (!dadosMapa || Date.now() - mapaCarregadoEm > RECARREGAR_APOS_MS) carregarMapa();
   else renderMapa();
 }
@@ -64,7 +65,8 @@ function iniciarLeaflet(): boolean {
 }
 
 function renderMapa() {
-  if (estado.aba !== 'mapa' || !dadosMapa) return;
+  if (estado.aba !== 'mapa') return;
+  if (!dadosMapa) { renderPainelAnfitriao(); return; }
   const f = regrasMapa.filtrar(dadosMapa, new Set(baseIndicadores().map(r => r.linha)));
   $('mapaStatus').textContent = regrasMapa.resumo(f);
   if (iniciarLeaflet()) {
@@ -94,6 +96,7 @@ function renderMapa() {
     secao('Endereço não localizado', f.naoLocalizados, 'Confira o endereço na ficha.') +
     secao('Aguardando localização', f.pendentes, 'A posição é calculada logo depois de salvar o endereço.') +
     secao('Sem endereço cadastrado', f.semEndereco);
+  renderPainelAnfitriao();
 }
 
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
