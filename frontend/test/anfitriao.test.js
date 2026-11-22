@@ -41,6 +41,7 @@ test('explica cada casa em frases completas', () => {
   assert.equal(pequena[2], 'Não comporta o grupo: cabem 6 pessoas e a célula tem 10 membros.');
   assert.equal(pequena[4], 'Casa localizada só pelo bairro: distância menos precisa.');
   assert.equal(regras.explicar(casa({ considerados: 1 }), 1)[1], '1 de 1 membro no cálculo.');
+  assert.equal(regras.explicar(casa({ comporta: false, capacidade: 3 }), 4, true)[2], 'Não comporta o grupo: cabem 3 pessoas e o grupo tem 4 membros.');
 });
 
 test('destaca só as 3 primeiras que comportam o grupo', () => {
