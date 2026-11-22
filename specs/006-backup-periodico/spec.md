@@ -1,6 +1,6 @@
 # Spec 006 — Backup periódico do banco de produção
 
-- Status: **Aprovada** (2026-11-22)
+- Status: **Entregue** (2026-11-22). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-22
 - ADRs: [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Roteiro: Fase 4 de [`ROADMAP-REFATORACAO.md`](../../docs/ROADMAP-REFATORACAO.md)

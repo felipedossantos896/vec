@@ -187,9 +187,13 @@ processo; permissões aplicadas no servidor; textos validados e limitados;
 proteção contra fórmulas em CSV; painel sem cache e fora do Google.
 
 Ainda falta (ideias para as próximas etapas): proteção contra robôs no formulário
-público (por exemplo Cloudflare Turnstile), política de CSP, paginação do painel
-quando passar de alguns milhares de cadastros, e backup periódico do banco para um
-local **privado** (nunca o Git).
+público (por exemplo Cloudflare Turnstile), política de CSP e paginação do painel
+quando passar de alguns milhares de cadastros.
+
+Backup: o workflow **Backup** gera todo dia uma cópia do banco de produção,
+criptografada com `age` (só abre com a chave privada do responsável, fora do
+repositório), guardada como artefato por 30 dias. Restauração em
+`ops/backup/RESTAURAR.md`.
 
 ## Limitações conhecidas
 
