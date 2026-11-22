@@ -1,0 +1,77 @@
+/* Área: o mapa com os rostos como tela inicial (Spec 009, ADR-0010 e 0011) */
+.area-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.area-head .filters { margin: 0; display: flex; flex-wrap: nowrap; gap: 8px; }
+.area-head .filters select.input { flex: 0 0 auto; width: 210px; }
+@media (max-width: 720px) { .area-head .filters { width: 100%; } .area-head .filters select.input { flex: 1 1 0; width: auto; min-width: 0; } }
+.area-palco { position: relative; margin: 8px 0 22px; }
+.area-canvas { height: min(68vh, 640px); min-height: 440px; margin: 0; border-radius: var(--r-lg); }
+/* Fundo do OpenStreetMap com a cor da identidade (decisão 1 da Spec 009) */
+.area-canvas .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
+
+.area-painel { position: absolute; left: 16px; top: 16px; z-index: 500; width: 300px; max-height: calc(100% - 32px); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--shadow-float); }
+.ap-stats { display: flex; gap: 22px; align-items: flex-end; }
+.ap-stats div { display: flex; flex-direction: column; }
+.ap-stats b { font: 800 var(--t44)/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.ap-stats span { font-size: var(--t13); color: #a7adba; margin-top: 4px; white-space: nowrap; }
+.ap-kick { font: 600 11px var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: #8b909c; margin: 16px 0 8px; }
+.ap-lentes { display: grid; gap: 4px; }
+.lente { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 42px; padding: 0 12px; border-radius: 10px; background: #22252c; color: #dfe2e8; font-weight: 600; font-size: var(--t15); }
+.lente b { font: 700 var(--t17) var(--display); font-variant-numeric: tabular-nums; }
+.lente.on { background: var(--coral); color: #fff; }
+.lente:focus-visible, .ap-ferr button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.ap-leg { display: grid; gap: 6px; font-size: var(--t13); }
+.ap-leg li { display: flex; justify-content: space-between; color: #dfe2e8; }
+.ap-leg b { color: #9aa0ad; font-weight: 600; }
+.ap-ferr { display: grid; gap: 6px; }
+.ap-ferr button { display: flex; justify-content: space-between; align-items: center; min-height: 42px; padding: 0 12px; border-radius: 10px; border: 1.5px solid #3a3e48; color: #fff; font-weight: 600; font-size: var(--t13); text-align: left; }
+.area-priv { position: absolute; right: 16px; bottom: 26px; z-index: 500; font-size: var(--t12); color: #4f5159; background: rgba(255, 255, 255, 0.9); padding: 6px 10px; border-radius: 8px; }
+
+/* Rostos no mapa */
+.rostos-pin { display: flex; justify-content: center; }
+.rp { display: block; margin-left: -18px; border-radius: 50%; }
+.rp:first-child { margin-left: 0; }
+.av-pin { --av: 40px; border: 3px solid var(--cel, #b7b3a8); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25); }
+.rp-mais { display: grid; place-items: center; width: 34px; height: 34px; margin: 3px 0 0 -10px; border-radius: 50%; background: var(--grafite); color: #fff; font: 700 var(--t12) var(--sans); border: 2px solid #fff; }
+.rp-nome { display: table; margin: 3px auto 0; white-space: nowrap; font: 600 var(--t12)/1 var(--sans); background: #fff; color: var(--ink); padding: 4px 8px; border-radius: 99px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
+.rp-alerta { position: absolute; top: -6px; right: -6px; width: 19px; height: 19px; border-radius: 50%; background: var(--coral); color: #fff; font: 800 11px/19px var(--sans); text-align: center; border: 2px solid #fff; }
+.mapa-grupo.apagado { opacity: 0.32; filter: grayscale(0.7); }
+.mapa-grupo:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 4px; border-radius: 12px; }
+
+/* Popup da área no mapa */
+.pop-pessoas { display: grid; gap: 10px; min-width: 240px; }
+.pop-pessoas li { display: grid; grid-template-columns: 28px 1fr; gap: 6px 10px; align-items: center; }
+.pop-pessoas b { display: block; font: 700 var(--t15) var(--display); }
+.pop-pessoas span { font-size: var(--t12); color: var(--muted); }
+.pop-pessoas em { font-style: normal; color: var(--coral-ink); font-weight: 600; }
+.pop-a { grid-column: 2; display: flex; gap: 6px; }
+
+/* Fale com eles esta semana */
+.fale { margin: 0 0 24px; }
+.fale-h h2 { font: 700 var(--t21) var(--display); }
+.fale-h p { font-size: var(--t13); color: var(--muted); margin: 4px 0 14px; }
+.fale-lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fale-c { display: grid; gap: 10px; background: var(--surface-card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: inset 0 3px 0 var(--cel, var(--line)); }
+.fale-t { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: center; min-width: 0; }
+.fale-t b { display: block; font: 700 var(--t17) var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fale-t span { font-size: var(--t12); color: var(--muted); }
+.av-m { --av: 48px; }
+.fale-m { font-size: var(--t13); font-weight: 600; color: var(--coral-ink); }
+.fale-a, .pop-a { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.b-zap, .b-sec { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--line-strong); background: var(--white); color: var(--ink); font-weight: 600; font-size: var(--t13); white-space: nowrap; text-decoration: none; }
+.b-zap { color: var(--whatsapp); border-color: #b9e2cb; }
+.pop-a .b-zap, .pop-a .b-sec { min-height: 32px; }
+.area-ferr { display: grid; gap: 12px; margin-bottom: 16px; }
+.area-lista { margin-bottom: 20px; }
+
+@media (max-width: 900px) { .fale-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .area-canvas { height: 420px; min-height: 0; border-radius: 14px; }
+  .area-painel { position: static; width: auto; max-height: none; margin-top: 10px; border-radius: 14px; }
+  .ap-stats b { font-size: var(--t28); }
+  .ap-lentes { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .ap-lentes li { flex: none; }
+  .lente { gap: 10px; }
+  .area-priv { position: static; display: block; margin-top: 8px; background: none; padding: 0; }
+  .fale-lista { grid-template-columns: 1fr; }
+  .fale-a .b-zap, .fale-a .b-sec { min-height: 44px; }
+}

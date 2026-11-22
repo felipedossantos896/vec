@@ -84,6 +84,7 @@ type UsuarioPainel = {
   acesso?: string;
 };
 type EstadoPainel = {
+  lente: string; // lente do mapa da Área (Spec 009): todos, cuidado, semDisc, servir
   regs: Registro[];
   busca: string;
   setor: string;
@@ -166,7 +167,7 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 const estado: EstadoPainel = {
   regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
   escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-  gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false
+  gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false, lente: 'cuidado'
 };
 
 function rotulo(e: Escopo | null | undefined): string {
