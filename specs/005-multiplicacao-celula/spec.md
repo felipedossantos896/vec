@@ -1,6 +1,6 @@
 # Spec 005 — Planejar a multiplicação de uma célula
 
-- Status: **Aprovada** (2026-11-22)
+- Status: **Entregue** (v1.34.0, 2026-11-22). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-22
 - ADRs: [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) (Aceito), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Aceito), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Depende de: Specs [002](../002-endereco-membro/spec.md), [003](../003-mapa-membros/spec.md) e [004](../004-recomendacao-anfitrioes/spec.md) (entregues)

@@ -1,6 +1,6 @@
 # Plano técnico — Planejar a multiplicação de uma célula
 
-- Status: **Aprovado** (2026-11-22)
+- Status: **Entregue** (v1.34.0)
 
 ## Referências e premissas verificadas
 - `store.MembrosCelula(sc, celula)` já devolve os membros da célula no escopo, com
