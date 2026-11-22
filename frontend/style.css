@@ -187,3 +187,8 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 
 /* Armadilha para robôs (Spec 007): existe no formulário, mas pessoas não a veem nem alcançam. */
 .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+/* Célula: chip com a cor (Spec 009); a cor chega por data-cor → --cel */
+.cel-chip { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.cel-chip i { width: 9px; height: 9px; border-radius: 3px; background: var(--cel, #b7b3a8); flex: none; }
+.opt .enc { display: block; font-size: 0.82rem; color: var(--muted); font-weight: 500; margin-top: 2px; }

@@ -2,7 +2,7 @@
 // O líder de área cria, renomeia, muda de setor e desativa células, e cria e renomeia setores.
 // As listas SETORES, CELULAS e SETOR_DA_CELULA passam a vir do servidor a cada carga.
 
-type CelulaEstrutura = { id: number; nome: string; setorId: number; setor: string; ativa: boolean };
+type CelulaEstrutura = { id: number; nome: string; setorId: number; setor: string; ativa: boolean; cor?: string; diaSemana?: string; horario?: string; anfitriaoId?: number };
 type Estrutura = { setores: { id: number; nome: string }[]; celulas: CelulaEstrutura[] };
 const FECHADAS = new Set<string>(); // células inativas: fora do formulário e da edição
 let estrutura: Estrutura = { setores: [], celulas: [] };
@@ -14,6 +14,21 @@ const ERROS_EST: Record<string, string> = {
   nao_encontrado: 'Não encontrado. Atualize o painel e tente de novo.',
   sem_permissao: 'Só o líder de área altera células e setores.'
 };
+
+// Cor da célula (definida em Ajustes ou a da paleta pela posição) e o chip usado nas listas.
+function corDaCelula(nome: string): string {
+  const i = estrutura.celulas.findIndex(c => c.nome === nome);
+  return regrasCelula.cor(estrutura.celulas[i]?.cor || '', i);
+}
+function celulaChip(nome: string | undefined): string {
+  return nome ? `<span class="cel-chip" data-cor="${corDaCelula(nome)}"><i aria-hidden="true"></i>${esc(nome)}</span>` : 'Sem célula';
+}
+const encontroDe = (c: CelulaEstrutura): string => regrasCelula.encontro(c.diaSemana || '', c.horario || '');
+function casaDe(c: CelulaEstrutura): string {
+  const r = c.anfitriaoId ? estado.regs.find(x => x.linha === c.anfitriaoId) : undefined;
+  return r ? `casa de ${curtoNome(r.nome)}` : '';
+}
+const curtoNome = (n: string): string => n.split(/\s+/)[0];
 
 function aplicarEstrutura(e?: Estrutura) {
   $('tabEstrutura').classList.toggle('hidden', !estado.escopo.todos);
@@ -33,7 +48,8 @@ function renderEstrutura() {
   const cartao = (s: { id: number; nome: string }): string => {
     const cels = estrutura.celulas.filter(c => c.setorId === s.id);
     const itens = cels.map(c => `<li><button type="button" class="est-item ${c.ativa ? '' : 'off'}" data-est="celula" data-id="${c.id}">
-      <span class="est-nome">${esc(c.nome)}</span><span class="est-n">${pessoas(r => r.celula === c.nome)}</span>${c.ativa ? '' : '<span class="badge off">Inativa</span>'}</button></li>`).join('');
+      <span class="est-nome">${celulaChip(c.nome)}</span><span class="est-n">${pessoas(r => r.celula === c.nome)}</span>${c.ativa ? '' : '<span class="badge off">Inativa</span>'}
+      ${[encontroDe(c), casaDe(c)].filter(Boolean).length ? `<span class="est-enc">${esc([encontroDe(c), casaDe(c)].filter(Boolean).join(' · '))}</span>` : ''}</button></li>`).join('');
     return `<section class="panel"><header class="panel-head est-head"><div><h2>Setor ${esc(s.nome)}</h2>
       <p>${plural(cels.filter(c => c.ativa).length, 'célula ativa', 'células ativas')} · ${pessoas(r => r.setor === s.nome)}</p></div>
       <button type="button" class="btn-link" data-est="setor" data-id="${s.id}">Renomear</button></header>
@@ -53,6 +69,12 @@ estDlg.innerHTML = `<div class="det-head"><div><h3 id="estTitulo"></h3><p id="es
   <form class="det-body" id="estForm" novalidate>
     <div class="field"><label class="label" for="estNome">Nome</label><input class="input" id="estNome" autocomplete="off" autocapitalize="words" maxlength="60"></div>
     <div class="field" id="estSetorWrap"><label class="label" for="estSetor">Setor</label><select class="input" id="estSetor"></select></div>
+    <div id="estIdent">
+      <fieldset class="field est-cores"><legend class="label">Cor no mapa e nas listas</legend><div class="cores-op" id="estCores"></div></fieldset>
+      <div class="est-enc-campos"><div class="field"><label class="label" for="estDia">Dia do encontro</label><select class="input" id="estDia"><option value="">Não definido</option>${regrasCelula.DIAS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+      <div class="field"><label class="label" for="estHora">Horário</label><input class="input" id="estHora" type="time" step="900"></div></div>
+      <div class="field"><label class="label" for="estCasa">Casa onde se reúne</label><select class="input" id="estCasa"></select><p class="field-hint">Só aparece no painel, nunca no formulário público.</p></div>
+    </div>
     <label class="sw" id="estAtivaWrap"><input type="checkbox" id="estAtiva"><span class="sw-txt"><b>Célula ativa</b><small>Desative quando a célula fechar ou multiplicar. Ela sai do formulário; os cadastros continuam.</small></span><span class="sw-ui" aria-hidden="true"></span></label>
     <p class="field-hint" id="estAviso"></p>
     <p class="msg" id="estMsg" role="alert"></p>
@@ -71,6 +93,13 @@ function abrirEstrutura(tipo: 'setor' | 'celula', id: number) {
   const setorPadrao = c?.setorId || estrutura.setores.find(x => x.nome === estado.setor)?.id || estrutura.setores[0]?.id;
   $('estSetor').innerHTML = estrutura.setores.map(x => `<option value="${x.id}"${x.id === setorPadrao ? ' selected' : ''}>${esc(x.nome)}</option>`).join('');
   $<HTMLInputElement>('estAtiva').checked = c ? c.ativa : true;
+  const corAtual = c ? corDaCelula(c.nome) : regrasCelula.PALETA[estrutura.celulas.length % regrasCelula.PALETA.length];
+  $('estCores').innerHTML = regrasCelula.PALETA.map((cor, i) => `<label class="cor-op"><input type="radio" name="estCor" value="${cor}"${cor === corAtual ? ' checked' : ''}><span data-cor="${cor}"><i class="sr-only">Cor ${i + 1}</i></span></label>`).join('');
+  $<HTMLSelectElement>('estDia').value = c?.diaSemana || '';
+  $<HTMLInputElement>('estHora').value = c?.horario || '';
+  const membros = c ? estado.regs.filter(r => r.celula === c.nome).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) : [];
+  $('estCasa').innerHTML = '<option value="0">Não definida</option>' + membros.map(r => `<option value="${r.linha}"${r.linha === c?.anfitriaoId ? ' selected' : ''}>${esc(r.nome)}</option>`).join('');
+  $('estIdent').classList.toggle('hidden', tipo === 'setor');
   $('estSetorWrap').classList.toggle('hidden', tipo === 'setor');
   $('estAtivaWrap').classList.toggle('hidden', tipo === 'setor');
   $('estAviso').textContent = !id ? '' : tipo === 'setor'
@@ -103,7 +132,10 @@ $('estForm').addEventListener('submit', async e => {
   try {
     const r = await api<ApiResult>({
       acao: 'estrutura_salvar', token: s.token, tipo: editandoEst.tipo, id: editandoEst.id, nome,
-      setorId: Number($<HTMLSelectElement>('estSetor').value) || 0, ativo: $<HTMLInputElement>('estAtiva').checked
+      setorId: Number($<HTMLSelectElement>('estSetor').value) || 0, ativo: $<HTMLInputElement>('estAtiva').checked,
+      cor: estDlg.querySelector<HTMLInputElement>('input[name="estCor"]:checked')?.value || '',
+      diaSemana: $<HTMLSelectElement>('estDia').value, horario: $<HTMLInputElement>('estHora').value,
+      anfitriaoId: Number($<HTMLSelectElement>('estCasa').value) || 0
     });
     if (r.ok) { estDlg.close(); carregar(); return; }
     if (r.erro === 'sessao') { limparSessao(); estDlg.close(); return mostrarLogin('Sua sessão expirou. Entre novamente.'); }

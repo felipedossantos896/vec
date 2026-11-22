@@ -20,7 +20,7 @@ const regDe = (id: number): Registro | undefined => estado.regs.find(r => r.linh
 
 function nomesMapa(ids: number[]): string {
   const regs = ids.map(regDe).filter((r): r is Registro => Boolean(r)).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}">${esc(r.nome)}</button> <span class="nota-fraca">${esc(r.celula || 'Sem célula')}</span></li>`).join('')}</ul>`;
+  return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}">${esc(r.nome)}</button> <span class="nota-fraca">${celulaChip(r.celula)}</span></li>`).join('')}</ul>`;
 }
 
 async function carregarMapa() {

@@ -35,7 +35,16 @@ async function carregarCelulas() {
         const marcada = valor('celula');
         const e = (s) => s.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
         byId('celulasOpcoes').innerHTML = setores.map((s, i) => `<p class="opt-group" id="g-${i}">Setor ${e(s.nome)}</p>
-      <div class="opts cols" data-setor="${e(s.nome)}" role="group" aria-labelledby="g-${i}">${s.celulas.map(c => `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span>${e(c)}</span></label>`).join('')}</div>`).join('');
+      <div class="opts cols" data-setor="${e(s.nome)}" role="group" aria-labelledby="g-${i}">${s.celulas.map(c => {
+            // Cor e dia do encontro da célula (Spec 009); a casa anfitriã nunca vem para cá.
+            const d = (s.detalhes || []).find(x => x.nome === c);
+            const cor = d ? regrasCelula.cor(d.cor || '', d.posicao ?? -1) : '';
+            const enc = d ? regrasCelula.encontro(d.diaSemana || '', d.horario || '', true) : '';
+            return `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span>${cor ? `<span class="cel-chip" data-cor="${cor}"><i aria-hidden="true"></i>${e(c)}</span>` : e(c)}${enc ? `<span class="enc">${e(enc)}</span>` : ''}</span></label>`;
+        }).join('')}</div>`).join('');
+        // A cor vai por CSSOM: o CSP não deixa usar style no HTML.
+        byId('celulasOpcoes').querySelectorAll('[data-cor]').forEach(el => { if (regrasCelula.corValida(el.dataset.cor))
+            el.style.setProperty('--cel', el.dataset.cor); });
     }
     catch { /* mantém a lista do HTML */ }
 }
