@@ -114,7 +114,7 @@ function renderTudo() {
 // Uma linha de medidor: nome, quantidade, percentual e barra
 function medidor(label, n, total) {
     const pct = total ? Math.round((n / total) * 100) : 0;
-    return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i style="width:${pct}%"></i></span></li>`;
+    return `<li><span class="j-name">${label}</span><span class="j-val"><b>${n}</b> · ${pct}%</span><span class="cell-bar"><i data-w="${pct}"></i></span></li>`;
 }
 const pips = (r) => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação

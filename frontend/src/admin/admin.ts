@@ -3,6 +3,30 @@ const ADMIN_API_URL: string = '/api';
 
 const CHAVE_SESSAO = 'vec_admin_sessao';
 
+// ── Medidas dinâmicas sem style= no HTML (CSP estrito, Spec 008) ──
+// O HTML gerado traz os números em data-w (largura em %), data-t (tom em %) e
+// data-h (altura de 0 a 1); aqui eles viram estilo pelo CSSOM, que o CSP permite.
+// O observador roda antes da pintura, então a tela não pisca.
+const limitar = (v: string | undefined, max: number): number | null => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), max) : null;
+};
+function aplicarMedidas(el: HTMLElement) {
+  const w = limitar(el.dataset.w, 100);
+  if (w !== null) el.style.width = `${w}%`;
+  const t = limitar(el.dataset.t, 100);
+  if (t !== null) el.style.setProperty('--t', `${t}%`);
+  const h = limitar(el.dataset.h, 1);
+  if (h !== null) el.style.setProperty('--h', String(h));
+}
+function aplicarMedidasEm(raiz: Element) {
+  if (raiz instanceof HTMLElement && (raiz.dataset.w || raiz.dataset.t || raiz.dataset.h)) aplicarMedidas(raiz);
+  raiz.querySelectorAll<HTMLElement>('[data-w],[data-t],[data-h]').forEach(aplicarMedidas);
+}
+new MutationObserver(mudancas => {
+  for (const m of mudancas) m.addedNodes.forEach(n => { if (n instanceof Element) aplicarMedidasEm(n); });
+}).observe(document.documentElement, { childList: true, subtree: true });
+
 type Escopo = { todos: boolean; setores: string[]; celulas: string[]; perfil?: string };
 type Pessoa = { id: number; nome: string; celula: string };
 type Registro = {
