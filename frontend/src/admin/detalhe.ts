@@ -32,6 +32,7 @@ function abrirDetalhe(r: Registro) {
   const ficha =
     secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]]) +
     blocoEndereco() +
+    blocoAnfitriao() +
     secao('Célula e serviço', [
       ['Setor', txt(r.setor)], ['Célula', txt(r.celula)],
       ['Congrega com frequência', pill(r.frequentaCultos)],
@@ -56,6 +57,7 @@ function abrirDetalhe(r: Registro) {
   d.scrollTop = 0;
   carregarNotasDe(r);
   carregarEnderecoDe(r);
+  carregarAnfitriaoDe(r);
 }
 
 function mostrarAbaDetalhe(k: string, focar = false) {

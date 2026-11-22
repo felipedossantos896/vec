@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="users.css">
 <link rel="stylesheet" href="editar.css">
 <link rel="stylesheet" href="mapa.css">
+<link rel="stylesheet" href="anfitriao.css">
 <link rel="stylesheet" href="acompanhar.css">
 <link rel="stylesheet" href="fotos.css">
 </head>
@@ -165,6 +166,11 @@
         <select class="input" id="mSetor" aria-label="Filtrar mapa por setor"></select>
         <select class="input" id="mCelula" aria-label="Filtrar mapa por célula"></select>
       </div>
+      <details class="anf-painel" id="anfPainel">
+        <summary id="anfResumo">Escolher anfitrião</summary>
+        <p class="field-hint" id="anfStatus" role="status"></p>
+        <div id="anfLista"></div>
+      </details>
       <p class="field-hint" id="mapaStatus" role="status"></p>
       <p class="msg" id="mapaAviso"></p>
       <div id="mapaCanvas" class="mapa-canvas" role="region" aria-label="Mapa das áreas com pessoas"></div>
@@ -323,6 +329,8 @@
 <script src="vendor/leaflet/leaflet.js" defer></script>
 <script src="mapa-regras.js" defer></script>
 <script src="mapa.js" defer></script>
+<script src="anfitriao-regras.js" defer></script>
+<script src="anfitriao.js" defer></script>
 <script src="users.js" defer></script>
 
 </body>

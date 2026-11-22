@@ -1,0 +1,29 @@
+/* Anfitrião (Spec 004): seção na ficha e painel "Escolher anfitrião" no Mapa */
+.anf-dados { display: grid; gap: 6px; margin: 0 0 8px; }
+.anf-dados div { display: flex; flex-wrap: wrap; gap: 6px; }
+.anf-dados dt { font-weight: 600; }
+.anf-dados dt::after { content: ':'; }
+.anf-dados dd { margin: 0; }
+.anf-cap { max-width: 8rem; }
+.anf-dias { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.anf-dias-op { display: flex; flex-wrap: wrap; gap: 8px; }
+.anf-dias-op label { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-sm, 8px); cursor: pointer; }
+.anf-dias-op input { width: 18px; height: 18px; }
+.anf-dias-op label:has(input:checked) { border-color: var(--navy, #1a2340); background: var(--surface-control, #f3f4f7); font-weight: 600; }
+.anf-dias-op label:has(input:focus-visible) { outline: 3px solid var(--gold, #c9a84c); outline-offset: 2px; }
+.field.invalid .anf-dias-op label { border-color: var(--danger); }
+
+.anf-painel { border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-md, 12px); padding: 12px 14px; margin: 12px 0; background: var(--surface-card, #fff); }
+.anf-painel > summary { cursor: pointer; font-weight: 700; min-height: 28px; }
+.anf-painel[open] > summary { margin-bottom: 8px; }
+.anf-aviso { font-size: 0.9rem; padding: 8px 10px; border-radius: var(--r-sm, 8px); background: var(--surface-control, #f3f4f7); margin: 0 0 10px; }
+.anf-fora { margin: 0 0 12px; padding-left: 1.2rem; font-size: 0.92rem; }
+.anf-casas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.anf-casa { border: 1px solid var(--border-card, #d9dce3); border-radius: var(--r-sm, 8px); padding: 10px 12px; }
+.anf-casa.destaque { border-color: var(--gold, #c9a84c); border-width: 2px; }
+.anf-topo { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.anf-pos { font-weight: 700; min-width: 2ch; }
+.anf-nome { font-weight: 600; }
+.anf-tag { font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; background: var(--navy, #1a2340); color: #fff; }
+.anf-tag.alerta { background: var(--danger, #b42318); }
+.anf-expl { margin: 6px 0 0; padding-left: 1.2rem; font-size: 0.92rem; display: grid; gap: 2px; }
