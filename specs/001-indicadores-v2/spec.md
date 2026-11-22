@@ -1,6 +1,6 @@
 # Spec 001 — Indicadores V2
 
-- Status: **Proposta**
+- Status: **Entregue** (v1.17.1, 2026-11-19). Ver [release-validation.md](release-validation.md)
 - Data: 2026-11-18
 - ADRs: [0001](../../docs/architecture/adr/0001-modernizacao-incremental.md), [0002](../../docs/architecture/adr/0002-design-system.md), [0003](../../docs/architecture/adr/0003-indicadores-acompanhamento.md)
 

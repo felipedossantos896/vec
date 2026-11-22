@@ -1,6 +1,6 @@
 # Plano técnico — Indicadores V2
 
-- Status: **Proposto**; implementação requer PR separado.
+- Status: **Entregue** (Issues #13 a #18 encerradas; validação em [release-validation.md](release-validation.md)).
 
 ## Base verificada
 - `frontend/admin/index.html` contém abas Acompanhar, Pessoas, Indicadores e Configurações.
