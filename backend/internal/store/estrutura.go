@@ -24,6 +24,11 @@ type Celula struct {
 	SetorID int64
 	Setor   string
 	Ativa   bool
+	// Identidade (Spec 009): '' / 0 = não definido. Cor em #rrggbb minúsculo.
+	Cor         string
+	DiaSemana   string // seg, ter, qua, qui, sex, sab, dom
+	Horario     string // HH:MM
+	AnfitriaoID int64  // cadastro da casa; o nome só aparece para quem tem a pessoa no escopo
 }
 
 var ErrNomeExiste = errors.New("já existe com esse nome")
@@ -33,7 +38,9 @@ var ErrNaoEncontrado = errors.New("não encontrado")
 func (s *Store) Estrutura(ctx context.Context) ([]Setor, []Celula, error) {
 	res, err := s.DB.Do(ctx,
 		turso.Stmt{SQL: `SELECT id, nome FROM setores ORDER BY ordem, nome`},
-		turso.Stmt{SQL: `SELECT c.id, c.nome, COALESCE(c.setor_id, 0), COALESCE(s.nome, ''), c.ativa
+		turso.Stmt{SQL: `SELECT c.id, c.nome, COALESCE(c.setor_id, 0), COALESCE(s.nome, ''), c.ativa,
+		                 c.cor, c.dia_semana, c.horario,
+		                 COALESCE((SELECT r.id FROM respostas r WHERE r.id = c.anfitriao_id AND r.excluido_em IS NULL), 0)
 		                 FROM celulas c LEFT JOIN setores s ON s.id = c.setor_id ORDER BY c.ordem, c.nome`},
 	)
 	if err != nil {
@@ -45,7 +52,8 @@ func (s *Store) Estrutura(ctx context.Context) ([]Setor, []Celula, error) {
 	}
 	celulas := make([]Celula, 0, len(res[1].Rows))
 	for _, r := range res[1].Rows {
-		celulas = append(celulas, Celula{ID: turso.Int(r, 0), Nome: turso.Str(r, 1), SetorID: turso.Int(r, 2), Setor: turso.Str(r, 3), Ativa: turso.Int(r, 4) == 1})
+		celulas = append(celulas, Celula{ID: turso.Int(r, 0), Nome: turso.Str(r, 1), SetorID: turso.Int(r, 2), Setor: turso.Str(r, 3), Ativa: turso.Int(r, 4) == 1,
+			Cor: turso.Str(r, 5), DiaSemana: turso.Str(r, 6), Horario: turso.Str(r, 7), AnfitriaoID: turso.Int(r, 8)})
 	}
 	return setores, celulas, nil
 }
@@ -79,9 +87,9 @@ func (s *Store) SalvarSetor(ctx context.Context, id int64, nome string) error {
 func (s *Store) SalvarCelula(ctx context.Context, c Celula) error {
 	if c.ID == 0 {
 		res, err := s.DB.Do(ctx, turso.Stmt{
-			SQL: `INSERT INTO celulas (nome, setor_id, ativa, ordem)
-			      SELECT ?, id, ?, (SELECT COALESCE(MAX(ordem), 0) + 1 FROM celulas) FROM setores WHERE id = ?`,
-			Args: []any{c.Nome, c.Ativa, c.SetorID},
+			SQL: `INSERT INTO celulas (nome, setor_id, ativa, ordem, cor, dia_semana, horario, anfitriao_id)
+			      SELECT ?, id, ?, (SELECT COALESCE(MAX(ordem), 0) + 1 FROM celulas), ?, ?, ?, ` + anfitriaoValido + ` FROM setores WHERE id = ?`,
+			Args: []any{c.Nome, c.Ativa, c.Cor, c.DiaSemana, c.Horario, c.AnfitriaoID, c.SetorID},
 		})
 		if err != nil {
 			return traduzir(err)
@@ -99,8 +107,9 @@ func (s *Store) SalvarCelula(ctx context.Context, c Celula) error {
 		},
 		turso.Stmt{SQL: `UPDATE usuario_escopos SET nome = ? WHERE tipo = 'CELULA' AND nome = ` + antigo, Args: []any{c.Nome, c.ID}},
 		turso.Stmt{
-			SQL:  `UPDATE celulas SET nome = ?, setor_id = ?, ativa = ? WHERE id = ? AND EXISTS (SELECT 1 FROM setores WHERE id = ?)`,
-			Args: []any{c.Nome, c.SetorID, c.Ativa, c.ID, c.SetorID},
+			SQL: `UPDATE celulas SET nome = ?, setor_id = ?, ativa = ?, cor = ?, dia_semana = ?, horario = ?, anfitriao_id = ` + anfitriaoValido + `
+			      WHERE id = ? AND EXISTS (SELECT 1 FROM setores WHERE id = ?)`,
+			Args: []any{c.Nome, c.SetorID, c.Ativa, c.Cor, c.DiaSemana, c.Horario, c.AnfitriaoID, c.ID, c.SetorID},
 		},
 	)
 	if err != nil {
@@ -111,6 +120,9 @@ func (s *Store) SalvarCelula(ctx context.Context, c Celula) error {
 	}
 	return nil
 }
+
+// anfitriaoValido grava a casa só se o cadastro existir e não estiver excluído (senão NULL).
+const anfitriaoValido = `(SELECT id FROM respostas WHERE id = ? AND excluido_em IS NULL)`
 
 func traduzir(err error) error {
 	if err != nil && turso.IsConstraint(err) {

@@ -27,6 +27,7 @@ type painelDB struct {
 	membros      [][]any      // membros da célula (id, lat, lng) para o ranking
 	casas        [][]any      // candidatos a anfitrião (id, nome, capacidade, dias, lat, lng, peloBairro)
 	interessados int64        // interessados sem confirmação
+	celulasExtra bool         // estrutura com setores e uma célula com identidade (Spec 009)
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -44,6 +45,10 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			out[i].Rows = d.escopos
 		case strings.HasPrefix(st.SQL, "SELECT nome FROM setores"):
 			out[i].Rows = [][]any{{"Fogo no Altar"}, {"Tabernáculo de Deus"}}
+		case d.celulasExtra && strings.HasPrefix(st.SQL, "SELECT id, nome FROM setores"):
+			out[i].Rows = [][]any{{int64(1), "Fogo no Altar"}}
+		case d.celulasExtra && strings.HasPrefix(st.SQL, "SELECT c.id, c.nome"):
+			out[i].Rows = [][]any{{int64(3), "Hope", int64(1), "Fogo no Altar", int64(1), "#0e8a8c", "ter", "20:00", int64(7)}}
 		case strings.HasPrefix(st.SQL, "SELECT c.nome"):
 			out[i].Rows = [][]any{{"Hope", "Fogo no Altar"}, {"Betânia", "Tabernáculo de Deus"}}
 		case strings.HasPrefix(st.SQL, "SELECT nome FROM respostas"):

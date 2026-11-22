@@ -18,10 +18,11 @@ function aplicarMedidas(el: HTMLElement) {
   if (t !== null) el.style.setProperty('--t', `${t}%`);
   const h = limitar(el.dataset.h, 1);
   if (h !== null) el.style.setProperty('--h', String(h));
+  if (regrasCelula.corValida(el.dataset.cor)) el.style.setProperty('--cel', el.dataset.cor); // cor da célula (Spec 009)
 }
 function aplicarMedidasEm(raiz: Element) {
-  if (raiz instanceof HTMLElement && (raiz.dataset.w || raiz.dataset.t || raiz.dataset.h)) aplicarMedidas(raiz);
-  raiz.querySelectorAll<HTMLElement>('[data-w],[data-t],[data-h]').forEach(aplicarMedidas);
+  if (raiz instanceof HTMLElement && (raiz.dataset.w || raiz.dataset.t || raiz.dataset.h || raiz.dataset.cor)) aplicarMedidas(raiz);
+  raiz.querySelectorAll<HTMLElement>('[data-w],[data-t],[data-h],[data-cor]').forEach(aplicarMedidas);
 }
 new MutationObserver(mudancas => {
   for (const m of mudancas) m.addedNodes.forEach(n => { if (n instanceof Element) aplicarMedidasEm(n); });

@@ -211,6 +211,11 @@ type adminReq struct {
 	Confirmacao bool         `json:"confirmacao"`
 	// Ranking de anfitriões (Spec 004): célula escolhida pelo líder
 	Celula string `json:"celula"`
+	// Identidade da célula (Spec 009)
+	Cor         string `json:"cor"`
+	DiaSemana   string `json:"diaSemana"`
+	Horario     string `json:"horario"`
+	AnfitriaoID int64  `json:"anfitriaoId"`
 	// Multiplicação (Spec 005): divisão ajustada pelo líder, dois grupos de cadastros
 	Grupos [][]int64 `json:"grupos"`
 }

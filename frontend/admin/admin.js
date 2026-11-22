@@ -20,11 +20,13 @@ function aplicarMedidas(el) {
     const h = limitar(el.dataset.h, 1);
     if (h !== null)
         el.style.setProperty('--h', String(h));
+    if (regrasCelula.corValida(el.dataset.cor))
+        el.style.setProperty('--cel', el.dataset.cor); // cor da célula (Spec 009)
 }
 function aplicarMedidasEm(raiz) {
-    if (raiz instanceof HTMLElement && (raiz.dataset.w || raiz.dataset.t || raiz.dataset.h))
+    if (raiz instanceof HTMLElement && (raiz.dataset.w || raiz.dataset.t || raiz.dataset.h || raiz.dataset.cor))
         aplicarMedidas(raiz);
-    raiz.querySelectorAll('[data-w],[data-t],[data-h]').forEach(aplicarMedidas);
+    raiz.querySelectorAll('[data-w],[data-t],[data-h],[data-cor]').forEach(aplicarMedidas);
 }
 new MutationObserver(mudancas => {
     for (const m of mudancas)

@@ -44,7 +44,7 @@ function grupo(id, titulo, resumo, corpo, classe = '') {
 // fica como opção, para quem quiser buscar e filtrar.
 let verSit = '';
 function notaCuidado(k, r) {
-    const cel = esc(r.celula || 'Sem célula');
+    const cel = celulaChip(r.celula);
     if (k === 'semContato')
         return `${cel} · ${r._contato ? `último contato ${contato(r)}` : 'nenhum contato registrado'}`;
     if (k === 'quaseLa')
@@ -123,7 +123,7 @@ function potencial(base) {
         const barra = treino && g.length ? `<span class="cell-bar progresso" aria-hidden="true"><i data-w="${(feitos / g.length) * 100}"></i></span>` : '';
         const vis = g.slice(0, 6);
         const lista = vis.map((r, i) => (treino && pronto(r) && i > 0 && !pronto(vis[i - 1]) ? `<li class="lista-sep">Já fizeram o ${nomeTreino}</li>` : '') +
-            pessoa(r, esc(r.celula || 'Sem célula'), pronto(r) ? '' : `<em class="tag">Falta o ${nomeTreino}</em>`)).join('');
+            pessoa(r, celulaChip(r.celula), pronto(r) ? '' : `<em class="tag">Falta o ${nomeTreino}</em>`)).join('');
         const todos = g.length > 6 ? `<button type="button" class="btn-link" data-sit="${sit}">Ver todas as ${g.length} pessoas</button>` : '';
         return painel(titulo, sub, g.length ? `${barra}<ul class="pessoas">${lista}</ul>${todos}` : '');
     }).join('');
@@ -144,11 +144,11 @@ function aniversarios(lista) {
     const quando = (a) => a.dias === 0 ? 'Hoje' : a.dias === 1 ? 'Amanhã' : `Em ${a.dias} dias`;
     const itens = lista.map(a => `<li><button type="button" class="pessoa aniv${a.dias === 0 ? ' hoje' : ''}" data-reg="${estado.regs.indexOf(a.r)}">
     <i class="cal" aria-hidden="true"><strong>${a.d.getDate()}</strong><small>${a.d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></i>
-    ${avatar(a.r)}<b>${esc(a.r.nome)}</b><span>${quando(a)} · faz ${a.anos} anos · ${esc(a.r.celula || 'Sem célula')}</span></button></li>`).join('');
+    ${avatar(a.r)}<b>${esc(a.r.nome)}</b><span>${quando(a)} · faz ${a.anos} anos · ${celulaChip(a.r.celula)}</span></button></li>`).join('');
     return painel('Aniversariantes', 'Quem faz aniversário nos próximos 30 dias.', itens ? `<ul class="pessoas rolar">${itens}</ul>` : '<p class="vazio">Nenhum aniversário nos próximos 30 dias.</p>');
 }
 function sugestoes(g) {
-    const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span>${avatar(r, 'av-xs')}${esc(curto(r.nome))} · ${esc(r.celula || 'Sem célula')}</span></button></li>`).join('');
+    const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span>${avatar(r, 'av-xs')}${esc(curto(r.nome))} · ${celulaChip(r.celula)}</span></button></li>`).join('');
     return painel('Sugestões para as células', g.length ? `${plural(g.length, 'sugestão recebida', 'sugestões recebidas')}, da mais recente para a mais antiga.` : 'O que as pessoas escreveram no formulário.', lista ? `<ul class="pessoas citacoes rolar">${lista}</ul>` : '<p class="vazio">Ninguém deixou sugestão ainda.</p>');
 }
 // Resumo do dia: cada chip leva ao grupo correspondente
