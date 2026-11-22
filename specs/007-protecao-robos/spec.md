@@ -1,6 +1,6 @@
 # Spec 007 — Proteção do formulário público contra robôs
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-22)
 - Data: 2026-11-22
 - ADRs: [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Roteiro: Fase 4 de [`ROADMAP-REFATORACAO.md`](../../docs/ROADMAP-REFATORACAO.md)
@@ -58,11 +58,8 @@ sem mudar nada para quem preenche de verdade.
 - Nenhuma dependência nova; nenhuma migration; nenhum cookie.
 - Testes com relógio controlado e dados fictícios.
 
-## Questões em aberto (com proposta)
-- **Limite por IP:** 60 envios em 10 minutos, alto para não barrar eventos em que
-  muitos preenchem pelo mesmo Wi-Fi. (proposto)
-- **Tempo mínimo:** 3 s. (proposto)
-- **Validade da marca:** 24 h. (proposto)
-
 ## Decisões do responsável (2026-11-22)
 1. **Abordagem:** proteção própria, sem serviço externo.
+2. **Limite por IP:** 60 envios em 10 minutos.
+3. **Tempo mínimo:** 3 s entre abrir a página e enviar.
+4. **Validade da marca:** 24 h.

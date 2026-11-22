@@ -1,6 +1,6 @@
 # Plano técnico — Proteção contra robôs
 
-- Status: **Proposto**
+- Status: **Aprovado** (2026-11-22)
 
 ## Backend
 - `internal/api/robos.go`:
