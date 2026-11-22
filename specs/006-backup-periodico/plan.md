@@ -1,6 +1,6 @@
 # Plano técnico — Backup periódico
 
-- Status: **Aprovado** (2026-11-22)
+- Status: **Entregue** (2026-11-22)
 
 ## Backend
 - `internal/backup`: `Dump(ctx, db, w)` lê `sqlite_master`, escreve

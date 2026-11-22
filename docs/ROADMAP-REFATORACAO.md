@@ -198,7 +198,9 @@ teste contra um banco de produção.
 
 ### Fase 4 — Operação e proteção adicional
 
-- A proteção contra robôs no formulário público, CSP e backup periódico já
+- [x] Backup periódico: diário, criptografado e com restauração ensaiada
+  (Spec 006, `ops/backup/RESTAURAR.md`).
+- A proteção contra robôs no formulário público e CSP já
   aparecem como itens pendentes no README. Planejar sua implantação conforme
   risco, sem assumir que CSP é apenas um cabeçalho: os scripts e estilos inline
   atuais precisam ser tratados.
