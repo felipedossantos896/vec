@@ -1,6 +1,6 @@
 # ADR-0003 — Indicadores e central de acompanhamento
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-22 pelo responsável. Implementado pela Spec 001 (entregue) e evoluído pela Spec 009.
 - Data: 2026-11-18
 
 ## Contexto
