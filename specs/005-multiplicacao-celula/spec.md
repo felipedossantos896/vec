@@ -1,8 +1,8 @@
 # Spec 005 — Planejar a multiplicação de uma célula
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-22)
 - Data: 2026-11-22
-- ADRs: [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) (Proposto), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Aceito), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
+- ADRs: [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) (Aceito), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md) (Aceito), [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceito)
 - Depende de: Specs [002](../002-endereco-membro/spec.md), [003](../003-mapa-membros/spec.md) e [004](../004-recomendacao-anfitrioes/spec.md) (entregues)
 
 ## Problema e objetivo
@@ -79,13 +79,11 @@ os anfitriões de cada grupo e deixar o líder ajustar à mão. É **só simula�
 - Nenhuma migration: a simulação não grava nada.
 - Testes só com dados fictícios.
 
-## Questões em aberto (com proposta)
-- **Sem posição:** começam no grupo menor, marcados. (proposto)
-- **Mínimo para propor:** 4 membros com posição (2 por grupo). (proposto)
-- **Nomes:** "Grupo 1" e "Grupo 2", sem campo para renomear. (proposto)
-
 ## Decisões do responsável (2026-11-22)
 1. **Foco:** multiplicar uma célula em dois grupos.
 2. **Guardar:** só simulação, sem gravar nada.
 3. **Acesso:** todo o escopo.
 4. **Ajuste:** o líder move pessoas à mão e o resultado é recalculado.
+5. **Sem posição:** começam no grupo menor, marcados "sem posição — confira o grupo".
+6. **Mínimo para a proposta automática:** 4 membros com posição (2 por grupo).
+7. **Nomes:** "Grupo 1" e "Grupo 2", sem campo para renomear.
