@@ -20,3 +20,7 @@ scripts/automation/target/
 Thumbs.db
 .vscode/settings.json
 .idea/
+
+# Chaves privadas (ex.: vec-backup.key do backup, Spec 006) nunca entram no repositório
+*.key
+AGE-SECRET-KEY*
