@@ -1,0 +1,6 @@
+Origem: Google Fonts (css2, 2026-11-22), arquivos woff2 variáveis.
+
+fraunces-latin-ext.woff2  sha256=f120089b9440f3e35a980a2137347b1851ad46ee4b8ad5c63b6c07e053fa40e2  59540 bytes  <- https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxCFTeP2Xz5fU8w.woff2
+fraunces-latin.woff2  sha256=48282a415ec22e31beaf0a0666e6fae0c8cbddcd0b1f6e729f27c3ade8a64e43  67388 bytes  <- https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeP2Xz5c.woff2
+source-sans-3-latin-ext.woff2  sha256=ed3571ea9ff752f1c846f1c9ad2b0006de42f478a2db9163a74db0729a4eb281  60048 bytes  <- https://fonts.gstatic.com/s/sourcesans3/v20/nwpStKy2OAdR1K-IwhWudF-R3wEaZejf5HdF8Q.woff2
+source-sans-3-latin.woff2  sha256=587435ca9d90732b8c1ce4958222c6ad3ade2b875500188e1d318efbcb61f4c5  28804 bytes  <- https://fonts.gstatic.com/s/sourcesans3/v20/nwpStKy2OAdR1K-IwhWudF-R3w8aZejf5Hc.woff2
