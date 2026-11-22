@@ -1,6 +1,6 @@
 # Plano técnico — Nova identidade e telas centradas no mapa
 
-- Status: **Proposto**
+- Status: **Aprovado** (2026-11-22)
 
 ## Princípios
 - Entregas pequenas, cada uma em produção e utilizável; a navegação antiga só sai

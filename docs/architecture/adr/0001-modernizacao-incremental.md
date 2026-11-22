@@ -1,6 +1,6 @@
 # ADR-0001 — Modernização incremental
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-22 pelo responsável: é a forma como o projeto já evolui (specs pequenas, PRs independentes, sem reescrita).
 - Data: 2026-11-18
 
 ## Contexto

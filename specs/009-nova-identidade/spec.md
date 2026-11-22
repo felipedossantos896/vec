@@ -1,8 +1,8 @@
 # Spec 009 — Nova identidade e telas centradas no mapa
 
-- Status: **Proposta**
+- Status: **Aprovada** (2026-11-22)
 - Data: 2026-11-22
-- ADRs: [0009](../../docs/architecture/adr/0009-identidade-visual.md), [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) e [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (Propostos); [0005](../../docs/architecture/adr/0005-mapa-membros.md), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md), [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
+- ADRs: [0009](../../docs/architecture/adr/0009-identidade-visual.md), [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) e [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (Aceitos); [0005](../../docs/architecture/adr/0005-mapa-membros.md), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md), [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
 - Previews (dados fictícios): [`previews/`](previews/)
 
 ## Problema e objetivo
@@ -87,17 +87,14 @@ um ou dois toques.
 - Contraste AA; texto em coral só no tom `#c43a1f`.
 - Migrations novas e aditivas; dados fictícios em testes.
 
-## Questões em aberto (com proposta)
-- **Fundo do mapa:** manter Leaflet com os tiles do OpenStreetMap, com um filtro de cor
-  para combinar com a identidade (sem dependência nova). O cartograma desenhado dos
-  previews é ilustrativo. *(proposto)* Alternativa: MapLibre com estilo vetorial próprio
-  (dependência e servidor de tiles novos).
-- **Avatares:** gerados no navegador a partir de um identificador interno, no estilo dos
-  previews. *(proposto)*
-- **Lembrete padrão:** 30 dias, ajustável por contato. *(proposto)*
-- **Retrato mensal:** gravado no primeiro acesso de cada mês (ou por comando), só com
-  contagens por escopo. *(proposto)*
-- **Ordem das entregas:** base visual primeiro, depois Área, depois o resto (ver
-  `tasks.md`). *(proposto)*
-- **Previews no repositório:** JPEGs comprimidos (~2,3 MB) em `previews/`, só com dados
-  fictícios. *(proposto)*
+## Decisões do responsável (2026-11-22)
+1. **Fundo do mapa:** Leaflet com os tiles do OpenStreetMap e filtro de cor para combinar
+   com a identidade; sem dependência nova. O cartograma dos previews é ilustrativo.
+2. **Avatares:** gerados no navegador a partir de um identificador interno, no estilo dos
+   previews, sem dado pessoal.
+3. **Lembrete de contato:** 30 dias por padrão, ajustável por contato.
+4. **Retrato mensal:** só contagens agregadas por escopo, gravadas no primeiro acesso de
+   cada mês (ou por comando).
+5. **Ordem das entregas:** base visual primeiro, depois a Área, depois o resto.
+6. **Previews no repositório:** JPEGs comprimidos em `previews/`, só com dados fictícios.
+7. **ADRs:** 0009, 0010 e 0011 aceitos; 0002 substituído pelo 0009; 0001 e 0003 aceitos.

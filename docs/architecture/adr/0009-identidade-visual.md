@@ -1,6 +1,6 @@
 # ADR-0009 — Nova identidade visual
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-22 pelo responsável. Implementado pela Spec 009.
 - Data: 2026-11-22
 - Substitui: [ADR-0002](./0002-design-system.md) (design system incremental), quando aceito.
 

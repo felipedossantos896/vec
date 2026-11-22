@@ -1,6 +1,6 @@
 # ADR-0010 — Navegação centrada no mapa
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-22 pelo responsável. Implementado pela Spec 009.
 - Data: 2026-11-22
 - Relacionados: [ADR-0005](./0005-mapa-membros.md), [ADR-0006](./0006-recomendacao-anfitrioes.md), [ADR-0007](./0007-planejamento-novas-celulas.md), [ADR-0009](./0009-identidade-visual.md)
 

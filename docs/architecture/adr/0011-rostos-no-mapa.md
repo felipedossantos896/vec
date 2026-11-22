@@ -1,6 +1,6 @@
 # ADR-0011 — Rostos no mapa e privacidade
 
-- Status: **Proposto**
+- Status: **Aceito** em 2026-11-22 pelo responsável. Implementado pela Spec 009.
 - Data: 2026-11-22
 - Complementa: [ADR-0008](./0008-privacidade-autorizacao.md) e [ADR-0005](./0005-mapa-membros.md)
 
