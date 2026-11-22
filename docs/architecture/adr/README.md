@@ -19,6 +19,9 @@ Este diretório documenta propostas e decisões para a evolução incremental do
 - [ADR-0006 — Recomendação de anfitriões](./0006-recomendacao-anfitrioes.md)
 - [ADR-0007 — Planejamento de novas células](./0007-planejamento-novas-celulas.md)
 - [ADR-0008 — Privacidade e autorização](./0008-privacidade-autorizacao.md)
+- [ADR-0009 — Nova identidade visual](./0009-identidade-visual.md)
+- [ADR-0010 — Navegação centrada no mapa](./0010-navegacao-centrada-no-mapa.md)
+- [ADR-0011 — Rostos no mapa e privacidade](./0011-rostos-no-mapa.md)
 
 ## Contexto técnico observado
 - Go serve o formulário público e o painel.
