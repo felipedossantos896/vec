@@ -46,7 +46,7 @@ func testAPIServer(db turso.DB) *Server {
 
 func TestFormularioRejectsFutureLocalDate(t *testing.T) {
 	s := testAPIServer(nil)
-	rep := s.formulario(context.Background(), []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-15"}`))
+	rep := enviarFormulario(s, []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-15"}`))
 	if rep.body["erro"] != "nascimento_invalido" {
 		t.Fatalf("erro = %v, queria nascimento_invalido", rep.body["erro"])
 	}
@@ -77,7 +77,7 @@ func TestFormularioBirthDateUsesFortalezaDayBoundary(t *testing.T) {
 			s := testAPIServer(db)
 			s.Now = func() time.Time { return tt.now }
 			body := `{"consentimento":"S","nome":"Ana Silva","nascimento":"` + tt.date + `"}`
-			rep := s.formulario(context.Background(), []byte(body))
+			rep := enviarFormulario(s, []byte(body))
 			if (rep.body["ok"] == true) != tt.ok {
 				t.Fatalf("resposta = %#v, ok = %v", rep.body, tt.ok)
 			}
@@ -91,7 +91,7 @@ func TestFormularioAcceptsTodayAndPassesRequestID(t *testing.T) {
 	const id = "0123456789abcdef0123456789abcdef"
 	body := `{"_requestId":"` + id + `","consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-14"}`
 
-	rep := s.formulario(context.Background(), []byte(body))
+	rep := enviarFormulario(s, []byte(body))
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
@@ -107,7 +107,7 @@ func TestFormularioAcceptsTodayAndPassesRequestID(t *testing.T) {
 func TestFormularioGeneratesIDForOlderClients(t *testing.T) {
 	db := &apiTestDB{}
 	s := testAPIServer(db)
-	rep := s.formulario(context.Background(), []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-14"}`))
+	rep := enviarFormulario(s, []byte(`{"consentimento":"S","nome":"Ana Silva","nascimento":"2026-11-14"}`))
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
@@ -126,7 +126,7 @@ func TestFormularioRejectsInvalidRequestID(t *testing.T) {
 		"nome":       "Ana Silva",
 		"nascimento": "2026-11-14",
 	})
-	rep := s.formulario(context.Background(), body)
+	rep := enviarFormulario(s, body)
 	if rep.body["erro"] != "dados_invalidos" {
 		t.Fatalf("erro = %v, queria dados_invalidos", rep.body["erro"])
 	}
@@ -149,11 +149,24 @@ func TestTelefoneBR(t *testing.T) {
 func TestFormularioExigeConsentimento(t *testing.T) {
 	db := &apiTestDB{}
 	s := testAPIServer(db)
-	rep := s.formulario(context.Background(), []byte(`{"nome":"Ana Silva","nascimento":"2026-11-14"}`))
+	rep := enviarFormulario(s, []byte(`{"nome":"Ana Silva","nascimento":"2026-11-14"}`))
 	if rep.body["erro"] != "consentimento" {
 		t.Fatalf("erro = %v, queria consentimento", rep.body["erro"])
 	}
 	if len(db.txCalls)+len(db.doCalls) != 0 {
 		t.Fatalf("consultou o banco sem consentimento: %#v %#v", db.doCalls, db.txCalls)
 	}
+}
+
+// enviarFormulario simula a página: inclui uma marca emitida 10 s antes e um IP
+// fictício (documentação, RFC 5737), como um envio normal depois da Spec 007.
+func enviarFormulario(s *Server, body []byte) reply {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return s.formulario(context.Background(), body, "203.0.113.7")
+	}
+	marca, _ := json.Marshal(s.marcaFormulario(s.Now().Add(-10 * time.Second)))
+	raw["_marca"] = marca
+	b, _ := json.Marshal(raw)
+	return s.formulario(context.Background(), b, "203.0.113.7")
 }

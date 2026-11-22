@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -118,7 +119,7 @@ func (s *Server) validar(ctx context.Context, raw map[string]json.RawMessage, no
 }
 
 // formulario recebe o envio público do formulário de membro.
-func (s *Server) formulario(ctx context.Context, body []byte) reply {
+func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return failReply("requisicao_invalida")
@@ -133,6 +134,19 @@ func (s *Server) formulario(ctx context.Context, body []byte) reply {
 		if !validRequestID(requestID) {
 			return failReply("dados_invalidos")
 		}
+	}
+	// Proteção contra robôs (Spec 007), antes de validar e gravar.
+	if !s.envios.permitir(ip, requestID, now) {
+		s.Log.Warn("envio recusado", "motivo", "muitos_envios", "rede", ipParcial(ip))
+		return reply{http.StatusTooManyRequests, map[string]any{"ok": false, "erro": "muitos_envios"}}
+	}
+	if texto(raw, "_site") != "" {
+		s.Log.Warn("envio recusado", "motivo", "armadilha", "rede", ipParcial(ip))
+		return failReply("envio_recusado")
+	}
+	if code := s.conferirMarca(texto(raw, "_marca"), now); code != "" {
+		s.Log.Warn("envio recusado", "motivo", code, "rede", ipParcial(ip))
+		return failReply(code)
 	}
 	// Sem a autorização de uso dos dados (LGPD), o envio não é gravado.
 	var aceite string
@@ -183,4 +197,13 @@ func telefoneBR(s string) (string, bool) {
 		return d, true
 	}
 	return "", false
+}
+
+// texto lê um campo de texto do JSON bruto ("" se ausente ou de outro tipo).
+func texto(raw map[string]json.RawMessage, chave string) string {
+	var v string
+	if b, ok := raw[chave]; ok {
+		_ = json.Unmarshal(b, &v)
+	}
+	return v
 }
