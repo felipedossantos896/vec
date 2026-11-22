@@ -1,6 +1,6 @@
 # ADR-0002 — Design system incremental
 
-- Status: **Proposto**
+- Status: **Proposto** · proposta de substituição pelo [ADR-0009](./0009-identidade-visual.md) (nova identidade visual), em análise na Spec 009.
 - Data: 2026-11-18
 
 ## Contexto
