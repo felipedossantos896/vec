@@ -6,3 +6,6 @@
 
 # Bibliotecas de terceiros: bytes exatos do pacote (hashes em VERSAO.txt)
 frontend/admin/vendor/** -text
+
+# Fontes (Spec 008): binárias, bytes exatos (hashes em frontend/fonts/VERSAO.txt)
+frontend/fonts/*.woff2 binary
