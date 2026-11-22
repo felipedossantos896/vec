@@ -1,6 +1,6 @@
 # Plano técnico — CSP
 
-- Status: **Aprovado** (2026-11-22)
+- Status: **Entregue** (v1.39.0)
 
 ## Fontes
 - Baixar os `woff2` (subconjuntos latin e latin-ext) de Fraunces (opsz, 500 e 600)
