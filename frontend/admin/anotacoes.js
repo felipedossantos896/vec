@@ -117,6 +117,7 @@ async function notas(r, payload, botao) {
             return false;
         }
         renderNotas(res.anotacoes);
+        renderResumoNotas(res.anotacoes);
         atualizarContatoDe(r, res.anotacoes);
         ultimaLista = res.anotacoes;
         return true;

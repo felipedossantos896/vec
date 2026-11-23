@@ -46,7 +46,7 @@ let verSit = '';
 function notaCuidado(k, r) {
     const cel = celulaChip(r.celula);
     if (k === 'semContato')
-        return `${cel} · ${r._contato ? `último contato ${contato(r)}` : 'nenhum contato registrado'}`;
+        return `${cel} · ${r._contato ? `último contato ${regrasPessoas.haQuanto(r._contato, new Date())}` : 'nenhum contato registrado'}`;
     if (k === 'quaseLa')
         return `${cel} · falta ${JORNADA.filter(([e]) => r[e] !== 'S').map(([, etapa]) => etapa.toLowerCase()).join(', ')}`;
     return cel;

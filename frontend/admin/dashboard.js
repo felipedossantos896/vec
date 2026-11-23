@@ -120,13 +120,6 @@ function medidor(label, n, total) {
 const pips = (r) => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
 const baseIndicadores = () => metricasIndicadores.filtrar(estado.regs, estado.setor, estado.celula);
-// Há quanto tempo foi o último contato registrado
-function contato(r) {
-    if (!r._contato)
-        return 'sem contato';
-    const dias = Math.floor((Date.now() - r._contato.getTime()) / 864e5);
-    return dias < 1 ? 'hoje' : dias === 1 ? 'há 1 dia' : `há ${dias} dias`;
-}
 // Etiquetas dos filtros ativos; o × de cada uma tira só aquele filtro
 function renderChips() {
     const chips = [];
@@ -157,30 +150,85 @@ $('chipLista').addEventListener('click', e => {
         estado.situacao = 'todos';
     renderTudo();
 });
+// Paginação: volta à primeira página quando os filtros mudam
+let limiteLista = regrasPessoas.PAGINA, chaveLista = '';
+const precisaCuidado = (r) => regrasContato.semContato(r._contato, r._lembrete || null, new Date());
+// Coluna Discipulador: rosto e nome, ou a etiqueta de quem ainda não tem
+function colunaDiscipulador(r) {
+    if (r.discipuladorId) {
+        const nome = String(r.discipulador || estado.pessoas.find(p => p.id === r.discipuladorId)?.nome || '');
+        return `<span class="it-disc">${avatarDe(Number(r.discipuladorId), nome, 'av-p')}<span>${esc(curto(nome))}</span></span>`;
+    }
+    if (r.discipulador)
+        return `<span class="it-disc"><span>${esc(curto(String(r.discipulador)))}</span><em class="tag">sem vínculo</em></span>`;
+    return '<span class="tag-c">Sem discipulador</span>';
+}
 function renderLista() {
     const lista = filtrados();
     const total = estado.regs.length;
     const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
-    $('countTxt').innerHTML = filtrando ? `Mostrando <b>${lista.length}</b> de ${total}` : `<b>${total}</b> ${total === 1 ? 'pessoa' : 'pessoas'} na sua visão`;
+    const chave = [estado.busca, estado.setor, estado.celula, estado.situacao].join('|');
+    if (chave !== chaveLista) {
+        chaveLista = chave;
+        limiteLista = regrasPessoas.PAGINA;
+    }
+    const cuidado = estado.regs.filter(precisaCuidado).length;
+    $('countTxt').innerHTML = filtrando ? `Mostrando <b>${lista.length}</b> de ${total}`
+        : `<b>${total}</b> no seu escopo${cuidado ? ` · <button type="button" class="btn-link cuidado-link" data-cuidado>${cuidado} ${cuidado === 1 ? 'precisa' : 'precisam'} de cuidado</button>` : ''}`;
     renderChips();
     if (!lista.length) {
         $('list').innerHTML = `<div class="empty">${total ? 'Ninguém encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
         return;
     }
-    const head = '<div class="thead" aria-hidden="true"><span>Nome</span><span>Célula</span><span>Jornada</span><span>Último contato</span></div>';
-    $('list').innerHTML = head + lista.map(r => `
-    <button type="button" class="item" data-i="${estado.regs.indexOf(r)}">
-      <span class="it-name">${avatar(r)}<span>${esc(r.nome)}</span></span>
+    const { mostra, resta } = regrasPessoas.visiveis(lista.length, limiteLista);
+    const aberto = $('det').open ? $('det').dataset.linha : '';
+    const head = '<div class="thead" aria-hidden="true"><span>Pessoa</span><span>Célula</span><span>Discipulador</span><span>Jornada</span><span>Contato</span></div>';
+    $('list').innerHTML = head + lista.slice(0, mostra).map(r => `
+    <button type="button" class="item${String(r.linha) === aberto ? ' sel' : ''}" data-i="${estado.regs.indexOf(r)}" data-linha="${r.linha}"${String(r.linha) === aberto ? ' aria-current="true"' : ''}>
+      <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n">${esc(r.nome)}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaChip(r.celula)}</span></span></span>
       <span class="it-cell">${celulaChip(r.celula)}</span>
-      <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada} de ${JORNADA.length}<span class="lbl"> etapas</span></span></span>
-      <span class="it-contato ${r._contato ? '' : 'nunca'}"><span class="lbl">Contato: </span>${contato(r)}</span>
-    </button>`).join('');
-    $('list').querySelectorAll('.item').forEach(b => b.addEventListener('click', () => {
-        const registro = estado.regs[Number(b.dataset.i)];
-        if (registro)
-            abrirDetalhe(registro);
-    }));
+      <span class="it-dsc">${colunaDiscipulador(r)}</span>
+      <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span></span>
+      <span class="it-contato${precisaCuidado(r) ? ' alerta' : ''}"><span class="sr-only">Último contato: </span>${regrasPessoas.haQuanto(r._contato, new Date())}</span>
+      <span class="it-seta" aria-hidden="true">›</span>
+    </button>`).join('') +
+        `<div class="lista-pe"><span>Mostrando ${mostra} de ${lista.length}</span>${resta ? `<button type="button" class="btn-link" data-mais>Carregar mais ${Math.min(resta, regrasPessoas.PAGINA)}</button>` : ''}</div>`;
 }
+// Abre a ficha, mostra mais linhas ou filtra quem precisa de cuidado
+$('list').addEventListener('click', e => {
+    const alvo = e.target instanceof Element ? e.target : null;
+    if (alvo?.closest('[data-mais]')) {
+        const foco = $('list').querySelectorAll('.item').length;
+        limiteLista += regrasPessoas.PAGINA;
+        renderLista();
+        $('list').querySelectorAll('.item')[foco]?.focus();
+        return;
+    }
+    const b = alvo?.closest('.item');
+    const registro = b ? estado.regs[Number(b.dataset.i)] : undefined;
+    if (registro)
+        abrirDetalhe(registro);
+});
+$('countTxt').addEventListener('click', e => {
+    if (!(e.target instanceof Element) || !e.target.closest('[data-cuidado]'))
+        return;
+    estado.situacao = 'semContato';
+    renderTudo();
+});
+// Linha da pessoa aberta na ficha fica marcada
+function marcarSelecionado() {
+    const d = $('det');
+    const l = d.open ? d.dataset.linha : '';
+    $('list').querySelectorAll('.item').forEach(i => {
+        const sel = i.dataset.linha === l;
+        i.classList.toggle('sel', sel);
+        if (sel)
+            i.setAttribute('aria-current', 'true');
+        else
+            i.removeAttribute('aria-current');
+    });
+}
+$('det').addEventListener('close', marcarSelecionado);
 // ── Filtros ──
 let tBusca;
 $('fBusca').addEventListener('input', e => { clearTimeout(tBusca); tBusca = setTimeout(() => { estado.busca = e.target.value; renderLista(); }, 150); });
