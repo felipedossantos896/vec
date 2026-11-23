@@ -35,7 +35,7 @@ const SQLRetrato = `WITH base AS (
     (TRIM(r.discipulador) <> '') AS com_disc,
     (SELECT MAX(` + QuandoContato + `) FROM anotacoes a WHERE a.resposta_id = r.id) AS ultimo,
     COALESCE((SELECT a.lembrar_em FROM anotacoes a WHERE a.resposta_id = r.id ORDER BY ` + QuandoContato + ` DESC, a.id DESC LIMIT 1), '') AS lembrete
-  FROM respostas r WHERE r.excluido_em IS NULL
+  FROM respostas r WHERE r.excluido_em IS NULL AND r.papel = 'membro'
 ), b AS (
   SELECT setor, celula, completa, com_disc,
     CASE WHEN ultimo IS NULL THEN 1 WHEN lembrete <> '' THEN lembrete <= ?2 ELSE ultimo < ?3 END AS cuidado

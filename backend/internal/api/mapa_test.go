@@ -53,7 +53,7 @@ func TestAcaoMapaUsaEscopoENaoDevolveCoordenadaExata(t *testing.T) {
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
-	if len(db.leituras) != 1 || !strings.Contains(db.leituras[0].SQL, "excluido_em IS NULL AND (celula IN (?))") || db.leituras[0].Args[0] != "Hope" {
+	if len(db.leituras) != 1 || !strings.Contains(db.leituras[0].SQL, "excluido_em IS NULL AND papel = 'membro' AND (celula IN (?))") || db.leituras[0].Args[0] != "Hope" {
 		t.Fatalf("mapa sem escopo: %#v", db.leituras)
 	}
 	b, _ := json.Marshal(rep.body)

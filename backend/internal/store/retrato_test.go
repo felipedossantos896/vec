@@ -46,7 +46,9 @@ INSERT INTO respostas (id, criado_em, nome, setor, celula, cafe_pastor, estacao_
  (3, '2026-01-01T00:00:00Z', 'P3', 'A', 'Y', '','','','','','', ''),
  (4, '2026-01-01T00:00:00Z', 'P4', 'B', 'Z', '','','','','','', '   '),
  (5, '2026-01-01T00:00:00Z', 'P5', 'B', 'Z', 'S','S','S','S','S','S', 'Bia'),
- (6, '2026-01-01T00:00:00Z', 'P6', '', '', '','','','','','', '');
+ (6, '2026-01-01T00:00:00Z', 'P6', '', '', '','','','','','', ''),
+ (7, '2026-01-01T00:00:00Z', 'Líder', 'A', '', 'S','S','S','S','S','S', '');
+UPDATE respostas SET papel = 'lider_setor' WHERE id = 7;
 UPDATE respostas SET excluido_em = '2026-11-01T00:00:00Z' WHERE id = 5;
 INSERT INTO anotacoes (resposta_id, autor, autor_nome, criado_em, texto, tipo, contato_em, lembrar_em) VALUES
  (1, 'u', 'U', '2026-11-13T10:00:00Z', '', 'ligacao', '2026-11-13', ''),
@@ -61,7 +63,7 @@ INSERT INTO anotacoes (resposta_id, autor, autor_nome, criado_em, texto, tipo, c
 	ler := func() string {
 		return rodar(`SELECT group_concat(escopo_tipo || ':' || escopo_nome || ':' || indicador || '=' || valor, ' ') FROM (SELECT * FROM retrato_mensal WHERE mes = '2026-11' ORDER BY escopo_tipo, escopo_nome, indicador);`)
 	}
-	// P5 excluída não conta. Cuidado: P2 (nunca), P4 (90 dias, sem lembrete) e P6 (lembrete
+	// P5 excluída não conta; o líder de setor (7) também não (Spec 013). Cuidado: P2 (nunca), P4 (90 dias, sem lembrete) e P6 (lembrete
 	// vence hoje); P3 tem contato antigo, mas o lembrete ainda não venceu; P1 falou ontem.
 	want := "area::com_discipulador=1 area::jornada_completa=1 area::pessoas=5 area::precisam_cuidado=3 " +
 		"celula:X:com_discipulador=1 celula:X:jornada_completa=1 celula:X:pessoas=2 celula:X:precisam_cuidado=1 " +
@@ -112,5 +114,46 @@ func TestListRetratosLimitaAoEscopo(t *testing.T) {
 	db.doCalls = nil
 	if l, _ := st.ListRetratos(context.Background(), Scope{Discipulador: 9}, "2025-12"); len(l) != 0 || len(db.doCalls) != 0 {
 		t.Fatal("só discipulador não lê retrato")
+	}
+}
+
+func TestPapelNoSQLite(t *testing.T) {
+	bin, err := exec.LookPath("sqlite3")
+	if err != nil {
+		t.Skip("sqlite3 não disponível")
+	}
+	arq := filepath.Join(t.TempDir(), "p.db")
+	nomes, _ := fs.Glob(migrations.FS, "*.sql")
+	sort.Strings(nomes)
+	var todas strings.Builder
+	for _, n := range nomes {
+		b, _ := fs.ReadFile(migrations.FS, n)
+		todas.Write(b)
+		todas.WriteString("\n")
+	}
+	todas.WriteString(`INSERT INTO respostas (id, criado_em, nome) VALUES (1, 'x', 'Ana');
+SELECT papel FROM respostas WHERE id = 1;`)
+	c := exec.Command(bin, arq)
+	c.Stdin = strings.NewReader(todas.String())
+	b, err := c.CombinedOutput()
+	if err != nil || strings.TrimSpace(string(b)) != "membro" {
+		t.Fatalf("padrão: %v %s", err, b)
+	}
+	c = exec.Command(bin, arq, `INSERT INTO respostas (criado_em, nome, papel) VALUES ('x', 'Eva', 'pastor');`)
+	if b, err := c.CombinedOutput(); err == nil && !strings.Contains(string(b), "CHECK") {
+		t.Fatal("papel desconhecido aceito")
+	}
+}
+
+func TestDefinirPapelLimpaCelula(t *testing.T) {
+	db := &recordingDB{}
+	st := &Store{DB: db}
+	_ = st.DefinirPapel(context.Background(), 7, "lider_setor", "A")
+	_ = st.DefinirPapel(context.Background(), 8, "lider_area", "")
+	_ = st.DefinirPapel(context.Background(), 9, "membro", "")
+	q := func(i int) string { return db.doCalls[i][0].SQL }
+	if !strings.Contains(q(0), "celula = '', setor = ?") || db.doCalls[0][0].Args[0] != "A" ||
+		!strings.Contains(q(1), "celula = '', setor = ''") || strings.Contains(q(2), "celula") {
+		t.Fatalf("papel: %s | %s | %s", q(0), q(1), q(2))
 	}
 }

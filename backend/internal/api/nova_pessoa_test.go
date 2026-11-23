@@ -67,18 +67,18 @@ func TestRegistroCriarNoEscopoComAutorizacao(t *testing.T) {
 			ins = e.Args
 		}
 	}
-	if ins == nil || ins[0] != envioTeste || ins[2] == nil || ins[3] != "painel" || ins[4] != "lider" {
+	if ins == nil || ins[0] != envioTeste || ins[2] == nil || ins[3] != "painel" || ins[4] != "lider" || ins[5] != "membro" {
 		t.Fatalf("gravação = %#v", ins)
 	}
 	for i, c := range store.Campos {
-		if c.Chave == "recebeuJesus" && ins[i+5] != "S" {
-			t.Fatalf("recebeuJesus = %v, esperado S por padrão", ins[i+5])
+		if c.Chave == "recebeuJesus" && ins[i+6] != "S" {
+			t.Fatalf("recebeuJesus = %v, esperado S por padrão", ins[i+6])
 		}
-		if c.Chave == "setor" && ins[i+5] != "Fogo no Altar" {
-			t.Fatalf("setor = %v, esperado o da célula", ins[i+5])
+		if c.Chave == "setor" && ins[i+6] != "Fogo no Altar" {
+			t.Fatalf("setor = %v, esperado o da célula", ins[i+6])
 		}
-		if c.Chave == "telefone" && ins[i+5] != "85999990000" {
-			t.Fatalf("telefone = %v", ins[i+5])
+		if c.Chave == "telefone" && ins[i+6] != "85999990000" {
+			t.Fatalf("telefone = %v", ins[i+6])
 		}
 	}
 }
@@ -162,5 +162,68 @@ func TestCelulaPermitidaEDuplicadoDe(t *testing.T) {
 	}
 	if _, ok := duplicadoDe(map[string]string{"nome": "Joao  da Silva", "nascimento": "2000-01-01"}, []store.Candidato{{Nome: "João da SILVA", Nascimento: "2000-01-01"}}); !ok {
 		t.Fatal("nome sem acento e maiúsculas deveria casar")
+	}
+}
+
+// Spec 013: líder de setor e de área sem célula, só para quem vê a área toda.
+func TestRegistroCriarLideranca(t *testing.T) {
+	s, db, token := novaPessoaServer(t)
+	req := pedidoNova(token, map[string]string{"nome": "Marcos Teste", "nascimento": "1980-01-01", "setor": "Fogo no Altar", "celula": "Hope"}, true)
+	req.Papel = "lider_setor"
+	if rep := s.registroCriar(context.Background(), req); rep.body["erro"] != "sem_permissao" || len(insercoes(db)) != 0 {
+		t.Fatalf("líder de célula criando liderança: %#v", rep.body)
+	}
+	s, db, token = novaPessoaServer(t)
+	db.perfil, db.escopos = "AREA", nil
+	req = pedidoNova(token, map[string]string{"nome": "Marcos Teste", "nascimento": "1980-01-01", "setor": "Fogo no Altar", "celula": "Hope"}, true)
+	req.Papel = "lider_setor"
+	if rep := s.registroCriar(context.Background(), req); rep.body["ok"] != true {
+		t.Fatalf("área criando líder de setor: %#v", rep.body)
+	}
+	var ins []any
+	for _, e := range db.escritas {
+		if strings.HasPrefix(e.SQL, "INSERT INTO respostas") {
+			ins = e.Args
+		}
+	}
+	if ins[5] != "lider_setor" {
+		t.Fatalf("papel = %v", ins[5])
+	}
+	for i, c := range store.Campos {
+		if (c.Chave == "celula" && ins[i+6] != "") || (c.Chave == "setor" && ins[i+6] != "Fogo no Altar") {
+			t.Fatalf("%s = %v", c.Chave, ins[i+6])
+		}
+	}
+	// Líder de setor precisa do setor; líder de área não tem setor nem célula
+	s, db, token = novaPessoaServer(t)
+	db.perfil, db.escopos = "AREA", nil
+	req = pedidoNova(token, map[string]string{"nome": "Marcos Teste", "nascimento": "1980-01-01"}, true)
+	req.Papel = "lider_setor"
+	if rep := s.registroCriar(context.Background(), req); rep.body["erro"] != "setor_obrigatorio" {
+		t.Fatalf("sem setor: %#v", rep.body)
+	}
+	s, db, token = novaPessoaServer(t)
+	db.perfil, db.escopos = "AREA", nil
+	req = pedidoNova(token, map[string]string{"nome": "Rute Teste", "nascimento": "1975-01-01", "setor": "Fogo no Altar", "celula": "Hope"}, true)
+	req.Papel = "lider_area"
+	if rep := s.registroCriar(context.Background(), req); rep.body["ok"] != true {
+		t.Fatalf("líder de área: %#v", rep.body)
+	}
+	for _, e := range db.escritas {
+		if strings.HasPrefix(e.SQL, "INSERT INTO respostas") {
+			ins = e.Args
+		}
+	}
+	for i, c := range store.Campos {
+		if (c.Chave == "celula" || c.Chave == "setor") && ins[i+6] != "" {
+			t.Fatalf("líder de área com %s = %v", c.Chave, ins[i+6])
+		}
+	}
+	s, db, token = novaPessoaServer(t)
+	db.perfil, db.escopos = "AREA", nil
+	req = pedidoNova(token, map[string]string{"nome": "Rute Teste", "nascimento": "1975-01-01"}, true)
+	req.Papel = "pastor"
+	if rep := s.registroCriar(context.Background(), req); rep.body["erro"] != "dados_invalidos" || len(insercoes(db)) != 0 {
+		t.Fatalf("papel desconhecido: %#v", rep.body)
 	}
 }

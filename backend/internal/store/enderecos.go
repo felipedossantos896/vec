@@ -191,7 +191,7 @@ func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao, e.geo_em IS NULL FROM enderecos e
-		      WHERE e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
+		      WHERE e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND papel = 'membro' AND ` + cond + `)`,
 		Args: args,
 	})
 	if err != nil {

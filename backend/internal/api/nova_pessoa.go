@@ -38,54 +38,97 @@ func (s *Server) registroCriar(ctx context.Context, req adminReq) reply {
 	} else if id != 0 {
 		return s.devolverCadastro(ctx, a, id)
 	}
-	if !req.Autorizou {
-		return failReply("consentimento")
+	id, falha := s.criarCadastro(ctx, a, requestID, req.Dados, req.Papel, req.Autorizou)
+	if falha != nil {
+		return *falha
+	}
+	s.Log.Info("cadastro criado pelo painel", "linha", id, "por", a.user.Usuario)
+	return s.devolverCadastro(ctx, a, id)
+}
+
+// cadastroLiderIn: dados do cadastro do líder criado junto do login em Ajustes (Spec 013).
+type cadastroLiderIn struct {
+	Nascimento string `json:"nascimento"`
+	Telefone   string `json:"telefone"`
+	Autorizou  bool   `json:"autorizou"`
+}
+
+// criarCadastro valida e grava um cadastro novo feito pelo painel: membro de uma célula do
+// escopo ou, só para quem vê a área toda, líder de setor ou de área sem célula (Spec 013).
+// Devolve o número do cadastro ou a resposta de recusa.
+func (s *Server) criarCadastro(ctx context.Context, a *session, requestID string, dados map[string]json.RawMessage, papelPedido string, autorizou bool) (int64, *reply) {
+	falha := func(code string) (int64, *reply) { r := failReply(code); return 0, &r }
+	interno := func(err error) (int64, *reply) { r := s.internal("registro_criar", err); return 0, &r }
+	papel := "membro"
+	switch papelPedido {
+	case "", "membro":
+	case "lider_setor", "lider_area":
+		if !a.scope.Todos {
+			return falha("sem_permissao")
+		}
+		papel = papelPedido
+	default:
+		return falha("dados_invalidos")
+	}
+	if !autorizou {
+		return falha("consentimento")
 	}
 	now := s.Now()
-	if _, tem := req.Dados["recebeuJesus"]; !tem {
-		req.Dados["recebeuJesus"] = json.RawMessage(`"S"`)
+	if _, tem := dados["recebeuJesus"]; !tem {
+		dados["recebeuJesus"] = json.RawMessage(`"S"`)
 	}
-	v, code, err := s.validar(ctx, req.Dados, now, true)
+	if papel != "membro" {
+		dados["celula"] = json.RawMessage(`""`) // líder de área ou setor não tem célula
+		if papel == "lider_area" {
+			dados["setor"] = json.RawMessage(`""`)
+		}
+	}
+	v, code, err := s.validar(ctx, dados, now, true)
 	if err != nil {
-		return s.internal("registro_criar", err)
+		return interno(err)
 	}
 	if code != "" {
-		return failReply(code)
+		return falha(code)
 	}
-	// A célula é obrigatória, ativa e do escopo de quem cadastra
-	setores, celulas, err := s.Store.Estrutura(ctx)
-	if err != nil {
-		return s.internal("registro_criar", err)
+	if papel == "lider_setor" && v["setor"] == "" {
+		return falha("setor_obrigatorio")
 	}
-	if !celulaPermitida(a.scope, v["celula"], setores, celulas) {
-		return failReply("celula_invalida")
+	if papel == "membro" {
+		setores, celulas, err := s.Store.Estrutura(ctx)
+		if err != nil {
+			return interno(err)
+		}
+		if !celulaPermitida(a.scope, v["celula"], setores, celulas) {
+			return falha("celula_invalida")
+		}
 	}
 	var discipulador int64
-	if bruto, tem := req.Dados["discipuladorId"]; tem {
+	if bruto, tem := dados["discipuladorId"]; tem {
 		if err := json.Unmarshal(bruto, &discipulador); err != nil || discipulador < 0 {
-			return failReply("discipulador_invalido")
+			return falha("discipulador_invalido")
 		}
 	}
 	if discipulador != 0 {
 		nome, existe, err := s.Store.NomeDaPessoa(ctx, discipulador)
 		if err != nil {
-			return s.internal("registro_criar", err)
+			return interno(err)
 		}
 		if !existe {
-			return failReply("discipulador_invalido")
+			return falha("discipulador_invalido")
 		}
 		v["discipulador"] = nome
 	}
 	// Duplicado: na área inteira, mas só mostra quem é se estiver no escopo
 	cands, err := s.Store.CandidatosDuplicado(ctx, v["nascimento"], v["telefone"])
 	if err != nil {
-		return s.internal("registro_criar", err)
+		return interno(err)
 	}
 	if c, ok := duplicadoDe(v, cands); ok {
 		if visivel(a.scope, c) {
-			return reply{200, map[string]any{"ok": false, "erro": "duplicado", "existente": map[string]any{"linha": c.ID, "nome": c.Nome, "celula": c.Celula}}}
+			r := reply{200, map[string]any{"ok": false, "erro": "duplicado", "existente": map[string]any{"linha": c.ID, "nome": c.Nome, "celula": c.Celula}}}
+			return 0, &r
 		}
-		return failReply("duplicado_fora")
+		return falha("duplicado_fora")
 	}
 	err = s.Store.InsertResposta(ctx, store.Resposta{
 		CriadoEm:      now.UTC().Format(time.RFC3339),
@@ -93,23 +136,23 @@ func (s *Server) registroCriar(ctx context.Context, req adminReq) reply {
 		RequestID:     requestID,
 		Origem:        "painel",
 		CadastradoPor: a.user.Usuario,
+		Papel:         papel,
 		V:             v,
 	})
 	if err != nil {
-		return s.internal("registro_criar", err)
+		return interno(err)
 	}
 	id, err := s.Store.IDDoEnvio(ctx, requestID)
 	if err != nil || id == 0 {
-		return s.internal("registro_criar", err)
+		return interno(err)
 	}
 	if discipulador != 0 {
 		// O vínculo com o discipulador usa a mesma gravação da edição
 		if _, err := s.Store.UpdateResposta(ctx, a.scope, id, v, discipulador, a.user.Usuario, now); err != nil {
-			return s.internal("registro_criar", err)
+			return interno(err)
 		}
 	}
-	s.Log.Info("cadastro criado pelo painel", "linha", id, "por", a.user.Usuario)
-	return s.devolverCadastro(ctx, a, id)
+	return id, nil
 }
 
 // devolverCadastro responde com o cadastro no mesmo formato de listar.

@@ -64,8 +64,10 @@ type Resposta struct {
 	// CadastradoPor é o usuário que cadastrou e registrou a autorização verbal.
 	Origem        string
 	CadastradoPor string
-	EditadoEm     string // ISO UTC ("" se nunca foi editada pelo painel)
-	EditadoPor    string // usuário do painel que fez a última edição
+	// Papel (Spec 013): "membro" (padrão), "lider_setor" ou "lider_area"; líderes não têm célula.
+	Papel      string
+	EditadoEm  string // ISO UTC ("" se nunca foi editada pelo painel)
+	EditadoPor string // usuário do painel que fez a última edição
 	// DiscipuladorID é o cadastro do discipulador (0 = sem vínculo; o nome digitado fica em V).
 	DiscipuladorID int64
 	Consentimento  string            // ISO UTC de quando autorizou o uso dos dados ("" = antes do aceite)
@@ -93,14 +95,18 @@ func (s *Store) InsertResposta(ctx context.Context, r Resposta) error {
 	if origem == "" {
 		origem = "formulario"
 	}
-	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+5), ", ")
-	args := make([]any, 0, len(Campos)+5)
-	args = append(args, r.RequestID, r.CriadoEm, idOuNuloTexto(r.Consentimento), origem, idOuNuloTexto(r.CadastradoPor))
+	papel := r.Papel
+	if papel == "" {
+		papel = "membro"
+	}
+	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+6), ", ")
+	args := make([]any, 0, len(Campos)+6)
+	args = append(args, r.RequestID, r.CriadoEm, idOuNuloTexto(r.Consentimento), origem, idOuNuloTexto(r.CadastradoPor), papel)
 	for _, c := range Campos {
 		args = append(args, r.V[c.Chave])
 	}
 	stmts := append([]turso.Stmt{{
-		SQL:  `INSERT INTO respostas (request_id, criado_em, consentimento_em, origem, cadastrado_por, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
+		SQL:  `INSERT INTO respostas (request_id, criado_em, consentimento_em, origem, cadastrado_por, papel, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
 		Args: args,
 	}}, jornadaDoEnvio(r.RequestID)...)
 	_, err := s.DB.Tx(ctx, stmts...)
@@ -187,7 +193,7 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), COALESCE(discipulador_id, 0), COALESCE(consentimento_em, ''),
 		      COALESCE((SELECT MAX(` + QuandoContato + `) FROM anotacoes a WHERE a.resposta_id = respostas.id), ''),
 		      COALESCE((SELECT a.lembrar_em FROM anotacoes a WHERE a.resposta_id = respostas.id ORDER BY ` + QuandoContato + ` DESC, a.id DESC LIMIT 1), ''),
-		      COALESCE((SELECT f.atualizado_em FROM fotos f WHERE f.resposta_id = respostas.id), ''), ` + colunas() +
+		      COALESCE((SELECT f.atualizado_em FROM fotos f WHERE f.resposta_id = respostas.id), ''), ` + colunas() + `, papel` +
 			` FROM respostas WHERE excluido_em IS NULL AND ` + cond + ` ORDER BY id DESC`,
 		Args: args,
 	}, turso.Stmt{
@@ -207,6 +213,9 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 		}
 		for i, c := range Campos {
 			r.V[c.Chave] = turso.Str(row, i+9)
+		}
+		if r.Papel = turso.Str(row, len(Campos)+9); r.Papel == "" {
+			r.Papel = "membro"
 		}
 		out = append(out, r)
 	}
@@ -333,4 +342,28 @@ func (s *Store) CandidatosDuplicado(ctx context.Context, nascimento, telefone st
 		out = append(out, Candidato{ID: turso.Int(row, 0), Nome: turso.Str(row, 1), Nascimento: turso.Str(row, 2), Telefone: turso.Str(row, 3), Setor: turso.Str(row, 4), Celula: turso.Str(row, 5), DiscipuladorID: turso.Int(row, 6)})
 	}
 	return out, nil
+}
+
+// PapelDe devolve o papel de um cadastro ativo ("" se não existe).
+func (s *Store) PapelDe(ctx context.Context, id int64) (string, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT papel FROM respostas WHERE id = ? AND excluido_em IS NULL`, Args: []any{id}})
+	if err != nil || len(res[0].Rows) == 0 {
+		return "", err
+	}
+	return turso.Str(res[0].Rows[0], 0), nil
+}
+
+// DefinirPapel muda o papel de um cadastro (Spec 013). Líder fica sem célula; o líder de
+// área também sem setor; o membro mantém a célula que tiver.
+func (s *Store) DefinirPapel(ctx context.Context, id int64, papel, setor string) error {
+	switch papel {
+	case "lider_area":
+		_, err := s.DB.Do(ctx, turso.Stmt{SQL: `UPDATE respostas SET papel = 'lider_area', celula = '', setor = '' WHERE id = ? AND excluido_em IS NULL`, Args: []any{id}})
+		return err
+	case "lider_setor":
+		_, err := s.DB.Do(ctx, turso.Stmt{SQL: `UPDATE respostas SET papel = 'lider_setor', celula = '', setor = ? WHERE id = ? AND excluido_em IS NULL`, Args: []any{setor, id}})
+		return err
+	}
+	_, err := s.DB.Do(ctx, turso.Stmt{SQL: `UPDATE respostas SET papel = 'membro' WHERE id = ? AND excluido_em IS NULL`, Args: []any{id}})
+	return err
 }
