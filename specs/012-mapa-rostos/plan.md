@@ -1,6 +1,6 @@
 # Plano técnico — Rostos maiores e grupos que se abrem no mapa
 
-- Status: **Aprovado** (2026-11-23)
+- Status: **Entregue** (v1.55.0)
 
 ## Foto
 - `area.css`: `.leaflet-marker-pane .av img { width: 100%; height: 100%; max-width: 100%;
