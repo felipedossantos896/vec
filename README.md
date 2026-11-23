@@ -91,6 +91,13 @@ O filtro é aplicado **no servidor**, na própria consulta SQL: quem não tem
 permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê
 **Configurações › Usuários do painel** e cria/edita acessos, troca senhas e desativa pessoas.
 
+**Nova pessoa pelo painel** (Spec 010): líderes cadastram, em **+ Nova pessoa** (Pessoas
+ou Área), quem já aceitou Jesus e é membro de uma célula do seu escopo: nome, nascimento e
+célula obrigatórios, com a autorização verbal da pessoa registrada (`respostas.origem =
+'painel'` e `cadastrado_por`). Um cadastro com o mesmo nome e nascimento, ou o mesmo
+WhatsApp, é bloqueado; se ele for de outra célula fora do escopo, o aviso não diz quem é.
+Depois de salvar, a ficha abre para seguir a trilha.
+
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do

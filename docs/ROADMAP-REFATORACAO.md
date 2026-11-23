@@ -207,6 +207,8 @@ teste contra um banco de produção.
 - [x] Nova identidade e telas centradas no mapa: Área com rostos, contato com
   lembrete, ficha em gaveta, Indicadores com retrato mensal agregado, formulário e
   login novos, visão do discipulador e estados de tela padronizados (Spec 009).
+- [x] Cadastrar nova pessoa pelo painel, com autorização verbal e bloqueio de
+  duplicado (Spec 010).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

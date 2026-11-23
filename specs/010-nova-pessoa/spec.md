@@ -1,6 +1,6 @@
 # Spec 010 — Cadastrar nova pessoa pelo painel
 
-- Status: **Aprovada** (2026-11-23)
+- Status: **Entregue** (v1.52.0, 2026-11-23) · [validação](release-validation.md)
 - Data: 2026-11-23
 - ADRs: [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (privacidade e autorização), [0009](../../docs/architecture/adr/0009-identidade-visual.md) e [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) (padrão de telas). Sem ADR nova.
 
