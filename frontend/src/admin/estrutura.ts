@@ -44,21 +44,29 @@ function aplicarEstrutura(e?: Estrutura) {
 }
 
 function renderEstrutura() {
-  const pessoas = (f: (r: Registro) => boolean): string => plural(estado.regs.filter(f).length, 'pessoa', 'pessoas');
-  const cartao = (s: { id: number; nome: string }): string => {
-    const cels = estrutura.celulas.filter(c => c.setorId === s.id);
-    const itens = cels.map(c => `<li><button type="button" class="est-item ${c.ativa ? '' : 'off'}" data-est="celula" data-id="${c.id}">
-      <span class="est-nome">${celulaChip(c.nome)}</span><span class="est-n">${pessoas(r => r.celula === c.nome)}</span>${c.ativa ? '' : '<span class="badge off">Inativa</span>'}
-      ${[encontroDe(c), casaDe(c)].filter(Boolean).length ? `<span class="est-enc">${esc([encontroDe(c), casaDe(c)].filter(Boolean).join(' · '))}</span>` : ''}</button></li>`).join('');
-    return `<section class="panel"><header class="panel-head est-head"><div><h2>Setor ${esc(s.nome)}</h2>
-      <p>${plural(cels.filter(c => c.ativa).length, 'célula ativa', 'células ativas')} · ${pessoas(r => r.setor === s.nome)}</p></div>
-      <button type="button" class="btn-link" data-est="setor" data-id="${s.id}">Renomear</button></header>
-      <ul class="est-lista">${itens || '<li class="vazio">Nenhuma célula ainda.</li>'}</ul></section>`;
+  const conta = (f: (r: Registro) => boolean): number => estado.regs.filter(f).length;
+  const ativas = estrutura.celulas.filter(c => c.ativa).length;
+  const setor = (s: { id: number; nome: string }): string => {
+    const cels = estrutura.celulas.filter(c => c.setorId === s.id && c.ativa).length;
+    return `<section class="est-setor"><p class="ct-kick">Setor</p><h2>${esc(s.nome)}</h2>
+      <dl><div><dt>células ativas</dt><dd>${cels}</dd></div><div><dt>pessoas</dt><dd>${conta(r => r.setor === s.nome)}</dd></div></dl>
+      <button type="button" class="btn-link" data-est="setor" data-id="${s.id}" aria-label="Renomear o setor ${esc(s.nome)}">Renomear</button></section>`;
   };
-  $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><h1>Células e setores</h1>
-    <p>O que aparece no formulário. Uma célula inativa sai do formulário, mas os cadastros dela continuam.</p></div>
-    <div class="est-acoes"><button class="btn-sec" type="button" data-est="setor" data-id="0">Novo setor</button><button class="btn-sec solid" type="button" data-est="celula" data-id="0">Nova célula</button></div></header>
-    <div class="panels">${estrutura.setores.map(cartao).join('')}</div>`;
+  const ordem = [...estrutura.celulas].sort((a, b) => Number(b.ativa) - Number(a.ativa) || (a.setor || '').localeCompare(b.setor || '', 'pt-BR') || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const linha = (c: CelulaEstrutura): string => `<button type="button" class="est-row${c.ativa ? '' : ' off'}" data-est="celula" data-id="${c.id}" aria-label="Editar a célula ${esc(c.nome)}">
+      <span class="er-cel">${celulaChip(c.nome)}<small class="er-m">${esc([c.setor, encontroDe(c)].filter(Boolean).join(' · '))}</small></span>
+      <span class="er-set">${esc(c.setor || '—')}</span>
+      <span class="er-enc">${esc(encontroDe(c) || '—')}</span>
+      <span class="er-casa">${esc(casaDe(c) || 'sem anfitrião')}</span>
+      <span class="er-n"><span class="sr-only">Pessoas: </span>${conta(r => r.celula === c.nome)}</span>
+      <span class="er-st">${c.ativa ? '<span class="badge">Ativa</span>' : '<span class="badge off">Inativa</span>'}</span>
+      <span class="it-seta" aria-hidden="true">›</span></button>`;
+  $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><p class="ct-kick">Ajustes</p><h1>Células e setores</h1>
+    <p>${plural(estrutura.setores.length, 'setor', 'setores')} · ${plural(estrutura.celulas.length, 'célula', 'células')}, ${ativas} ${ativas === 1 ? 'ativa' : 'ativas'} · ${plural(estado.regs.length, 'pessoa', 'pessoas')}</p></div>
+    <div class="est-acoes"><button class="b-sec" type="button" data-est="setor" data-id="0">+ Novo setor</button><button class="b-pri" type="button" data-est="celula" data-id="0">+ Nova célula</button></div></header>
+    <div class="est-setores">${estrutura.setores.map(setor).join('')}</div>
+    <div class="est-tab">${estrutura.celulas.length ? '<div class="est-thead" aria-hidden="true"><span>Célula</span><span>Setor</span><span>Encontro</span><span>Casa</span><span>Pessoas</span><span>Situação</span><span></span></div>' + ordem.map(linha).join('') : '<p class="empty">Nenhuma célula ainda.</p>'}</div>
+    <p class="field-hint">Células inativas saem do formulário público e do mapa, mas as pessoas continuam vinculadas.</p>`;
 }
 
 // ── Diálogo ──

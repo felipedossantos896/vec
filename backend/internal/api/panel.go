@@ -106,6 +106,7 @@ func (s *Server) usuariosListar(ctx context.Context, req adminReq) reply {
 			"temSenha": u.SenhaHash != "",
 			"criado":   fmtLocal(u.CriadoEm),
 			"acesso":   fmtLocal(u.Acesso),
+			"acessoEm": u.Acesso, // RFC 3339, para o "há 2 h" de Ajustes (Spec 009)
 		})
 	}
 	return okReply(map[string]any{"usuarios": out})

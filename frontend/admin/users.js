@@ -125,15 +125,23 @@ function escopoTexto(u) {
 function renderUsuarios() {
     const lista = [...estado.usuarios].sort((a, b) => (Number(b.ativo) - Number(a.ativo)) || String(a.nome || a.usuario).localeCompare(String(b.nome || b.usuario), 'pt-BR'));
     const ativos = lista.filter(u => u.ativo).length;
-    $('userCount').textContent = `${ativos} ativo${ativos === 1 ? '' : 's'} de ${lista.length}`;
-    $('userList').innerHTML = lista.length ? lista.map(u => `
-    <button type="button" class="uitem ${u.ativo ? '' : 'off'}" data-u="${esc(u.usuario)}">
-      <span class="u-top"><span class="u-name">${esc(u.nome || u.usuario)}</span><span class="badge ${u.ativo ? '' : 'off'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></span>
-      <span class="u-login">@${esc(u.usuario)} · ${PERFIL_LABEL[u.perfil] || 'Sem perfil'}${u.gerencia ? ' · gerencia usuários' : ''}</span>
-      <span class="u-scope">${esc(escopoTexto(u))}</span>
-      <span class="u-meta">${u.acesso ? 'Último acesso: ' + esc(u.acesso) : 'Ainda não acessou'}</span>
-    </button>`).join('') : '<div class="empty">Nenhum usuário cadastrado.</div>';
-    $('userList').querySelectorAll('.uitem').forEach(b => b.addEventListener('click', () => abrirUsuario(estado.usuarios.find(x => x.usuario === b.dataset.u) || null)));
+    const agora = new Date();
+    const eu = lerSessao()?.usuario;
+    $('userCount').textContent = `${plural(lista.length, 'usuário', 'usuários')} · ${ativos} ${ativos === 1 ? 'ativo' : 'ativos'} · cada um vê só o próprio escopo`;
+    const discipulos = (u) => u.cadastro ? estado.regs.filter(r => r.discipuladorId === u.cadastro).length : 0;
+    $('userList').innerHTML = lista.length ? '<div class="uhead" aria-hidden="true"><span>Usuário</span><span>Perfil</span><span>Escopo</span><span>Acesso</span><span>Situação</span></div>' + lista.map(u => {
+        const nome = u.nome || u.usuario;
+        const rosto = u.cadastro ? avatarDe(u.cadastro, nome) : avatar({ nome });
+        const acesso = regrasAjustes.acesso(String(u.acessoEm || ''), agora);
+        return `<button type="button" class="urow${u.ativo ? '' : ' off'}" data-u="${esc(u.usuario)}">
+      <span class="u-pes">${rosto}<span class="u-id"><b>${esc(nome)}${u.usuario === eu ? ' <small class="u-voce">você</small>' : ''}</b><small>@${esc(u.usuario)}</small></span></span>
+      <span class="u-perf"><span class="perf-b ${esc(u.perfil)}">${esc(regrasAjustes.rotuloPerfil(u.perfil))}</span></span>
+      <span class="u-esc">${esc(regrasAjustes.escopo(u, discipulos(u)))}${u.gerencia ? '<small>gerencia usuários</small>' : ''}</span>
+      <span class="u-ac"><span class="sr-only">Último acesso: </span>${esc(acesso)}</span>
+      <span class="u-st">${u.ativo ? '<span class="badge">Ativo</span>' : '<span class="badge off">Desativado</span>'}</span>
+    </button>`;
+    }).join('') : '<div class="empty">Nenhum usuário cadastrado.</div>';
+    $('userList').querySelectorAll('.urow').forEach(b => b.addEventListener('click', () => abrirUsuario(estado.usuarios.find(x => x.usuario === b.dataset.u) || null)));
 }
 // Opções de setores e células: listas fixas + o que já existe nos cadastros e usuários
 function opcoes(tipo) {
@@ -147,7 +155,7 @@ function opcoes(tipo) {
 }
 function preencherChks(id, tipo, marcados) {
     const m = new Set(marcados.map(norm));
-    $(id).innerHTML = opcoes(tipo).map(v => `<label><input type="checkbox" value="${esc(v)}" ${m.has(norm(v)) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('');
+    $(id).innerHTML = opcoes(tipo).map(v => `<label><input type="checkbox" value="${esc(v)}" ${m.has(norm(v)) ? 'checked' : ''}><span>${tipo === 'celulas' ? `<i class="chk-cor" data-cor="${corDaCelula(v)}" aria-hidden="true"></i>` : ''}${esc(v)}</span></label>`).join('');
 }
 const marcados = (id) => [...$(id).querySelectorAll('input:checked')].map(i => i.value);
 const perfilAtual = () => document.querySelector('input[name="uPerfil"]:checked')?.value || '';
