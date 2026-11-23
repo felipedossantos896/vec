@@ -3,19 +3,12 @@
 // Monta a aba Indicadores e seus gráficos de colunas. Os blocos sobre pessoas ficam na aba Acompanhar (acompanhamento.ts).
 // A aba usa os mesmos filtros de setor e célula da aba Cadastros.
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-const FAIXAS = [['até 17', 0, 17], ['18–24', 18, 24], ['25–34', 25, 34], ['35–44', 35, 44], ['45–59', 45, 59], ['60+', 60, 200]];
-const VIDA = [
-    ['Recebeu Jesus', r => r.recebeuJesus === 'S'],
-    ['Congrega com frequência', r => r.frequentaCultos === 'S'],
-    ['Serve em ministério', r => r.serveMinisterio === 'S'],
-    ['Tem discipulador', r => !!r.discipulador]
-];
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 // Colunas com o valor no topo; a mais alta ocupa toda a altura do gráfico
 function colunas(itens, rotulo) {
     const max = Math.max(1, ...itens.map(i => i.n));
-    return `<div class="chart-scroll" role="region" aria-label="${esc(rotulo)}" tabindex="0"><ol class="cols">${itens.map(i => `
-    <li tabindex="0" data-tip="${esc(i.titulo)}" aria-label="${esc(i.titulo)}">
+    return `<div class="chart-scroll" role="region" aria-label="${esc(rotulo)}" tabindex="0"><ol class="cols${itens.length <= 6 ? ' curtas' : ''}">${itens.map(i => `
+    <li tabindex="0" data-tip="${esc(i.titulo)}" aria-label="${esc(i.titulo)}"${i.destaque ? ' class="destaque"' : ''}>
       <span class="col-plot" aria-hidden="true"><span class="col-v">${i.n || ''}</span><i data-h="${i.n / max}"></i></span>
       <span class="col-x" aria-hidden="true">${i.rotulo}<small>${i.sub || ''}</small></span>
     </li>`).join('')}</ol></div>`;
@@ -23,86 +16,119 @@ function colunas(itens, rotulo) {
 function painel(titulo, sub, corpo) {
     return `<section class="panel ui-card"><header class="panel-head"><h2>${titulo}</h2><p>${sub}</p></header>${corpo}</section>`;
 }
-function kpi(label, valor, nota, destaque = false) {
-    return `<div class="stat kpi ui-kpi${destaque ? ' stat-primary' : ''}"><span>${label}</span><b>${valor}</b><small>${nota}</small></div>`;
-}
-function centralAtencao(base) {
-    const itens = [
-        ['jornadaIncompleta', 'Jornada incompleta', 'Pessoas que ainda não concluíram as seis etapas.'],
-        ['semDiscipulador', 'Sem discipulador', 'Pessoas sem um discipulador informado.']
-    ];
-    return `<section class="attention" aria-labelledby="centralAtencao">
-    <header class="indicator-heading"><div><p class="eyebrow">Ação</p><h2 id="centralAtencao">Central de atenção</h2></div><p>Os grupos podem se sobrepor e seguem o escopo selecionado.</p></header>
-    <div class="attention-grid">${itens.map(([situacao, titulo, nota]) => {
-        const n = base.filter(SITUACOES[situacao].f).length;
-        return `<button type="button" class="attention-card" data-sit="${situacao}"${n ? '' : ' disabled'}><b>${n}</b><span>${titulo}</span><small>${nota}</small><em>${n ? 'Ver em Pessoas →' : 'Tudo em dia'}</em></button>`;
-    }).join('')}</div></section>`;
-}
 // Cadastros recebidos em cada um dos últimos 12 meses, incluindo os meses sem nenhum
-function porMes(base) {
+function porMes(base, qtd = 12) {
     const hoje = new Date();
-    return Array.from({ length: 12 }, (_, i) => {
-        const d = new Date(hoje.getFullYear(), hoje.getMonth() - 11 + i, 1);
+    return Array.from({ length: qtd }, (_, i) => {
+        const d = new Date(hoje.getFullYear(), hoje.getMonth() - qtd + 1 + i, 1);
         const n = base.filter(r => { const e = parseData(r.dataHora); return !!e && e.getFullYear() === d.getFullYear() && e.getMonth() === d.getMonth(); }).length;
         const mes = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         return { rotulo: MESES[d.getMonth()], sub: i === 0 || d.getMonth() === 0 ? String(d.getFullYear()) : '', titulo: `${mes}: ${plural(n, 'cadastro', 'cadastros')}`, n };
     });
 }
-// Etapas da jornada marcadas como concluídas em cada um dos últimos 12 meses
-function jornadaPorMes(base) {
-    return porMes(base).map((col, i) => {
-        const hoje = new Date();
-        const d = new Date(hoje.getFullYear(), hoje.getMonth() - 11 + i, 1);
-        const cont = JORNADA.map(([k, etapa]) => [etapa, base.filter(r => {
-                const e = r[k] === 'S' ? parseData(r.jornadaDatas?.[k]) : null;
-                return !!e && e.getFullYear() === d.getFullYear() && e.getMonth() === d.getMonth();
-            }).length]);
-        const n = cont.reduce((a, [, c]) => a + c, 0);
-        const detalhe = cont.filter(([, c]) => c).map(([etapa, c]) => `${c} ${etapa}`).join(', ');
-        const mes = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-        return { ...col, n, titulo: `${mes}: ${plural(n, 'etapa concluída', 'etapas concluídas')}${detalhe ? ` (${detalhe})` : ''}` };
-    });
+// ── Retrato mensal (tendências) ──
+let retratos = null;
+let pedindoRetratos = false;
+let periodoInd = 12;
+async function carregarRetratos() {
+    const s = lerSessao();
+    if (!s || pedindoRetratos)
+        return;
+    pedindoRetratos = true;
+    try {
+        const r = await api({ acao: 'indicadores_tendencia', token: s.token });
+        retratos = r.ok ? r.retratos : [];
+    }
+    catch {
+        retratos = [];
+    }
+    finally {
+        pedindoRetratos = false;
+    }
+    if (estado.aba === 'indicadores')
+        renderIndicadores();
+}
+function minilinha(valores, cor) {
+    const pts = regrasIndicadores.minilinha(valores);
+    if (!pts)
+        return '';
+    const ult = pts.split(' ').pop().split(',');
+    return `<svg class="spark ${cor}" viewBox="-3 0 106 32" aria-hidden="true" focusable="false"><polyline points="${pts}"/><circle cx="${ult[0]}" cy="${ult[1]}" r="2.6"/></svg>`;
+}
+function cartao(rotulo, valor, nota, valores, cor, notaClasse = '') {
+    return `<div class="ind-kpi"><p class="ind-k">${rotulo}</p><div class="ind-kv"><b>${valor}</b>${minilinha(valores, cor)}</div><p class="ind-kt ${notaClasse}">${nota || '&nbsp;'}</p></div>`;
+}
+// Barras deitadas: rótulo, barra e valor
+function barras(itens, total, cor, comTotal) {
+    const max = Math.max(1, ...itens.map(([, n]) => n));
+    return `<ul class="hbars ${cor}">${itens.map(([l, n]) => `<li><span class="hb-l">${esc(l)}</span><span class="hb-b"><i data-w="${Math.round((n / (comTotal ? Math.max(total, 1) : max)) * 100)}"></i></span><span class="hb-v"><b>${n}</b>${comTotal ? `<small>/${total}</small>` : ''}</span></li>`).join('')}</ul>`;
 }
 function renderIndicadores() {
     const base = baseIndicadores();
-    const resumo = metricasIndicadores.resumir(base);
-    const total = resumo.total;
+    const total = base.length;
+    if (retratos === null && estado.aba === 'indicadores')
+        carregarRetratos();
+    document.querySelectorAll('[data-periodo]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.periodo) === periodoInd)));
+    $('indSub').textContent = `Como a área está caminhando · últimos ${periodoInd} meses`;
     if (!total) {
         $('gConteudo').innerHTML = `<div class="empty">${estado.regs.length ? 'Nenhum cadastro nesse setor ou célula.' : 'Ainda não há cadastros para mostrar.'}</div>`;
         return;
     }
-    const limite = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const novos = base.filter(r => (parseData(r.dataHora)?.getTime() ?? 0) >= limite).length;
+    const agora = new Date();
+    const meses = regrasIndicadores.meses(agora, periodoInd);
+    const alvo = regrasIndicadores.alvo(estado.escopo, estado.setor, estado.celula);
+    const serie = (k) => regrasIndicadores.serie(retratos || [], k, alvo, meses);
+    const comVivo = (k, vivo) => [...serie(k).slice(0, -1), vivo]; // o mês atual é o valor de agora
+    const tend = (k, vivo) => regrasIndicadores.textoTendencia(regrasIndicadores.tendencia(vivo, serie(k)));
+    const completa = base.filter(r => r._jornada === JORNADA.length).length;
+    const comDisc = base.filter(r => !SITUACOES.semDiscipulador.f(r)).length;
+    const cuidado = base.filter(SITUACOES.semContato.f).length;
+    const cadastros = porMes(base, periodoInd);
+    const novos = cadastros[cadastros.length - 1].n;
+    const nomeMes = agora.toLocaleDateString('pt-BR', { month: 'long' });
+    const dCuidado = regrasIndicadores.tendencia(cuidado, serie('precisam_cuidado'));
     const idades = base.map(r => r._idade).filter((i) => i != null);
-    const media = idades.length ? Math.round(idades.reduce((a, b) => a + b, 0) / idades.length) : null;
-    const completa = resumo.jornadaCompleta;
-    const etapas = resumo.mediaEtapas.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-    const faixas = FAIXAS.map(([rotulo, min, max]) => {
-        const n = idades.filter(i => i >= min && i <= max).length;
-        return { rotulo, titulo: `${rotulo} anos: ${plural(n, 'pessoa', 'pessoas')} (${idades.length ? Math.round((n / idades.length) * 100) : 0}%)`, n };
-    });
-    const semIdade = total - idades.length;
-    const lista = (itens) => `<ol class="meters">${itens.map(([l, n]) => medidor(l, n, total)).join('')}</ol>`;
-    const sim = (grupo) => lista(grupo.map(([k, l]) => [l, base.filter(r => r[k] === 'S').length]));
+    const maior = cadastros.reduce((m, c, i) => c.n > cadastros[m].n ? i : m, 0);
+    const subCad = `${plural(novos, 'cadastro', 'cadastros')} em ${nomeMes}${novos && maior === cadastros.length - 1 ? ', o maior número do período' : ''}.`;
+    const semDisc = base.filter(SITUACOES.semDiscipulador.f).length;
+    const batizar = base.filter(SITUACOES.batizar.f).length;
+    const agir = [
+        [semDisc, semDisc === 1 ? 'pessoa sem discipulador vinculado' : 'pessoas sem discipulador vinculado', 'Vincular', 'data-sit="semDiscipulador"'],
+        [cuidado, `sem contato há mais de ${DIAS_SEM_CONTATO} dias`, 'Ver no mapa', 'data-lente="cuidado"'],
+        [batizar, batizar === 1 ? 'recebeu Jesus e não foi batizada' : 'receberam Jesus e não foram batizadas', 'Ver pessoas', 'data-sit="batizar"']
+    ].filter(([n]) => n);
     $('gConteudo').innerHTML =
-        `<section class="indicator-section" aria-labelledby="indicadoresResumo">
-    <header class="indicator-heading"><div><p class="eyebrow">Visão geral</p><h2 id="indicadoresResumo">Retrato atual</h2></div><p>Os números acompanham os filtros selecionados acima.</p></header>
-    <div class="stats">${kpi('Total de pessoas', String(total), 'no escopo selecionado', true) +
-            kpi('Novos em 30 dias', String(novos), `${Math.round((novos / total) * 100)}% dos cadastros`) +
-            kpi('Idade média', media != null ? `${media}` : '—', media != null ? 'anos' : 'sem datas de nascimento') +
-            kpi('Jornada completa', String(completa), `${Math.round((completa / total) * 100)}% concluíram as ${JORNADA.length} etapas`) +
-            kpi('Etapas por pessoa', etapas, `em média, de ${JORNADA.length}`)}</div></section>
-    ${centralAtencao(base)}
-    <section class="indicator-section" aria-labelledby="indicadoresJornada">
-    <header class="indicator-heading"><div><p class="eyebrow">Jornada</p><h2 id="indicadoresJornada">Caminho de desenvolvimento</h2></div><p>Cada etapa é contada de forma independente.</p></header>
-    <div class="panels">${mapaJornada(base) + painel('Jornada mês a mês', 'Etapas marcadas como concluídas em cada mês, no formulário ou no painel.', colunas(jornadaPorMes(base), 'Jornada concluída por mês'))}</div></section>
-    <section class="indicator-section" aria-labelledby="indicadoresPerfil">
-    <header class="indicator-heading"><div><p class="eyebrow">Perfil</p><h2 id="indicadoresPerfil">Retrato da área</h2></div><p>Distribuição e participação das pessoas do escopo.</p></header>
-    <div class="panels">${painel('Novos cadastros', 'Formulários recebidos por mês, nos últimos 12 meses.', colunas(porMes(base), 'Novos cadastros por mês')) +
-            painel('Faixa etária', semIdade ? `Idade de ${idades.length} pessoas; ${plural(semIdade, 'cadastro', 'cadastros')} sem data válida.` : 'Idade de quem está cadastrado.', colunas(faixas, 'Distribuição por faixa etária')) +
-            painel('Vida na igreja', 'Quem já vive cada prática.', lista(VIDA.map(([l, f]) => [l, base.filter(f).length]))) +
-            painel('Treinamentos', 'Quem já fez ou participa.', sim(TREINOS))}</div></section>`;
+        `<div class="ind-kpis">${cartao(estado.celula || estado.setor ? 'Pessoas no filtro' : 'Pessoas na área', total, tend('pessoas', total), comVivo('pessoas', total), 'grafite') +
+            cartao('Novos cadastros', novos, `em ${nomeMes}`, cadastros.map(c => c.n), 'grafite') +
+            cartao('Jornada completa', completa, `${regrasIndicadores.pct(completa, total)}% ${estado.celula || estado.setor ? 'do filtro' : 'da área'}`, comVivo('jornada_completa', completa), 'verde', 'verde') +
+            cartao('Com discipulador', comDisc, `${regrasIndicadores.pct(comDisc, total)}% ${estado.celula || estado.setor ? 'do filtro' : 'da área'}`, comVivo('com_discipulador', comDisc), 'ouro', 'ouro') +
+            cartao('Precisam de cuidado', cuidado, regrasIndicadores.textoTendencia(dCuidado), comVivo('precisam_cuidado', cuidado), 'coral', dCuidado && dCuidado > 0 ? 'coral' : '')}</div>
+    <div class="ind-grid">
+      ${mapaJornada(base)}
+      ${painel('Cadastros por mês', subCad, colunas(cadastros.map((c, i) => ({ ...c, destaque: i === cadastros.length - 1 })), 'Novos cadastros por mês'))}
+      ${painel('Faixa etária', idades.length < total ? `Idade de ${idades.length} de ${plural(total, 'pessoa', 'pessoas')}.` : 'Idade de quem está cadastrado.', barras(regrasIndicadores.faixas(idades), idades.length, 'grafite', false))}
+      ${painel('Treinamentos', 'Quantos já fizeram cada um.', barras(TREINOS.map(([k, l]) => [l.split(' · ')[0], base.filter(r => r[k] === 'S').length]), total, 'verde', true))}
+      <section class="ind-agir" aria-labelledby="indAgir"><h2 id="indAgir">Onde agir</h2><p>Os pontos que mais pesam agora.</p>
+        ${agir.length ? `<ul>${agir.map(([n, t, acao, attrs]) => `<li><b>${n}</b><span>${t}</span><button type="button" ${attrs}>${acao} <span aria-hidden="true">→</span></button></li>`).join('')}</ul>` : '<p class="ind-ok">Nada pendente por aqui. 🙌</p>'}
+      </section>
+    </div>`;
 }
+// Período e o atalho "Ver no mapa" (Área com a lente de cuidado)
+document.addEventListener('click', e => {
+    const b = e.target instanceof Element ? e.target.closest('[data-periodo]') : null;
+    if (!b)
+        return;
+    periodoInd = Number(b.dataset.periodo) || 12;
+    renderIndicadores();
+});
+$('gConteudo').addEventListener('click', e => {
+    const b = e.target instanceof Element ? e.target.closest('[data-lente]') : null;
+    if (!b)
+        return;
+    estado.lente = b.dataset.lente || 'cuidado';
+    mostrarAba('acompanhar');
+    renderMapa();
+});
 // ── Dica ao passar o mouse ou focar uma coluna ──
 function mostrarDica(e) {
     const alvo = e.target instanceof Element ? e.target.closest('[data-tip]') : null;

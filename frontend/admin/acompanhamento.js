@@ -81,7 +81,8 @@ function mapaJornada(base) {
         const tom = TONS[Math.min(4, Math.floor((rs.length ? n / rs.length : 0) * 5))];
         const dica = esc(`${nome} · ${etapa}: ${n} de ${rs.length} concluíram`);
         const attrs = `class="mc${tom >= 72 ? ' hi' : ''}" data-t="${tom}" data-tip="${dica}" aria-label="${dica}"`;
-        return `<td>${alvo === null ? `<span ${attrs}>${n}</span>` : `<button type="button" ${attrs} data-sit="${sitEtapa(k)}" ${alvo}>${n}</button>`}</td>`;
+        const pct = `${rs.length ? Math.round((n / rs.length) * 100) : 0}%`;
+        return `<td>${alvo === null ? `<span ${attrs}>${pct}</span>` : `<button type="button" ${attrs} data-sit="${sitEtapa(k)}" ${alvo}>${pct}</button>`}</td>`;
     }).join('')}</tr>`;
     const porCelula = {};
     base.forEach(r => { var _a; if (r.celula)
@@ -109,7 +110,7 @@ function mapaJornada(base) {
         if (sem.length)
             linhas += linha('Sem célula', sem, 'setor', null);
     }
-    return painel('Mapa da jornada', 'Quantos concluíram cada etapa. Toque num número para ver quem ainda falta.', `<table class="mapa"><thead><tr><td></td>${JORNADA.map(([, etapa], i) => `<th scope="col" aria-label="${etapa}">${i + 1}</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
+    return painel('Jornada por célula', 'Quanto de cada célula já concluiu cada etapa. Quanto mais escuro, mais gente. Toque para ver quem falta.', `<table class="mapa"><thead><tr><td></td>${JORNADA.map(([, etapa], i) => `<th scope="col" aria-label="${etapa}">${i + 1}</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
      <ol class="mapa-leg">${JORNADA.map(([, etapa]) => `<li>${etapa}</li>`).join('')}</ol>
      <p class="escala" aria-hidden="true">menos${TONS.map(t => `<i data-t="${t}"></i>`).join('')}mais gente concluiu</p>`);
 }

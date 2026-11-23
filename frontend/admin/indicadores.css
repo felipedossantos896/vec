@@ -1,0 +1,66 @@
+/* Indicadores (Spec 009): números com tendência, jornada por célula, cadastros, idade,
+   treinamentos e "Onde agir" */
+:root { --ambar: #96600a; }
+
+.ind-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.ind-head .filters { flex-wrap: wrap; align-items: center; margin: 0; }
+.ind-per { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--sunken); }
+.ind-per button { min-height: 38px; padding: 0 12px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: var(--t13); white-space: nowrap; }
+.ind-per button[aria-pressed="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, 0.16); }
+.ind-per button:focus-visible { outline: var(--focus); outline-offset: 1px; }
+
+/* Cartões de número com a minilinha do período */
+.ind-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ind-kpi { min-width: 0; padding: 14px 16px; border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
+.ind-k { overflow: hidden; color: var(--muted); font: 600 11px var(--sans); letter-spacing: 0.12em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.ind-kv { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.ind-kv b { font: 700 clamp(1.8rem, 3vw, 2.4rem)/1 var(--display); font-variant-numeric: tabular-nums; }
+.ind-kt { margin-top: 6px; overflow: hidden; color: var(--muted); font-size: var(--t12); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ind-kt.verde { color: var(--verde); }
+.ind-kt.ouro { color: var(--ambar); }
+.ind-kt.coral { color: var(--coral-ink); }
+.spark { flex: 0 1 110px; min-width: 48px; height: 32px; overflow: visible; }
+.spark polyline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.spark circle { fill: currentColor; }
+.spark.grafite { color: var(--grafite); }
+.spark.verde { color: var(--verde); }
+.spark.ouro { color: #d69a1d; }
+.spark.coral { color: var(--coral); }
+
+/* Grade de painéis */
+.ind-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.ind-grid .panel-head h2 { font: 700 1.2rem/1.2 var(--display); }
+.cols li.destaque .col-plot i { background: var(--coral); }
+
+/* Barras deitadas (faixa etária e treinamentos) */
+.hbars li { display: grid; grid-template-columns: minmax(64px, 120px) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 0; font-size: var(--t13); }
+.hb-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-b { height: 8px; border-radius: 4px; background: var(--sunken); overflow: hidden; }
+.hb-b i { display: block; height: 100%; border-radius: 4px; background: var(--grafite); }
+.hbars.verde .hb-b i { background: var(--verde); }
+.hb-v { min-width: 2.5em; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hb-v small { color: var(--muted); font-size: 11px; }
+
+/* Onde agir */
+.ind-agir { min-width: 0; padding: var(--space-5, 20px); border-radius: var(--r-md); background: var(--grafite); color: #fff; }
+.ind-agir h2 { font: 700 1.2rem/1.2 var(--display); }
+.ind-agir > p { margin-top: 2px; color: rgba(255, 255, 255, 0.66); font-size: 0.92rem; }
+.ind-agir ul { margin-top: 10px; }
+.ind-agir li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: var(--t13); }
+.ind-agir li b { color: var(--coral); font: 700 1.6rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.ind-agir li button { min-height: 44px; color: #fff; font-weight: 700; font-size: var(--t13); white-space: nowrap; }
+.ind-agir li button:focus-visible { outline: var(--focus-on-dark, 3px solid #fff); outline-offset: 2px; }
+.ind-ok { margin-top: 12px; color: rgba(255, 255, 255, 0.8); }
+
+@media (hover: hover) { .ind-agir li button:hover { text-decoration: underline; text-underline-offset: 3px; } }
+/* Poucas colunas cabem no celular sem rolar; a última figura sozinha ocupa a linha */
+.cols.curtas { min-width: 0; }
+@media (max-width: 639px) { .ind-kpi:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+@media (min-width: 640px) { .ind-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .ind-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+  .ind-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ind-grid > :nth-child(-n+2) { grid-column: span 3; }
+  .ind-grid > :nth-child(n+3) { grid-column: span 2; }
+}
+@media (max-width: 639px) { .ind-head .filters { width: 100%; } .ind-head select.input { flex: 1 1 140px; } }

@@ -58,6 +58,8 @@ function mostrarAba(aba) {
         carregarUsuarios();
     if (aba === 'acompanhar')
         abrirMapa(); // a Área tem o mapa no topo (Spec 009)
+    if (aba === 'indicadores' && retratos === null)
+        carregarRetratos(); // tendências do mês (Spec 009)
 }
 // Configurações aparece para quem pode ver ao menos uma das duas partes
 function atualizarConfig() {

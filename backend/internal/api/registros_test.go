@@ -28,6 +28,8 @@ type painelDB struct {
 	casas        [][]any      // candidatos a anfitrião (id, nome, capacidade, dias, lat, lng, peloBairro)
 	interessados int64        // interessados sem confirmação
 	celulasExtra bool         // estrutura com setores e uma célula com identidade (Spec 009)
+	retratos     [][]any      // retrato mensal devolvido aos Indicadores (Spec 009)
+	temRetrato   bool         // o retrato do mês já existe
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -73,6 +75,16 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		case strings.HasPrefix(st.SQL, "SELECT COUNT(*) FROM respostas WHERE interesse_anfitriao"):
 			d.leituras = append(d.leituras, st)
 			out[i].Rows = [][]any{{d.interessados}}
+		case strings.HasPrefix(st.SQL, "SELECT 1 FROM retrato_mensal"):
+			d.leituras = append(d.leituras, st)
+			if d.temRetrato {
+				out[i].Rows = [][]any{{int64(1)}}
+			}
+		case strings.HasPrefix(st.SQL, "WITH base AS"):
+			d.escritas = append(d.escritas, st)
+		case strings.HasPrefix(st.SQL, "SELECT mes, escopo_tipo"):
+			d.leituras = append(d.leituras, st)
+			out[i].Rows = d.retratos
 		case strings.HasPrefix(st.SQL, "SELECT e.resposta_id, e.lat"):
 			d.leituras = append(d.leituras, st)
 			out[i].Rows = d.pontos
