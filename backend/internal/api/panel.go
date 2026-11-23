@@ -27,25 +27,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	}
 	registros := make([]map[string]any, 0, len(rs))
 	for _, r := range rs {
-		m := make(map[string]any, len(r.V)+8)
-		for k, v := range r.V {
-			m[k] = v
-		}
-		m["linha"] = r.ID
-		m["dataHora"] = fmtLocal(r.CriadoEm)
-		m["editadoEm"] = fmtLocal(r.EditadoEm)
-		m["editadoPor"] = r.EditadoPor
-		m["discipuladorId"] = r.DiscipuladorID
-		m["consentimentoEm"] = fmtLocal(r.Consentimento)
-		m["ultimoContato"] = fmtLocal(r.UltimoContato)
-		m["proximoContato"] = r.ProximoContato
-		m["fotoUrl"] = s.fotoURL(r.ID, r.FotoEm)
-		datas := make(map[string]string, len(r.Jornada))
-		for etapa, em := range r.Jornada {
-			datas[etapa] = fmtLocal(em)
-		}
-		m["jornadaDatas"] = datas
-		registros = append(registros, m)
+		registros = append(registros, s.registroMapa(r))
 	}
 	// Nome e célula de toda a área, para escolher o discipulador de alguém: ele pode
 	// ser de outra célula ou líder de setor ou de área.
@@ -213,4 +195,27 @@ func perfilPainel(u *store.User) string {
 		return "DISCIPULADOR"
 	}
 	return u.Perfil
+}
+
+// registroMapa é um cadastro no formato que o painel usa (listar e registro_criar).
+func (s *Server) registroMapa(r store.Resposta) map[string]any {
+	m := make(map[string]any, len(r.V)+8)
+	for k, v := range r.V {
+		m[k] = v
+	}
+	m["linha"] = r.ID
+	m["dataHora"] = fmtLocal(r.CriadoEm)
+	m["editadoEm"] = fmtLocal(r.EditadoEm)
+	m["editadoPor"] = r.EditadoPor
+	m["discipuladorId"] = r.DiscipuladorID
+	m["consentimentoEm"] = fmtLocal(r.Consentimento)
+	m["ultimoContato"] = fmtLocal(r.UltimoContato)
+	m["proximoContato"] = r.ProximoContato
+	m["fotoUrl"] = s.fotoURL(r.ID, r.FotoEm)
+	datas := make(map[string]string, len(r.Jornada))
+	for etapa, em := range r.Jornada {
+		datas[etapa] = fmtLocal(em)
+	}
+	m["jornadaDatas"] = datas
+	return m
 }

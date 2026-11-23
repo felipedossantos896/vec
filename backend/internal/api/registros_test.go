@@ -31,6 +31,10 @@ type painelDB struct {
 	retratos     [][]any      // retrato mensal devolvido aos Indicadores (Spec 009)
 	temRetrato   bool         // o retrato do mês já existe
 	gerente      bool         // o login pode gerenciar usuários
+	// Nova pessoa (Spec 010)
+	criado     bool    // já houve INSERT INTO respostas (ou o envio já existia)
+	candidatos [][]any // possíveis duplicados devolvidos pela busca
+	respostas  [][]any // linhas de ListRespostas
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -82,6 +86,18 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		case strings.HasPrefix(st.SQL, "SELECT COUNT(*) FROM respostas WHERE interesse_anfitriao"):
 			d.leituras = append(d.leituras, st)
 			out[i].Rows = [][]any{{d.interessados}}
+		case strings.HasPrefix(st.SQL, "SELECT id FROM respostas WHERE request_id"):
+			if d.criado {
+				out[i].Rows = [][]any{{int64(42)}}
+			}
+		case strings.HasPrefix(st.SQL, "INSERT INTO respostas"):
+			d.escritas = append(d.escritas, st)
+			d.criado = true
+		case strings.HasPrefix(st.SQL, "SELECT id, nome, nascimento, telefone"):
+			d.leituras = append(d.leituras, st)
+			out[i].Rows = d.candidatos
+		case strings.HasPrefix(st.SQL, "SELECT id, criado_em"):
+			out[i].Rows = d.respostas
 		case strings.HasPrefix(st.SQL, "SELECT 1 FROM retrato_mensal"):
 			d.leituras = append(d.leituras, st)
 			if d.temRetrato {
