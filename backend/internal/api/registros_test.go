@@ -30,6 +30,7 @@ type painelDB struct {
 	celulasExtra bool         // estrutura com setores e uma célula com identidade (Spec 009)
 	retratos     [][]any      // retrato mensal devolvido aos Indicadores (Spec 009)
 	temRetrato   bool         // o retrato do mês já existe
+	gerente      bool         // o login pode gerenciar usuários
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -42,7 +43,13 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			if perfil == "" {
 				perfil = "CELULA"
 			}
-			out[i].Rows = [][]any{{"lider", "Líder", d.hash, perfil, int64(1), int64(0), "2026-01-01T00:00:00Z", "", d.cadastro}}
+			ger := int64(0)
+			if d.gerente {
+				ger = 1
+			}
+			out[i].Rows = [][]any{{"lider", "Líder", d.hash, perfil, int64(1), ger, "2026-01-01T00:00:00Z", "", d.cadastro}}
+		case strings.Contains(st.SQL, "FROM usuarios ORDER BY"):
+			out[i].Rows = [][]any{{"rute", "Rute", "x", "AREA", int64(1), int64(1), "2026-01-01T00:00:00Z", "2026-11-14T09:30:00Z", int64(0)}}
 		case strings.Contains(st.SQL, "FROM usuario_escopos"):
 			out[i].Rows = d.escopos
 		case strings.HasPrefix(st.SQL, "SELECT nome FROM setores"):

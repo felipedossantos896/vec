@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="contato.css">
 <link rel="stylesheet" href="pessoas.css">
 <link rel="stylesheet" href="indicadores.css">
+<link rel="stylesheet" href="ajustes.css">
 <link rel="stylesheet" href="anfitriao.css">
 <link rel="stylesheet" href="acompanhar.css">
 <link rel="stylesheet" href="fotos.css">
@@ -201,6 +202,7 @@
     <div id="usersView" class="hidden">
       <header class="page-heading with-action">
         <div>
+          <p class="ct-kick">Ajustes</p>
           <h1>Usuários do painel</h1>
           <p id="userCount">Quem pode entrar e o que cada pessoa vê.</p>
         </div>
@@ -263,10 +265,10 @@
       <div class="field" role="radiogroup" aria-labelledby="uPerfilLbl">
         <p class="label" id="uPerfilLbl">Perfil</p>
         <div class="perfis">
-          <label><input type="radio" name="uPerfil" value="AREA"><span>Área</span></label>
-          <label><input type="radio" name="uPerfil" value="SETOR"><span>Setor</span></label>
-          <label><input type="radio" name="uPerfil" value="CELULA"><span>Célula</span></label>
-          <label><input type="radio" name="uPerfil" value="DISCIPULADOR"><span>Discipulador</span></label>
+          <label><input type="radio" name="uPerfil" value="AREA"><span>Área<small>vê tudo</small></span></label>
+          <label><input type="radio" name="uPerfil" value="SETOR"><span>Setor<small>setores escolhidos</small></span></label>
+          <label><input type="radio" name="uPerfil" value="CELULA"><span>Célula<small>células escolhidas</small></span></label>
+          <label><input type="radio" name="uPerfil" value="DISCIPULADOR"><span>Discipulador<small>só os discípulos</small></span></label>
         </div>
         <p class="field-hint" id="uPerfilHint"></p>
       </div>
@@ -313,6 +315,7 @@
 <script src="../celula-regras.js" defer></script>
 <script src="pessoas-regras.js" defer></script>
 <script src="indicadores-regras.js" defer></script>
+<script src="ajustes-regras.js" defer></script>
 <script src="admin.js" defer></script>
 <script src="metrics.js" defer></script>
 <script src="dashboard.js" defer></script>

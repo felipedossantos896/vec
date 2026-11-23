@@ -76,6 +76,7 @@ type Registro = {
 };
 type UsuarioPainel = {
   usuario: string;
+  acessoEm?: string;
   nome: string;
   ativo: boolean;
   perfil: string;
