@@ -104,6 +104,13 @@ nome e último sobrenome ("Felipe dos Santos Carneiro" → Felipe Carneiro). Com
 Filho/Júnior/Neto saem; nomes curtos repetidos ganham as iniciais do meio. A ficha mostra o
 curto e o completo abaixo; busca, CSV e edição usam o nome completo. O cadastro não muda.
 
+**Liderança sem célula** (Spec 013): o cadastro tem um papel: membro de célula, líder de setor
+ou líder de área. Líderes de área e de setor não têm célula fixa: aparecem em Pessoas com a
+etiqueta e o filtro Liderança, ficam fora das contagens de célula, do mapa e dos indicadores, e
+podem ser escolhidos como discipuladores (grupo Liderança no topo da lista). Só o líder de setor
+tem jornada e entra em "precisam de cuidado". O cadastro do líder nasce em Ajustes, junto do login,
+ou em Nova pessoa ("Quem é"), sempre por quem vê a área toda; o papel acompanha o perfil do login.
+
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do

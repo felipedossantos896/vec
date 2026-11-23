@@ -1,6 +1,6 @@
 # Spec 013 — Líderes de área e de setor como discipuladores, sem célula fixa
 
-- Status: **Aprovada** (2026-11-23)
+- Status: **Entregue** (v1.57.0, 2026-11-23) · [validação](release-validation.md)
 - Data: 2026-11-23
 - ADRs: [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (privacidade e autorização) e [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md). Sem ADR nova.
 - Relacionadas: Spec 010 (Nova pessoa) e a regra do discipulado (o discipulador pode ser
