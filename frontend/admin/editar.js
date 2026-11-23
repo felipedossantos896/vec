@@ -107,11 +107,12 @@ async function excluirCadastro(r, botao) {
     atualizarVinculos(r);
     xDlg.close();
     $('det').close();
-    avisoRapido(`Cadastro de ${curtoNome(r.nome)} excluído.`);
+    avisoRapido(`Cadastro de ${nomeCurto(r)} excluído.`);
     atualizarPainel();
 }
 function atualizarPainel() {
     marcarDuplicados();
+    aplicarNomesCurtos();
     montarFiltros();
     if (['duplicados', 'semVinculo', 'meusDiscipulos', 'discipulosDe'].includes(estado.situacao) && !estado.regs.some(SITUACOES[estado.situacao].f))
         Object.assign(estado, { situacao: 'todos', busca: '' });
@@ -203,7 +204,7 @@ document.body.appendChild(xDlg);
 let excluindo = null;
 function confirmarExclusao(r) {
     excluindo = r;
-    const nome = curtoNome(r.nome);
+    const nome = nomeCurto(r);
     $('xTitulo').textContent = `Excluir o cadastro de ${nome}?`;
     const notas = registroAberto() === r ? ultimaLista.length : 0;
     const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;

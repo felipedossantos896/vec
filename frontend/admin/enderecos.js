@@ -194,7 +194,7 @@ $('detBody').addEventListener('click', async (e) => {
         $('endCorpo').querySelector('[data-end="editar"]')?.focus();
     }
     else if (b.dataset.end === 'remover') {
-        if (!confirm(`Remover o endereço de ${curto(r.nome)}? Ele é apagado de vez.`))
+        if (!confirm(`Remover o endereço de ${nomeCurto(r)}? Ele é apagado de vez.`))
             return;
         const res = await chamarEndereco(r, { acao: 'endereco_excluir' }, b);
         if (!res?.ok)

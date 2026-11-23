@@ -99,7 +99,7 @@ $('detFoto').addEventListener('click', async (e) => {
         $('fotoArquivo').click();
         return;
     }
-    if (!confirm(`Remover a foto de ${curto(r.nome)}?`))
+    if (!confirm(`Remover a foto de ${nomeCurto(r)}?`))
         return;
     if (await enviarFoto(r, { acao: 'foto_excluir' }))
         aposFoto(r, '');

@@ -14,7 +14,7 @@ function naLente(lente, r) {
 }
 function pessoaArea(r) {
     const dias = r._contato ? Math.floor((Date.now() - r._contato.getTime()) / 864e5) : null;
-    return { nome: r.nome, diasSemContato: dias, semDiscipulador: SITUACOES.semDiscipulador.f(r), naoBatizado: r.recebeuJesus === 'S' && r.batismo !== 'S', semCelula: !r.celula };
+    return { nome: nomeCurto(r), diasSemContato: dias, semDiscipulador: SITUACOES.semDiscipulador.f(r), naoBatizado: r.recebeuJesus === 'S' && r.batismo !== 'S', semCelula: !r.celula };
 }
 function botaoWhats(r, classe = 'b-zap') {
     const url = regrasArea.whatsapp(r.telefone);
@@ -40,7 +40,7 @@ function renderFaleCom(base) {
     $('faleCom').innerHTML = `<header class="fale-h"><h2 id="faleTitulo">Fale com eles esta semana</h2><p>${top.length ? `Os ${top.length === 1 ? 'mais urgente' : `${top.length} mais urgentes`}, na ordem — marcados com ! no mapa.` : 'Ninguém precisando de cuidado agora.'}</p></header>` +
         (!top.length && base.length ? regrasEstados.html(regrasEstados.cuidadoEmDia(estado.celula ? `da ${estado.celula}` : estado.setor ? `do setor ${estado.setor}` : 'do seu escopo')) : '') +
         (top.length ? `<ul class="fale-lista">${top.map(({ r, ...p }) => `<li class="fale-c" data-cor="${corDaCelula(r.celula)}">
-      <div class="fale-t">${avatar(r, 'av-m')}<div><b>${esc(r.nome)}</b><span>${celulaChip(r.celula)}</span></div></div>
+      <div class="fale-t">${avatar(r, 'av-m')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</b><span>${celulaChip(r.celula)}</span></div></div>
       <p class="fale-m">${esc(regrasArea.motivo(p))}</p>
       <div class="fale-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>` : '');
 }

@@ -27,12 +27,12 @@ const curto = (nome) => nome.split(/\s+/).slice(0, 2).join(' ');
 const algum = (pares) => (r) => pares.some(([k]) => SITUACOES[k].f(r));
 const ICONE_OK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>';
 function nomes(rs) {
-    const tres = rs.slice(0, 3).map(r => esc(curto(r.nome)));
+    const tres = rs.slice(0, 3).map(r => esc(nomeCurto(r)));
     return rs.length > 3 ? `${tres.join(', ')} e mais ${rs.length - 3}` : tres.join(', ');
 }
 const rostos = (rs) => `<span class="rostos" aria-hidden="true">${rs.slice(0, 3).map(r => avatar(r)).join('')}${rs.length > 3 ? `<i class="mais">+${rs.length - 3}</i>` : ''}</span>`;
 function pessoa(r, nota, tag = '', classe = '') {
-    return `<li><button type="button" class="pessoa av-l ${classe}" data-reg="${estado.regs.indexOf(r)}">${avatar(r)}<b>${esc(r.nome)}</b><span>${nota}</span>${tag}</button></li>`;
+    return `<li><button type="button" class="pessoa av-l ${classe}" data-reg="${estado.regs.indexOf(r)}">${avatar(r)}<b title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</b><span>${nota}</span>${tag}</button></li>`;
 }
 // Grupos recolhíveis: no celular começam fechados para a página não ficar comprida demais
 const abertos = {};
@@ -145,11 +145,11 @@ function aniversarios(lista) {
     const quando = (a) => a.dias === 0 ? 'Hoje' : a.dias === 1 ? 'Amanhã' : `Em ${a.dias} dias`;
     const itens = lista.map(a => `<li><button type="button" class="pessoa aniv${a.dias === 0 ? ' hoje' : ''}" data-reg="${estado.regs.indexOf(a.r)}">
     <i class="cal" aria-hidden="true"><strong>${a.d.getDate()}</strong><small>${a.d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</small></i>
-    ${avatar(a.r)}<b>${esc(a.r.nome)}</b><span>${quando(a)} · faz ${a.anos} anos · ${celulaChip(a.r.celula)}</span></button></li>`).join('');
+    ${avatar(a.r)}<b title="${esc(regrasNomes.completo(a.r.nome))}">${esc(nomeCurto(a.r))}</b><span>${quando(a)} · faz ${a.anos} anos · ${celulaChip(a.r.celula)}</span></button></li>`).join('');
     return painel('Aniversariantes', 'Quem faz aniversário nos próximos 30 dias.', itens ? `<ul class="pessoas rolar">${itens}</ul>` : '<p class="vazio">Nenhum aniversário nos próximos 30 dias.</p>');
 }
 function sugestoes(g) {
-    const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span>${avatar(r, 'av-xs')}${esc(curto(r.nome))} · ${celulaChip(r.celula)}</span></button></li>`).join('');
+    const lista = g.map(r => `<li><button type="button" class="pessoa sug" data-reg="${estado.regs.indexOf(r)}"><b>${esc(r.sugestao)}</b><span> ${avatar(r, 'av-xs')}${esc(nomeCurto(r))} · ${celulaChip(r.celula)}</span></button></li>`).join('');
     return painel('Sugestões para as células', g.length ? `${plural(g.length, 'sugestão recebida', 'sugestões recebidas')}, da mais recente para a mais antiga.` : 'O que as pessoas escreveram no formulário.', lista ? `<ul class="pessoas citacoes rolar">${lista}</ul>` : '<p class="vazio">Ninguém deixou sugestão ainda.</p>');
 }
 // Resumo do dia: cada chip leva ao grupo correspondente

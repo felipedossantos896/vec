@@ -26,7 +26,7 @@ function celulaChip(nome: string | undefined): string {
 const encontroDe = (c: CelulaEstrutura): string => regrasCelula.encontro(c.diaSemana || '', c.horario || '');
 function casaDe(c: CelulaEstrutura): string {
   const r = c.anfitriaoId ? estado.regs.find(x => x.linha === c.anfitriaoId) : undefined;
-  return r ? `casa de ${curtoNome(r.nome)}` : '';
+  return r ? `casa de ${nomeCurto(r)}` : '';
 }
 const curtoNome = (n: string): string => n.split(/\s+/)[0];
 
@@ -106,7 +106,7 @@ function abrirEstrutura(tipo: 'setor' | 'celula', id: number) {
   $<HTMLSelectElement>('estDia').value = c?.diaSemana || '';
   $<HTMLInputElement>('estHora').value = c?.horario || '';
   const membros = c ? estado.regs.filter(r => r.celula === c.nome).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')) : [];
-  $('estCasa').innerHTML = '<option value="0">Não definida</option>' + membros.map(r => `<option value="${r.linha}"${r.linha === c?.anfitriaoId ? ' selected' : ''}>${esc(r.nome)}</option>`).join('');
+  $('estCasa').innerHTML = '<option value="0">Não definida</option>' + membros.map(r => `<option value="${r.linha}"${r.linha === c?.anfitriaoId ? ' selected' : ''}>${esc(nomeCurto(r))}</option>`).join('');
   $('estIdent').classList.toggle('hidden', tipo === 'setor');
   $('estSetorWrap').classList.toggle('hidden', tipo === 'setor');
   $('estAtivaWrap').classList.toggle('hidden', tipo === 'setor');

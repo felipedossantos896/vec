@@ -2,7 +2,7 @@
 // Liga cada pessoa ao cadastro do seu discipulador e cada login ao cadastro de quem entra.
 // Assim o discipulador vê os seus discípulos e o que falta na jornada de cada um.
 
-const rotuloPessoa = (p: Pessoa): string => p.nome + (p.celula ? ` · ${p.celula}` : '');
+const rotuloPessoa = (p: Pessoa): string => nomeCurtoId(p.id, p.nome) + (p.celula ? ` · ${p.celula}` : '');
 const opcoesPessoas = (lista: Pessoa[], atual: number): string => lista.map(p => `<option value="${p.id}"${p.id === atual ? ' selected' : ''}>${esc(rotuloPessoa(p))}</option>`).join('');
 
 // Etapas da jornada que a pessoa ainda não concluiu
@@ -55,7 +55,7 @@ function atualizarVinculos(r: Registro) {
 const situacaoVisivel = (k: string): boolean =>
   k === 'discipulosDe' ? estado.situacao === k : k !== 'meusDiscipulos' || (!!estado.meuCadastro && estado.escopo.perfil !== 'DISCIPULADOR');
 const rotuloSituacao = (k: string, label: string): string =>
-  k === 'discipulosDe' ? `Discípulos de ${curto(estado.pessoas.find(p => p.id === estado.discipuladorDe)?.nome || '…')}` : label;
+  k === 'discipulosDe' ? `Discípulos de ${nomeCurtoId(estado.discipuladorDe, estado.pessoas.find(p => p.id === estado.discipuladorDe)?.nome || '…')}` : label;
 
 // Atalho na lista para quem lidera e também discipula
 function renderMeus() {
@@ -89,7 +89,7 @@ function painelDiscipulado(base: Registro[], resumoGrupo: string): string {
     const n = cont[id];
     const dica = `${nomeDe(id)}: ${plural(n, 'discípulo', 'discípulos')}`;
     return `<button type="button" class="cell-row" data-disc="${id}" data-tip="${esc(dica)}" aria-label="${esc(dica)}">
-      <span class="cell-name com-av">${avatarDe(id, nomeDe(id), 'av-s')}<span>${esc(curto(nomeDe(id)))}</span>${n > MUITOS_DISCIPULOS ? ` <em class="tag">mais de ${MUITOS_DISCIPULOS}</em>` : ''}</span>
+      <span class="cell-name com-av">${avatarDe(id, nomeDe(id), 'av-s')}<span title="${esc(regrasNomes.completo(nomeDe(id)))}">${esc(nomeCurtoId(id, nomeDe(id)))}</span>${n > MUITOS_DISCIPULOS ? ` <em class="tag">mais de ${MUITOS_DISCIPULOS}</em>` : ''}</span>
       <span class="cell-bar"><i data-w="${(n / max) * 100}"></i></span><span class="cell-n">${n}</span></button>`;
   }).join('');
   const resumo = ids.length ? `${plural(ids.length, 'discipulador acompanha', 'discipuladores acompanham')} ${plural(vinculados, 'pessoa', 'pessoas')}; ${base.length - vinculados} sem vínculo.` : 'Nenhum discipulador vinculado ainda.';
@@ -135,7 +135,7 @@ function renderDiscipulos() {
     const prox = regrasPessoas.proximoPasso(JORNADA, k => r[k] === 'S');
     return `<article class="dc" data-cor="${r.celula ? corDaCelula(String(r.celula)) : regrasCelula.SEM_COR}">
       ${avatar(r, 'av-g')}
-      <h2><button type="button" class="dc-nome" data-reg="${estado.regs.indexOf(r)}">${esc(r.nome)}</button></h2>
+      <h2><button type="button" class="dc-nome" data-reg="${estado.regs.indexOf(r)}" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</button></h2>
       <p class="dc-cel">${celulaChip(String(r.celula || ''))}</p>
       <span class="dc-jor" role="img" aria-label="${r._jornada} de ${JORNADA.length} etapas da jornada">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>
       <p class="dc-prox">${prox ? `Próximo passo: <b>${esc(prox)}</b>` : '<b>Jornada completa</b>'}</p>
