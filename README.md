@@ -96,22 +96,27 @@ permissão nunca recebe os dados. Quem tem "Pode gerenciar usuários" vê
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do
 que o perfil permite, todos os que o têm como discipulador, mesmo de outra célula.
 O vínculo é feito ao editar o cadastro; o formulário público continua pedindo só o nome.
-Na aba Acompanhar, o grupo **Discipulado** mostra quantos discípulos cada um
+Na Área, o grupo **Discipulado** mostra quantos discípulos cada um
 acompanha (marcando quem passa de 12), a cobertura por célula e quem fez o
 Expresso 01 e ainda não discipula ninguém.
 
-**Abas do painel:** Acompanhar (abre primeiro: um resumo do dia, quem precisa de cuidado,
-discipulado, quem quer servir, aniversários e sugestões e, por último, cadastros para
-arrumar; no celular os grupos começam recolhidos), Pessoas (busca, filtros e lista), Indicadores
-(números e gráficos da área) e Configurações (Células e Usuários, só para quem pode).
-Quem é só discipulador vê Acompanhar e Pessoas. O detalhe de cada pessoa tem três abas:
-Resumo, Acompanhamento e Ficha completa.
+**Abas do painel** (Spec 009, identidade nova): **Área** (abre primeiro: o mapa com os rostos
+de cada pessoa em áreas de ~300 m, lentes de cuidado, "Fale com eles esta semana", as
+ferramentas Escolher anfitrião e Planejar multiplicação e, abaixo, os grupos de cuidado,
+discipulado, quem quer servir, datas e cadastros para arrumar), **Pessoas** (tabela com busca,
+filtros e paginação; ficha em gaveta com Resumo, Acompanhamento e Ficha completa),
+**Indicadores** (números com tendência mensal, jornada por célula, cadastros, faixa etária,
+treinamentos e "Onde agir") e **Ajustes** (Células e setores com cor e encontro; Usuários,
+só para quem pode). Quem é só discipulador vê **Meus discípulos** e Pessoas. No celular,
+o menu fica numa barra inferior.
 
 **Contato e acompanhamento:** o formulário pede WhatsApp (opcional) e só grava o
 envio com a autorização de uso dos dados marcada; a data do aceite fica em
 `respostas.consentimento_em` (vazia para envios anteriores). No detalhe da pessoa,
 quem a enxerga registra anotações de cada conversa (`anotacoes`); cada um apaga só
-as suas. Quem está sem anotação há 60 dias aparece em Próximos passos.
+as suas. Cada contato tem tipo (ligação, WhatsApp, visita, encontro ou anotação), dia e um
+lembrete de falar de novo (30 dias por padrão). Quem está sem contato há 60 dias, ou com o
+lembrete vencido, aparece em "Precisam de cuidado".
 A data em que cada etapa da jornada foi concluída fica em `jornada_eventos`: a do
 envio do formulário, ou a da edição no painel. Para cadastros anteriores, a migração
 usou a data do envio.
@@ -119,7 +124,8 @@ usou a data do envio.
 **Fotos de perfil:** quem pode editar a pessoa adiciona, troca ou remove a foto
 pelo cabeçalho do cadastro. O navegador recorta um quadrado de 256 px e reduz para
 JPEG antes de enviar; o servidor só aceita JPEG ou PNG de até 40 KB e 1024 px de lado
-e guarda a imagem na tabela `fotos`. Sem foto, aparecem as iniciais. Para exibir, o
+e guarda a imagem na tabela `fotos`. Sem foto, aparece um rosto ilustrado gerado no
+navegador a partir do número do cadastro (sem nenhum dado da pessoa). Para exibir, o
 `listar` devolve um endereço `/api/foto` assinado com o `SESSION_SECRET`, que vale até
 o fim do dia seguinte: a imagem abre sem o token da sessão e só quem enxerga a pessoa
 recebe o endereço. A foto é apagada junto com o cadastro.
