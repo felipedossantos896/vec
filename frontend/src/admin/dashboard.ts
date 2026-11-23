@@ -20,10 +20,15 @@ async function carregar() {
     estado.pessoas = r.pessoas || [];
     aplicarEstrutura(r.estrutura);
     const soDiscipulos = estado.escopo.perfil === 'DISCIPULADOR';
-    $('visaoTitulo').textContent = soDiscipulos ? 'Meus discípulos' : 'Pessoas';
+    $('visaoTitulo').textContent = 'Pessoas';
     // Quem é só discipulador fica com Acompanhar e Pessoas
     $('tabIndicadores').classList.toggle('hidden', soDiscipulos);
-    if (soDiscipulos && estado.aba === 'indicadores') mostrarAba('acompanhar');
+    estado.nomeUsuario = r.nome || s.nome;
+    // Quem só discipula entra em "Meus discípulos" no lugar da Área (Spec 009)
+    $('tabDisc').classList.toggle('hidden', !soDiscipulos);
+    $('tabAcompanhar').classList.toggle('hidden', soDiscipulos);
+    if (soDiscipulos && (estado.aba === 'indicadores' || estado.aba === 'acompanhar')) mostrarAba('discipulos');
+    if (!soDiscipulos && estado.aba === 'discipulos') mostrarAba('acompanhar');
     $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
     if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('acompanhar');
     $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
@@ -100,6 +105,7 @@ function renderTudo() {
   SELETORES.forEach(([id, chave]) => { $<HTMLSelectElement>(id).value = estado[chave]; });
   $<HTMLSelectElement>('fSituacao').value = estado.situacao;
   renderMeus(); renderLista(); renderAcompanhar(); renderIndicadores(); renderMapa();
+  if (estado.aba === 'discipulos') renderDiscipulos();
   if (estado.aba === 'estrutura') renderEstrutura(); // depois dos cadastros, para contar as pessoas
 }
 

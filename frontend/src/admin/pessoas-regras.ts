@@ -40,5 +40,23 @@ const regrasPessoas = {
     if (anotacoes) c.push(anotacoes === 1 ? '1 anotação de acompanhamento deixa de aparecer.' : `${anotacoes} anotações de acompanhamento deixam de aparecer.`);
     if (discipulos) c.push(discipulos === 1 ? `Quem tinha ${nome} como discipulador fica sem vínculo.` : `As ${discipulos} pessoas que tinham ${nome} como discipulador ficam sem vínculo.`);
     return c;
+  },
+
+  // Visão do discipulador (Spec 009): a primeira etapa que falta, na ordem da jornada
+  proximoPasso(jornada: [string, string][], feitas: (k: string) => boolean): string {
+    return (jornada.find(([k]) => !feitas(k)) || ['', ''])[1];
+  },
+
+  // "Falar agora · último contato há 48 dias" ou "Em dia · último contato há 12 dias"
+  situacaoContato(contato: Date | null, lembrete: Date | null, agora: Date): { alerta: boolean; texto: string } {
+    const alerta = regrasContato.semContato(contato, lembrete, agora);
+    const quando = contato ? `último contato ${regrasPessoas.haQuanto(contato, agora)}` : 'nenhum contato ainda';
+    return { alerta, texto: `${alerta ? 'Falar agora' : 'Em dia'} · ${quando}` };
+  },
+
+  // Quem precisa de contato primeiro; entre eles, quem está há mais tempo sem conversa
+  ordemDiscipulos<T extends { alerta: boolean; contato: Date | null; nome: string }>(lista: T[]): T[] {
+    const t = (x: T): number => x.contato ? x.contato.getTime() : 0;
+    return [...lista].sort((a, b) => Number(b.alerta) - Number(a.alerta) || t(a) - t(b) || a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 };

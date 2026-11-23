@@ -75,6 +75,10 @@
         </div>
       </div>
       <nav class="tabs" id="tabs" role="tablist" aria-label="Seções do painel">
+        <button type="button" role="tab" class="hidden" id="tabDisc" data-aba="discipulos" aria-selected="false" tabindex="-1">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          Meus discípulos
+        </button>
         <button type="button" role="tab" id="tabAcompanhar" data-aba="acompanhar" aria-selected="true" tabindex="0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
           Área
@@ -107,6 +111,8 @@
 
   <main class="wrap">
     <div id="loading" class="loading"><span class="spinner"></span>Carregando cadastros...</div>
+
+    <div id="discView" class="hidden"></div>
 
     <div id="acompanharView" class="area">
       <header class="page-heading area-head">

@@ -100,3 +100,31 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
   .b-perigo:hover { background: #8f1d17; }
 }
 @media (max-width: 400px) { .jor-lista { grid-template-columns: 1fr; } }
+
+/* ── Meus discípulos (Spec 009) ── */
+.dc-hero { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 18px 32px; margin-bottom: 16px; padding: 24px; border-radius: var(--r-lg); background: var(--grafite); color: #fff; }
+.dc-hero .ct-kick { color: rgba(255, 255, 255, 0.62); }
+.dc-hero h1 { margin-top: 6px; font: 700 clamp(1.5rem, 4vw, 2.3rem)/1.1 var(--display); letter-spacing: -0.02em; }
+.dc-hero p:last-child { margin-top: 6px; color: rgba(255, 255, 255, 0.72); font-size: 0.95rem; }
+.dc-num { display: flex; gap: 28px; }
+.dc-num div { display: flex; flex-direction: column-reverse; }
+.dc-num dd { color: var(--coral); font: 700 2.2rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.dc-num dt { margin-top: 4px; color: rgba(255, 255, 255, 0.66); font-size: var(--t12); }
+.dc-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.dc { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--border-card); border-top: 4px solid var(--cel, var(--line-strong)); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
+.dc > .av { width: 52px; height: 52px; border: 3px solid var(--cel, var(--line-strong)); }
+.dc h2 { font: 700 1.15rem/1.2 var(--display); }
+.dc-nome { text-align: left; color: var(--ink); }
+.dc-nome:focus-visible { outline: var(--focus); outline-offset: 2px; border-radius: 4px; }
+.dc-cel { font-size: var(--t12); }
+.dc-jor { display: flex; gap: 4px; margin-top: 4px; }
+.dc-jor i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.dc-jor i.on { background: var(--grafite); }
+.dc-prox, .dc-st { font-size: var(--t13); color: var(--muted); }
+.dc-prox b { color: var(--ink); }
+.dc-st { color: var(--verde); font-weight: 600; }
+.dc-st.alerta { color: var(--coral-ink); }
+.dc-acoes { display: flex; gap: 8px; margin-top: auto; padding-top: 6px; }
+.dc-acoes > * { flex: 1 1 0; min-height: 44px; }
+.dc-acoes .b-pri { flex-grow: 1.6; }
+@media (hover: hover) { .dc-nome:hover { text-decoration: underline; text-underline-offset: 3px; } }

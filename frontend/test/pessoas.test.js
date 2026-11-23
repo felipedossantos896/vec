@@ -38,3 +38,21 @@ test('consequências da exclusão', () => {
   assert.deepEqual([...regras.consequencias('Zeca', 1, 1)], ['1 anotação de acompanhamento deixa de aparecer.', 'Quem tinha Zeca como discipulador fica sem vínculo.']);
   assert.deepEqual([...regras.consequencias('Zeca', 4, 3)], ['4 anotações de acompanhamento deixam de aparecer.', 'As 3 pessoas que tinham Zeca como discipulador ficam sem vínculo.']);
 });
+
+test('visão do discipulador: próximo passo, contato e ordem', () => {
+  const J = [['a', 'Café com Pastor'], ['b', 'Estação DNA'], ['c', 'Batismo']];
+  assert.equal(regras.proximoPasso(J, k => k === 'a'), 'Estação DNA');
+  assert.equal(regras.proximoPasso(J, () => true), '');
+  const s1 = regras.situacaoContato(diasAtras(48), null, agora);
+  assert.equal(s1.alerta, false); // 48 dias ainda está dentro dos 60
+  assert.equal(regras.situacaoContato(diasAtras(70), null, agora).texto, 'Falar agora · último contato há 70 dias');
+  assert.equal(regras.situacaoContato(null, null, agora).texto, 'Falar agora · nenhum contato ainda');
+  assert.equal(s1.texto, 'Em dia · último contato há 48 dias');
+  const l = regras.ordemDiscipulos([
+    { nome: 'Bia', alerta: false, contato: diasAtras(5) },
+    { nome: 'Caio', alerta: true, contato: diasAtras(70) },
+    { nome: 'Ana', alerta: true, contato: null },
+    { nome: 'Davi', alerta: false, contato: diasAtras(40) }
+  ]);
+  assert.deepEqual([...l.map(x => x.nome)], ['Ana', 'Caio', 'Davi', 'Bia']);
+});
