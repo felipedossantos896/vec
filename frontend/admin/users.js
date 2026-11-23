@@ -84,6 +84,7 @@ function sessaoInvalida(r) {
         return true;
     }
     if (r.erro === 'sem_permissao') {
+        avisoRapido('Esta parte não é do seu escopo.', undefined, 'erro');
         estado.gerencia = false;
         $('tabUsuarios').classList.add('hidden');
         mostrarAba('acompanhar');
@@ -95,7 +96,7 @@ async function carregarUsuarios() {
     const s = lerSessao();
     if (!s)
         return mostrarLogin('Sua sessão expirou. Entre novamente.');
-    $('userList').innerHTML = '<div class="loading"><span class="spinner"></span>Carregando usuários...</div>';
+    $('userList').innerHTML = regrasEstados.carregando('Carregando os usuários…', 3);
     $('btnRefresh').disabled = true;
     try {
         const r = await api({ acao: 'usuarios_listar', token: s.token });
@@ -109,7 +110,7 @@ async function carregarUsuarios() {
         renderUsuarios();
     }
     catch (e) {
-        $('userList').innerHTML = '<div class="empty"><span>Não foi possível carregar os usuários.</span><button class="btn-sec" type="button" onclick="carregarUsuarios()">Tentar novamente</button></div>';
+        $('userList').innerHTML = regrasEstados.html(regrasEstados.falhaCarga(navigator.onLine));
     }
     finally {
         $('btnRefresh').disabled = false;
@@ -205,6 +206,8 @@ function abrirUsuario(u) {
     $('uDlg').scrollTop = 0;
 }
 $('btnNovoUsuario').addEventListener('click', () => abrirUsuario(null));
+$('userList').addEventListener('click', e => { if (e.target instanceof Element && e.target.closest('[data-recarregar]'))
+    carregarUsuarios(); });
 $('uClose').addEventListener('click', () => $('uDlg').close());
 $('uConcluir').addEventListener('click', () => $('uDlg').close());
 $('uGerar').addEventListener('click', () => {

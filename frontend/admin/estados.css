@@ -1,0 +1,47 @@
+/* Estados de tela (Spec 009): vazio, tudo em dia, busca, sem conexão, erro, sessão,
+   permissão e mapa vazio; esqueleto de carregamento; aviso de erro; barra inferior no celular */
+
+.estado { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 36px 20px; text-align: center; }
+.estado-ic { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 6px; border-radius: 14px; background: var(--sunken); color: var(--muted); font: 700 1.4rem/1 var(--display); }
+.estado.ok .estado-ic { background: #e3f1e9; color: var(--verde); }
+.estado.offline .estado-ic, .estado.erro .estado-ic { background: var(--coral-bg); color: var(--coral-ink); }
+.estado.mapa .estado-ic { background: #e0f2f1; color: #0e8a8c; }
+.estado.permissao .estado-ic { background: #ece8f7; color: #5b3fb5; }
+.estado-t { font: 700 1.1rem/1.25 var(--display); }
+.estado-x { max-width: 36ch; color: var(--muted); font-size: var(--t13); line-height: 1.5; }
+.estado .b-pri, .estado .b-sec { margin-top: 8px; min-height: 44px; padding: 0 18px; }
+.list > .estado { border: 0; }
+#loading > .estado, #gConteudo > .estado, #userList > .estado, #mapaVazio > .estado { border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
+#mapaVazio > .estado { margin-top: 12px; }
+#faleCom > .estado { padding: 24px 16px; }
+
+/* Esqueleto: linhas cinzas que respiram (paradas com movimento reduzido) */
+.esqueleto { display: grid; gap: 14px; padding: 20px; border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); }
+.esq-l { display: grid; grid-template-columns: 40px minmax(0, 1fr) 56px; align-items: center; gap: 14px; }
+.esq-l i, .esq-l b, .esq-l em { display: block; border-radius: 6px; background: var(--sunken); animation: respira 1.4s ease-in-out infinite; }
+.esq-l i { width: 40px; height: 40px; border-radius: 50%; }
+.esq-l span { display: grid; gap: 8px; }
+.esq-l b { height: 10px; width: 70%; }
+.esq-l b + b { width: 40%; }
+.esq-l em { height: 10px; }
+.esqueleto p { color: var(--muted); font-size: var(--t13); text-align: center; }
+@keyframes respira { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .esq-l i, .esq-l b, .esq-l em { animation: none; } }
+
+/* Aviso rápido de erro */
+.toast.erro { background: var(--danger); }
+.toast.erro b { margin-right: 4px; }
+
+/* ── Celular: menu como barra inferior (ADR-0010) ── */
+@media (max-width: 1023px) {
+  .tabs { position: fixed; inset: auto 0 0 0; z-index: 900; gap: 0; padding: 4px max(4px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); border-radius: 0; background: var(--white); box-shadow: 0 -4px 18px rgba(21, 23, 28, 0.06); }
+  .tabs button { flex-direction: column; gap: 3px; min-height: 54px; border-radius: 10px; color: var(--muted); font-size: 11px; font-weight: 600; }
+  .tabs button svg { display: block !important; width: 20px; height: 20px; }
+  .tabs button[aria-selected="true"] { background: none; color: var(--coral-ink); box-shadow: none; }
+  .tabs .t-longo { display: none; }
+  .tabs .t-curto { display: inline; }
+  .tabs button:focus-visible { outline: var(--focus); outline-offset: -2px; }
+  .admin-page .wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 1023px) and (hover: hover) { .tabs button:not([aria-selected="true"]):hover { background: var(--sunken); color: var(--ink); } }

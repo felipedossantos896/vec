@@ -101,6 +101,7 @@ function renderMapa() {
   if (!dadosMapa) { carregarMapa(); renderPainelAnfitriao(); renderPainelMultiplicacao(); return; }
   const f = regrasMapa.filtrar(dadosMapa, new Set(baseIndicadores().map(r => r.linha)));
   $('mapaStatus').textContent = regrasMapa.resumo(f);
+  $('mapaVazio').innerHTML = !f.grupos.length && baseIndicadores().length ? regrasEstados.html(regrasEstados.mapaVazio()) : '';
   if (iniciarLeaflet()) {
     camadaGrupos.clearLayers();
     camadaFerr.clearLayers();
@@ -166,4 +167,14 @@ document.addEventListener('click', e => {
   const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-mapa-pessoa]') : null;
   const r = b ? regDe(Number(b.dataset.mapaPessoa)) : undefined;
   if (r) abrirDetalhe(r);
+});
+
+// "Ver quem não tem endereço": abre a lista abaixo do mapa
+$('mapaVazio').addEventListener('click', e => {
+  if (!(e.target instanceof Element) || !e.target.closest('[data-ver-lista]')) return;
+  const d = document.querySelector<HTMLDetailsElement>('details.area-lista');
+  if (!d) return;
+  d.open = true;
+  d.scrollIntoView({ block: 'start' });
+  d.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
 });

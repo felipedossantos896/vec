@@ -71,14 +71,14 @@ function atualizarConfig() {
 function sessaoInvalida(r: ApiResult) {
   if (r.erro === 'sessao') { limparSessao(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return true; }
   if (r.erro === 'sem_escopo') { limparSessao(); mostrarLogin('Seu acesso ainda não foi configurado. Fale com a liderança da área.'); return true; }
-  if (r.erro === 'sem_permissao') { estado.gerencia = false; $('tabUsuarios').classList.add('hidden'); mostrarAba('acompanhar'); return true; }
+  if (r.erro === 'sem_permissao') { avisoRapido('Esta parte não é do seu escopo.', undefined, 'erro'); estado.gerencia = false; $('tabUsuarios').classList.add('hidden'); mostrarAba('acompanhar'); return true; }
   return false;
 }
 
 async function carregarUsuarios() {
   const s = lerSessao();
   if (!s) return mostrarLogin('Sua sessão expirou. Entre novamente.');
-  $('userList').innerHTML = '<div class="loading"><span class="spinner"></span>Carregando usuários...</div>';
+  $('userList').innerHTML = regrasEstados.carregando('Carregando os usuários…', 3);
   $<HTMLButtonElement>('btnRefresh').disabled = true;
   try {
     const r = await api<UsuariosResult>({ acao: 'usuarios_listar', token: s.token });
@@ -87,7 +87,7 @@ async function carregarUsuarios() {
     estado.usuariosCarregados = true;
     renderUsuarios();
   } catch (e) {
-    $('userList').innerHTML = '<div class="empty"><span>Não foi possível carregar os usuários.</span><button class="btn-sec" type="button" onclick="carregarUsuarios()">Tentar novamente</button></div>';
+    $('userList').innerHTML = regrasEstados.html(regrasEstados.falhaCarga(navigator.onLine));
   } finally {
     $<HTMLButtonElement>('btnRefresh').disabled = false;
   }
@@ -184,6 +184,7 @@ function abrirUsuario(u: UsuarioPainel | null) {
 }
 
 $('btnNovoUsuario').addEventListener('click', () => abrirUsuario(null));
+$('userList').addEventListener('click', e => { if (e.target instanceof Element && e.target.closest('[data-recarregar]')) carregarUsuarios(); });
 $('uClose').addEventListener('click', () => $<HTMLDialogElement>('uDlg').close());
 $('uConcluir').addEventListener('click', () => $<HTMLDialogElement>('uDlg').close());
 

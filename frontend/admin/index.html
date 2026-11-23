@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="pessoas.css">
 <link rel="stylesheet" href="indicadores.css">
 <link rel="stylesheet" href="ajustes.css">
+<link rel="stylesheet" href="estados.css">
 <link rel="stylesheet" href="anfitriao.css">
 <link rel="stylesheet" href="acompanhar.css">
 <link rel="stylesheet" href="fotos.css">
@@ -110,7 +111,7 @@
   </header>
 
   <main class="wrap">
-    <div id="loading" class="loading"><span class="spinner"></span>Carregando cadastros...</div>
+    <div id="loading"><div class="esqueleto" role="status" aria-live="polite"><div class="esq-l" aria-hidden="true"><i></i><span><b></b><b></b></span><em></em></div><div class="esq-l" aria-hidden="true"><i></i><span><b></b><b></b></span><em></em></div><div class="esq-l" aria-hidden="true"><i></i><span><b></b><b></b></span><em></em></div><div class="esq-l" aria-hidden="true"><i></i><span><b></b><b></b></span><em></em></div><p>Carregando as pessoas do seu escopo…</p></div></div>
 
     <div id="discView" class="hidden"></div>
 
@@ -143,6 +144,7 @@
       </section>
       <p class="field-hint" id="mapaStatus" role="status"></p>
       <p class="msg" id="mapaAviso"></p>
+      <div id="mapaVazio"></div>
       <section class="fale" id="faleCom" aria-labelledby="faleTitulo"></section>
       <details class="mapa-sec area-lista"><summary>Lista das áreas do mapa</summary><div id="mapaLista" class="mapa-lista"></div></details>
       <div id="aConteudo"></div>
@@ -317,6 +319,7 @@
 </dialog>
 
 <script src="../celula-regras.js" defer></script>
+<script src="estados-regras.js" defer></script>
 <script src="pessoas-regras.js" defer></script>
 <script src="indicadores-regras.js" defer></script>
 <script src="ajustes-regras.js" defer></script>

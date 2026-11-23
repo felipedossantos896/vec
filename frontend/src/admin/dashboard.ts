@@ -43,14 +43,15 @@ async function carregar() {
     $('loading').classList.add('hidden');
     $('content').classList.remove('hidden');
   } catch (err) {
-    $('loading').innerHTML = '<span>Não foi possível carregar os dados.</span><button class="btn-sec" type="button" onclick="carregar()">Tentar novamente</button>';
+    // Sem onclick no HTML (o CSP bloqueia): o botão tem data-recarregar (Spec 009)
+    $('loading').innerHTML = regrasEstados.html(regrasEstados.falhaCarga(navigator.onLine));
   } finally {
     $<HTMLButtonElement>('btnRefresh').disabled = false;
   }
 }
 $('btnRefresh').addEventListener('click', () => {
   if (estado.aba === 'usuarios') return carregarUsuarios();
-  $('loading').innerHTML = '<span class="spinner"></span>Carregando cadastros...';
+  $('loading').innerHTML = regrasEstados.carregando('Carregando as pessoas do seu escopo…');
   carregar();
 });
 
@@ -166,7 +167,7 @@ function renderLista() {
   renderChips();
 
   if (!lista.length) {
-    $('list').innerHTML = `<div class="empty">${total ? 'Ninguém encontrado com esses filtros.' : 'Ainda não há cadastros. Assim que alguém enviar o formulário, ele aparece aqui.'}</div>`;
+    $('list').innerHTML = regrasEstados.html(regrasEstados.listaVazia(total, estado.busca.trim(), !!(estado.setor || estado.celula || estado.situacao !== 'todos')));
     return;
   }
 
@@ -187,6 +188,9 @@ function renderLista() {
 // Abre a ficha, mostra mais linhas ou filtra quem precisa de cuidado
 $('list').addEventListener('click', e => {
   const alvo = e.target instanceof Element ? e.target : null;
+  const limpar = alvo?.closest<HTMLElement>('[data-limpar]')?.dataset.limpar;
+  if (limpar === 'busca') { estado.busca = ''; $<HTMLInputElement>('fBusca').value = ''; renderTudo(); $('fBusca').focus(); return; }
+  if (limpar === 'tudo') { $('btnClear').click(); return; }
   if (alvo?.closest('[data-mais]')) {
     const foco = $('list').querySelectorAll('.item').length;
     limiteLista += regrasPessoas.PAGINA;
@@ -246,4 +250,11 @@ $('btnCsv').addEventListener('click', () => {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+// "Tentar de novo" do estado de erro ou sem conexão
+$('loading').addEventListener('click', e => {
+  if (!(e.target instanceof Element) || !e.target.closest('[data-recarregar]')) return;
+  $('loading').innerHTML = regrasEstados.carregando('Carregando as pessoas do seu escopo…');
+  carregar();
 });
