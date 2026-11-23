@@ -128,3 +128,21 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 .dc-acoes > * { flex: 1 1 0; min-height: 44px; }
 .dc-acoes .b-pri { flex-grow: 1.6; }
 @media (hover: hover) { .dc-nome:hover { text-decoration: underline; text-underline-offset: 3px; } }
+
+/* ── Nova pessoa (Spec 010) ── */
+.np-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.np-acoes .b-pri { min-height: 44px; padding: 0 16px; }
+.np-intro { margin-bottom: 14px; color: var(--muted); font-size: var(--t13); }
+.np-form .field { margin-bottom: 12px; }
+.np-form .msg:empty { display: none; }
+.np-form .field.invalid .input { border-color: var(--danger); }
+.np-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.np-jesus { border: 0; padding: 0; min-width: 0; }
+.np-aut { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1.5px solid var(--line-strong); border-radius: 12px; background: var(--white); font-size: var(--t13); line-height: 1.45; cursor: pointer; }
+.np-aut input { flex: none; width: 20px; height: 20px; margin-top: 1px; accent-color: var(--grafite); }
+.np-aut:has(input:checked) { border-color: var(--grafite); }
+.np-aut.invalid { border-color: var(--danger); background: var(--danger-bg); }
+.np-dup { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--coral-bg); color: var(--coral-ink); font-size: var(--t13); }
+.np-dup .b-sec { margin-top: 8px; min-height: 40px; }
+.np-form .btn-primary { margin-top: 14px; }
+@media (max-width: 480px) { .np-duas { grid-template-columns: 1fr; } .np-acoes { width: 100%; } .np-acoes > * { flex: 1; } }

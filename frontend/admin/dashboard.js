@@ -50,6 +50,7 @@ async function carregar() {
         marcarDuplicados();
         montarFiltros();
         renderTudo();
+        atualizarBotoesNova(); // Spec 010: só para quem pode cadastrar
         $('loading').classList.add('hidden');
         $('content').classList.remove('hidden');
     }
