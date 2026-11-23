@@ -40,5 +40,20 @@ const regrasPessoas = {
         if (discipulos)
             c.push(discipulos === 1 ? `Quem tinha ${nome} como discipulador fica sem vínculo.` : `As ${discipulos} pessoas que tinham ${nome} como discipulador ficam sem vínculo.`);
         return c;
+    },
+    // Visão do discipulador (Spec 009): a primeira etapa que falta, na ordem da jornada
+    proximoPasso(jornada, feitas) {
+        return (jornada.find(([k]) => !feitas(k)) || ['', ''])[1];
+    },
+    // "Falar agora · último contato há 48 dias" ou "Em dia · último contato há 12 dias"
+    situacaoContato(contato, lembrete, agora) {
+        const alerta = regrasContato.semContato(contato, lembrete, agora);
+        const quando = contato ? `último contato ${regrasPessoas.haQuanto(contato, agora)}` : 'nenhum contato ainda';
+        return { alerta, texto: `${alerta ? 'Falar agora' : 'Em dia'} · ${quando}` };
+    },
+    // Quem precisa de contato primeiro; entre eles, quem está há mais tempo sem conversa
+    ordemDiscipulos(lista) {
+        const t = (x) => x.contato ? x.contato.getTime() : 0;
+        return [...lista].sort((a, b) => Number(b.alerta) - Number(a.alerta) || t(a) - t(b) || a.nome.localeCompare(b.nome, 'pt-BR'));
     }
 };

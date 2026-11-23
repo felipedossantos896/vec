@@ -36,6 +36,8 @@ const visivel = (id) => !$(id).classList.contains('hidden');
 function mostrarAba(aba) {
     if (aba === 'config')
         aba = visivel('tabEstrutura') ? 'estrutura' : 'usuarios';
+    if (aba === 'acompanhar' && soDiscipulador())
+        aba = 'discipulos';
     estado.aba = aba;
     const naNav = aba === 'estrutura' || aba === 'usuarios' ? 'config' : aba;
     abas.forEach(b => {
@@ -45,6 +47,7 @@ function mostrarAba(aba) {
     });
     segs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.aba === aba)));
     $('acompanharView').classList.toggle('hidden', aba !== 'acompanhar');
+    $('discView').classList.toggle('hidden', aba !== 'discipulos');
     $('cadastrosView').classList.toggle('hidden', aba !== 'cadastros');
     $('indicadoresView').classList.toggle('hidden', aba !== 'indicadores');
     $('configView').classList.toggle('hidden', naNav !== 'config');
@@ -58,6 +61,8 @@ function mostrarAba(aba) {
         carregarUsuarios();
     if (aba === 'acompanhar')
         abrirMapa(); // a Área tem o mapa no topo (Spec 009)
+    if (aba === 'discipulos')
+        renderDiscipulos();
     if (aba === 'indicadores' && retratos === null)
         carregarRetratos(); // tendências do mês (Spec 009)
 }
