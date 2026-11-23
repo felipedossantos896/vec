@@ -206,6 +206,9 @@ type adminReq struct {
 	// Nova pessoa pelo painel (Spec 010): id do envio (idempotência) e autorização verbal
 	RequestID string `json:"requestId"`
 	Autorizou bool   `json:"autorizou"`
+	// Liderança sem célula (Spec 013): papel do cadastro novo e o cadastro criado junto do login
+	Papel         string           `json:"papel"`
+	CriarCadastro *cadastroLiderIn `json:"criarCadastro"`
 	// Endereço da pessoa (Spec 002): consentimento marcado agora por quem salva
 	Endereco      *enderecoIn `json:"endereco"`
 	Consentimento bool        `json:"consentimento"`

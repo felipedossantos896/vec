@@ -32,6 +32,15 @@ func (s *Server) registroSalvar(ctx context.Context, req adminReq) reply {
 	if code != "" {
 		return failReply(code)
 	}
+	// Líder de área ou setor continua sem célula na edição (Spec 013)
+	if papel, err := s.Store.PapelDe(ctx, req.Linha); err != nil {
+		return s.internal("registro_salvar", err)
+	} else if papel == "lider_setor" || papel == "lider_area" {
+		v["celula"] = ""
+		if papel == "lider_area" {
+			v["setor"] = ""
+		}
+	}
 	// O discipulador escolhido precisa ser outro cadastro da área; o nome dele passa a
 	// valer no lugar do que a pessoa digitou no formulário.
 	var discipulador int64

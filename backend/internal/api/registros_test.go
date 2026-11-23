@@ -35,6 +35,7 @@ type painelDB struct {
 	criado     bool    // já houve INSERT INTO respostas (ou o envio já existia)
 	candidatos [][]any // possíveis duplicados devolvidos pela busca
 	respostas  [][]any // linhas de ListRespostas
+	papel      string  // papel do cadastro consultado (Spec 013)
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -42,6 +43,8 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 	for i, st := range stmts {
 		out[i] = &turso.Result{}
 		switch {
+		case strings.Contains(st.SQL, "FROM usuarios WHERE") && len(st.Args) > 0 && st.Args[0] != "lider":
+			// outro usuário: não existe (Spec 013 confere antes de criar o cadastro do líder)
 		case strings.Contains(st.SQL, "FROM usuarios WHERE"):
 			perfil := d.perfil
 			if perfil == "" {
@@ -98,6 +101,12 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			out[i].Rows = d.candidatos
 		case strings.HasPrefix(st.SQL, "SELECT id, criado_em"):
 			out[i].Rows = d.respostas
+		case strings.HasPrefix(st.SQL, "SELECT papel FROM respostas"):
+			if d.papel != "" {
+				out[i].Rows = [][]any{{d.papel}}
+			}
+		case strings.HasPrefix(st.SQL, "UPDATE respostas SET papel"):
+			d.escritas = append(d.escritas, st)
 		case strings.HasPrefix(st.SQL, "SELECT 1 FROM retrato_mensal"):
 			d.leituras = append(d.leituras, st)
 			if d.temRetrato {

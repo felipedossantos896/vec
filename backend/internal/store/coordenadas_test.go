@@ -87,7 +87,7 @@ func TestPontosMapaUsaEscopoEDevolveASituacao(t *testing.T) {
 	}
 	cond, args, _ := escopoSQL(sc)
 	st := db.doCalls[0][0]
-	if !strings.Contains(st.SQL, "WHERE excluido_em IS NULL AND "+cond) || len(st.Args) != len(args) || st.Args[0] != args[0] {
+	if !strings.Contains(st.SQL, "WHERE excluido_em IS NULL AND papel = 'membro' AND "+cond) || len(st.Args) != len(args) || st.Args[0] != args[0] {
 		t.Fatalf("mapa sem escopo exato: %s %#v", st.SQL, st.Args)
 	}
 	db = &recordingDB{}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -41,7 +42,7 @@ func (s *Server) listar(ctx context.Context, req adminReq) reply {
 	}
 	pessoas := make([]map[string]any, 0, len(ps))
 	for _, p := range ps {
-		pessoas = append(pessoas, map[string]any{"id": p.ID, "nome": p.Nome, "celula": p.Celula})
+		pessoas = append(pessoas, map[string]any{"id": p.ID, "nome": p.Nome, "celula": p.Celula, "papel": papelOuMembro(p.Papel), "setor": p.Setor})
 	}
 	return okReply(map[string]any{
 		"nome":        nomeOuUsuario(a.user),
@@ -160,6 +161,41 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("auto_bloqueio")
 	}
 
+	// Liderança sem célula (Spec 013): o cadastro do líder de área ou setor pode nascer aqui,
+	// ligado ao login, e o papel do cadastro ligado acompanha o perfil.
+	papelLogin := map[string]string{"AREA": "lider_area", "SETOR": "lider_setor"}[perfil]
+	setorLogin := ""
+	if papelLogin == "lider_setor" {
+		setorLogin = setores[0]
+	}
+	if req.CriarCadastro != nil {
+		if papelLogin == "" || req.Cadastro != 0 {
+			return failReply("dados_invalidos")
+		}
+		if !a.scope.Todos {
+			return failReply("sem_permissao")
+		}
+		if req.Novo {
+			if u, err := s.Store.GetUser(ctx, usuario); err != nil {
+				return s.internal("usuario_salvar", err)
+			} else if u != nil {
+				return failReply("usuario_existe") // antes de criar o cadastro, para não sobrar um sem login
+			}
+		}
+		texto := func(v string) json.RawMessage { b, _ := json.Marshal(v); return b }
+		dados := map[string]json.RawMessage{"nome": texto(nome), "nascimento": texto(req.CriarCadastro.Nascimento), "telefone": texto(req.CriarCadastro.Telefone), "setor": texto(setorLogin)}
+		rid, err := newRequestID()
+		if err != nil {
+			return s.internal("usuario_salvar", err)
+		}
+		id, falha := s.criarCadastro(ctx, a, rid, dados, papelLogin, req.CriarCadastro.Autorizou)
+		if falha != nil {
+			return *falha
+		}
+		req.Cadastro = id
+		s.Log.Info("cadastro de liderança criado", "linha", id, "por", a.user.Usuario)
+	}
+
 	hash := ""
 	if req.Senha != "" {
 		if hash, err = auth.HashPassword(req.Senha); err != nil {
@@ -177,6 +213,21 @@ func (s *Server) usuarioSalvar(ctx context.Context, req adminReq) reply {
 		return failReply("nao_encontrado")
 	case err != nil:
 		return s.internal("usuario_salvar", err)
+	}
+	if req.Cadastro != 0 {
+		atual, err := s.Store.PapelDe(ctx, req.Cadastro)
+		if err != nil {
+			return s.internal("usuario_salvar", err)
+		}
+		alvo := papelLogin
+		if alvo == "" {
+			alvo = "membro"
+		}
+		if atual != "" && (atual != alvo || alvo == "lider_setor") && !(atual == "membro" && alvo == "membro") {
+			if err := s.Store.DefinirPapel(ctx, req.Cadastro, alvo, setorLogin); err != nil {
+				return s.internal("usuario_salvar", err)
+			}
+		}
 	}
 
 	resp := map[string]any{}
@@ -217,5 +268,13 @@ func (s *Server) registroMapa(r store.Resposta) map[string]any {
 		datas[etapa] = fmtLocal(em)
 	}
 	m["jornadaDatas"] = datas
+	m["papel"] = papelOuMembro(r.Papel)
 	return m
+}
+
+func papelOuMembro(p string) string {
+	if p == "lider_setor" || p == "lider_area" {
+		return p
+	}
+	return "membro"
 }
