@@ -2,7 +2,7 @@
 // Etiquetas de cuidado da ficha, o "há N dias" da tabela, a paginação da lista e o que
 // a confirmação de exclusão avisa. Sem DOM, para serem testadas em Node.
 
-type PessoaStatus = { contato: Date | null; lembrete: Date | null; semDiscipulador: boolean; celula: string; duplicados: number };
+type PessoaStatus = { contato: Date | null; lembrete: Date | null; semDiscipulador: boolean; celula: string; duplicados: number; papel?: string };
 
 const regrasPessoas = {
   PAGINA: 50,
@@ -21,9 +21,10 @@ const regrasPessoas = {
   // Etiquetas do topo da ficha, na ordem de prioridade do cuidado
   etiquetas(p: PessoaStatus, agora: Date): string[] {
     const t: string[] = [];
+    if (p.papel === 'lider_area') return p.duplicados > 1 ? ['Possível duplicado'] : []; // fora da trilha (Spec 013)
     if (regrasContato.semContato(p.contato, p.lembrete, agora)) t.push(p.contato ? `${regrasPessoas.dias(p.contato, agora)} dias sem contato` : 'Sem contato registrado');
     if (p.semDiscipulador) t.push('Sem discipulador');
-    if (!p.celula) t.push('Sem célula');
+    if (!p.celula && (!p.papel || p.papel === 'membro')) t.push('Sem célula');
     if (p.duplicados > 1) t.push('Possível duplicado');
     return t;
   },

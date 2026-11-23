@@ -35,3 +35,11 @@ test('mensagens das respostas do servidor', () => {
   assert.ok(!/nome|Hope/.test(regras.mensagem('duplicado_fora').replace('Fale com a liderança', '')));
   assert.ok(regras.mensagem('xyz').startsWith('Não foi possível'));
 });
+
+test('liderança sem célula: setor no lugar da célula (Spec 013)', () => {
+  const base = { nome: 'Marcos Vieira', nascimento: '1980-01-01', celula: '', telefone: '', autorizou: true };
+  assert.equal(regras.validar({ ...base }, '2026-11-23').celula, 'Escolha a célula.');
+  assert.deepEqual({ ...regras.validar({ ...base, papel: 'lider_area' }, '2026-11-23') }, {});
+  assert.ok(regras.validar({ ...base, papel: 'lider_setor' }, '2026-11-23').setor);
+  assert.deepEqual({ ...regras.validar({ ...base, papel: 'lider_setor', setor: 'Fogo no Altar' }, '2026-11-23') }, {});
+});

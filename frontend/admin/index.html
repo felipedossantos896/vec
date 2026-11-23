@@ -295,6 +295,16 @@
         <select class="input" id="uCadastro"></select>
         <p class="field-hint">Liga o login ao cadastro dela. É assim que ela vê os próprios discípulos.</p>
       </div>
+      <div class="field u-lider hidden" id="uLiderWrap">
+        <label class="sw"><input type="checkbox" id="uCriarCad"><span class="sw-txt"><b>Criar o cadastro desta pessoa</b><small>Líder de área ou setor não tem célula. O cadastro deixa ele ser escolhido como discipulador.</small></span><span class="sw-ui" aria-hidden="true"></span></label>
+        <div class="u-lider-campos hidden" id="uLiderCampos">
+          <div class="np-duas">
+            <div class="field"><label class="label" for="uNasc">Data de nascimento</label><input class="input" id="uNasc" type="date" min="1900-01-01"></div>
+            <div class="field"><label class="label" for="uTel">WhatsApp <span class="opc">opcional</span></label><input class="input" id="uTel" type="tel" inputmode="tel" placeholder="(85) 99999-9999" maxlength="20"></div>
+          </div>
+          <label class="np-aut"><input type="checkbox" id="uAut"><span>A pessoa autorizou a liderança da Área VEC a guardar estes dados.</span></label>
+        </div>
+      </div>
       <label class="sw">
         <input type="checkbox" id="uAtivo">
         <span class="sw-txt"><b>Acesso ativo</b><small>Desative para bloquear o login sem apagar o usuário.</small></span>
@@ -325,6 +335,7 @@
 <script src="../celula-regras.js" defer></script>
 <script src="estados-regras.js" defer></script>
 <script src="nomes-regras.js" defer></script>
+<script src="lideranca-regras.js" defer></script>
 <script src="pessoas-regras.js" defer></script>
 <script src="indicadores-regras.js" defer></script>
 <script src="ajustes-regras.js" defer></script>

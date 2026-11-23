@@ -3,7 +3,15 @@
 // Liga cada pessoa ao cadastro do seu discipulador e cada login ao cadastro de quem entra.
 // Assim o discipulador vê os seus discípulos e o que falta na jornada de cada um.
 const rotuloPessoa = (p) => nomeCurtoId(p.id, p.nome) + (p.celula ? ` · ${p.celula}` : '');
-const opcoesPessoas = (lista, atual) => lista.map(p => `<option value="${p.id}"${p.id === atual ? ' selected' : ''}>${esc(rotuloPessoa(p))}</option>`).join('');
+// Discipuladores (Spec 013): a liderança no topo, com o papel; depois os membros com a célula
+const opcaoPessoa = (p, atual, rotulo) => `<option value="${p.id}"${p.id === atual ? ' selected' : ''}>${esc(rotulo)}</option>`;
+function opcoesPessoas(lista, atual) {
+    const { lideranca, membros } = regrasLideranca.ordemDiscipuladores(lista);
+    if (!lideranca.length)
+        return membros.map(p => opcaoPessoa(p, atual, rotuloPessoa(p))).join('');
+    return `<optgroup label="Liderança">${lideranca.map(p => opcaoPessoa(p, atual, `${nomeCurtoId(p.id, p.nome)} · ${regrasLideranca.rotulo(p)}`)).join('')}</optgroup>` +
+        `<optgroup label="Membros">${membros.map(p => opcaoPessoa(p, atual, rotuloPessoa(p))).join('')}</optgroup>`;
+}
 // Etapas da jornada que a pessoa ainda não concluiu
 function faltam(r) {
     const f = JORNADA.filter(([k]) => r[k] !== 'S').map(([, etapa]) => etapa);
@@ -37,7 +45,7 @@ function atualizarVinculos(r) {
     const existe = estado.regs.includes(r);
     estado.pessoas = estado.pessoas.filter(p => p.id !== r.linha);
     if (existe)
-        estado.pessoas.push({ id: r.linha, nome: r.nome, celula: r.celula || '' });
+        estado.pessoas.push({ id: r.linha, nome: r.nome, celula: r.celula || '', papel: regrasLideranca.papel(r), setor: String(r.setor || '') });
     estado.pessoas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     estado.regs.forEach(x => {
         if (x.discipuladorId !== r.linha)
@@ -128,7 +136,7 @@ function renderDiscipulos() {
         return `<article class="dc" data-cor="${r.celula ? corDaCelula(String(r.celula)) : regrasCelula.SEM_COR}">
       ${avatar(r, 'av-g')}
       <h2><button type="button" class="dc-nome" data-reg="${estado.regs.indexOf(r)}" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</button></h2>
-      <p class="dc-cel">${celulaChip(String(r.celula || ''))}</p>
+      <p class="dc-cel">${celulaOuPapel(r)}</p>
       <span class="dc-jor" role="img" aria-label="${r._jornada} de ${JORNADA.length} etapas da jornada">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>
       <p class="dc-prox">${prox ? `Próximo passo: <b>${esc(prox)}</b>` : '<b>Jornada completa</b>'}</p>
       <p class="dc-st${alerta ? ' alerta' : ''}">${esc(texto)}</p>

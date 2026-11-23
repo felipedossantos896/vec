@@ -9,12 +9,16 @@ novaDlg.setAttribute('aria-labelledby', 'npTitulo');
 novaDlg.innerHTML = `<div class="det-head"><div><p class="ct-kick">Nova pessoa</p><h3 id="npTitulo">Cadastrar membro</h3></div>
   <button class="icon-btn" type="button" data-fechar aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <form class="det-body np-form" id="npForm" novalidate>
-    <p class="np-intro">Para quem já aceitou Jesus e é membro de uma célula. Depois de salvar, a ficha abre para seguir a trilha.</p>
+    <p class="np-intro" id="npIntro">Para quem já aceitou Jesus e é membro de uma célula. Depois de salvar, a ficha abre para seguir a trilha.</p>
     <div class="field" id="npF-nome"><label class="label" for="npNome">Nome completo</label><input class="input" id="npNome" autocomplete="off" autocapitalize="words" maxlength="200"><p class="msg" id="npE-nome"></p></div>
     <div class="np-duas">
       <div class="field" id="npF-nascimento"><label class="label" for="npNasc">Data de nascimento</label><input class="input" id="npNasc" type="date" min="1900-01-01"><p class="msg" id="npE-nascimento"></p></div>
       <div class="field" id="npF-telefone"><label class="label" for="npTel">WhatsApp <span class="opc">opcional</span></label><input class="input" id="npTel" type="tel" inputmode="tel" autocomplete="off" placeholder="(85) 99999-9999" maxlength="20"><p class="msg" id="npE-telefone"></p></div>
     </div>
+    <fieldset class="field np-papel hidden" id="npPapelWrap"><legend class="label">Quem é</legend>
+      <div class="ct-dias">${regrasLideranca.PAPEIS.map(([k, l], i) => `<label class="ct-dia"><input type="radio" name="npPapel" value="${k}"${i === 0 ? ' checked' : ''}><span>${l}</span></label>`).join('')}</div>
+      <p class="field-hint" id="npPapelHint"></p></fieldset>
+    <div class="field hidden" id="npF-setor"><label class="label" for="npSetor">Setor que lidera</label><select class="input" id="npSetor"></select><p class="msg" id="npE-setor"></p></div>
     <div class="field" id="npF-celula"><label class="label" for="npCelula">Célula</label><select class="input" id="npCelula"></select><p class="field-hint" id="npCelulaUnica"></p><p class="msg" id="npE-celula"></p></div>
     <div class="field"><label class="label" for="npDisc">Discipulador <span class="opc">opcional</span></label><select class="input" id="npDisc"></select></div>
     <fieldset class="field np-jesus"><legend class="label">Já recebeu Jesus como Senhor e Salvador?</legend>
@@ -45,6 +49,10 @@ function abrirNovaPessoa() {
     $('npCelula').disabled = cels.length === 1;
     $('npCelulaUnica').textContent = cels.length === 1 ? 'É a célula que você lidera.' : '';
     $('npDisc').innerHTML = '<option value="">Sem discipulador por enquanto</option>' + opcoesPessoas(estado.pessoas, 0);
+    // Liderança sem célula (Spec 013): só quem vê a área toda cadastra líderes
+    $('npPapelWrap').classList.toggle('hidden', !estado.escopo.todos);
+    $('npSetor').innerHTML = '<option value="">Escolha o setor</option>' + estrutura.setores.map(x => `<option>${esc(x.nome)}</option>`).join('');
+    ajustarPapelNova();
     $('npNasc').max = regrasContato.iso(new Date());
     mostrarErrosNova({});
     $('npDup').classList.add('hidden');
@@ -52,14 +60,27 @@ function abrirNovaPessoa() {
     novaDlg.showModal();
     $('npNome').focus();
 }
+const papelNova = () => novaDlg.querySelector('input[name="npPapel"]:checked')?.value || 'membro';
+function ajustarPapelNova() {
+    const papel = papelNova();
+    $('npF-celula').classList.toggle('hidden', papel !== 'membro');
+    $('npF-setor').classList.toggle('hidden', papel !== 'lider_setor');
+    $('npPapelHint').textContent = papel === 'membro' ? '' : papel === 'lider_setor'
+        ? 'Sem célula fixa: supervisiona as células do setor. Tem jornada e pode ser discipulador.'
+        : 'Sem célula fixa nem jornada: supervisiona a área e pode ser discipulador.';
+    $('npIntro').textContent = papel === 'membro' ? 'Para quem já aceitou Jesus e é membro de uma célula. Depois de salvar, a ficha abre para seguir a trilha.'
+        : 'Cadastro de liderança, sem célula. Depois de salvar, ele já aparece na escolha de discipulador.';
+}
+novaDlg.addEventListener('change', e => { if (e.target?.name === 'npPapel')
+    ajustarPapelNova(); });
 function mostrarErrosNova(e) {
-    ['nome', 'nascimento', 'telefone', 'celula', 'autorizou'].forEach(k => {
+    ['nome', 'nascimento', 'telefone', 'celula', 'setor', 'autorizou'].forEach(k => {
         $(`npE-${k}`).textContent = e[k] || '';
         $(`npF-${k}`).classList.toggle('invalid', !!e[k]);
     });
-    const primeiro = ['nome', 'nascimento', 'telefone', 'celula', 'autorizou'].find(k => e[k]);
+    const primeiro = ['nome', 'nascimento', 'telefone', 'celula', 'setor', 'autorizou'].find(k => e[k]);
     if (primeiro)
-        ({ nome: $('npNome'), nascimento: $('npNasc'), telefone: $('npTel'), celula: $('npCelula'), autorizou: $('npAut') }[primeiro].focus());
+        ({ nome: $('npNome'), nascimento: $('npNasc'), telefone: $('npTel'), celula: $('npCelula'), setor: $('npSetor'), autorizou: $('npAut') }[primeiro].focus());
 }
 // Máscara do WhatsApp, como no formulário público
 $('npTel').addEventListener('input', () => {
@@ -76,7 +97,8 @@ $('npForm').addEventListener('submit', async (e) => {
     }
     const p = {
         nome: $('npNome').value.trim(), nascimento: $('npNasc').value,
-        celula: $('npCelula').value, telefone: $('npTel').value, autorizou: $('npAut').checked
+        celula: $('npCelula').value, telefone: $('npTel').value, autorizou: $('npAut').checked,
+        papel: papelNova(), setor: $('npSetor').value
     };
     const erros = regrasNovaPessoa.validar(p, regrasContato.iso(new Date()));
     mostrarErrosNova(erros);
@@ -89,8 +111,8 @@ $('npForm').addEventListener('submit', async (e) => {
     try {
         const jesus = novaDlg.querySelector('input[name="npJesus"]:checked')?.value || 'S';
         const res = await api({
-            acao: 'registro_criar', token: s.token, requestId: npEnvio, autorizou: p.autorizou,
-            dados: { nome: p.nome, nascimento: p.nascimento, celula: p.celula, telefone: regrasNovaPessoa.digitos(p.telefone), recebeuJesus: jesus, discipuladorId: Number($('npDisc').value) || 0 }
+            acao: 'registro_criar', token: s.token, requestId: npEnvio, autorizou: p.autorizou, papel: p.papel,
+            dados: { nome: p.nome, nascimento: p.nascimento, celula: p.papel === 'membro' ? p.celula : '', setor: p.papel === 'lider_setor' ? (p.setor || '') : '', telefone: regrasNovaPessoa.digitos(p.telefone), recebeuJesus: jesus, discipuladorId: Number($('npDisc').value) || 0 }
         });
         if (!res.ok) {
             if (res.erro === 'sessao') {
@@ -115,7 +137,7 @@ $('npForm').addEventListener('submit', async (e) => {
         Object.keys(r).forEach(k => { x[k] = typeof r[k] === 'string' ? String(r[k]).trim() : r[k]; });
         derivar(x);
         estado.regs = [x, ...estado.regs.filter(o => o.linha !== x.linha)];
-        estado.pessoas = [...estado.pessoas.filter(o => o.id !== x.linha), { id: x.linha, nome: x.nome, celula: String(x.celula || '') }].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+        estado.pessoas = [...estado.pessoas.filter(o => o.id !== x.linha), { id: x.linha, nome: x.nome, celula: String(x.celula || ''), papel: regrasLideranca.papel(x), setor: String(x.setor || '') }].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
         npEnvio = novoEnvio();
         novaDlg.close();
         atualizarPainel();

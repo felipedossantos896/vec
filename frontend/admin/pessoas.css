@@ -150,3 +150,9 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 /* Nome completo abaixo do nome curto na ficha (Spec 011) */
 .det-head .det-completo { margin-top: 1px; color: var(--muted); font-size: var(--t12); font-weight: 500; }
 .det-completo[hidden] { display: none; }
+
+/* Liderança sem célula (Spec 013) */
+.tag-lider { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; background: var(--grafite); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+.np-papel { border: 0; padding: 0; min-width: 0; }
+.ed-papel { margin: 0 0 12px; font-weight: 600; color: var(--ink); }
+.u-lider-campos { margin-top: 8px; }

@@ -43,7 +43,7 @@ function abrirEdicao(r: Registro) {
   const celulas = `<option value="">Sem célula</option>` +
     SETORES.map(s => `<optgroup label="Setor ${esc(s)}">${opcoesSel(CELULAS.filter(c => SETOR_DA_CELULA[c] === s && (!FECHADAS.has(c) || c === r.celula)), r.celula)}</optgroup>`).join('') +
     (soltas.length ? `<optgroup label="Outras">${opcoesSel(soltas, r.celula)}</optgroup>` : '');
-  const secoes: [string, string][] = [['edDados', 'Dados pessoais'], ['edJornada', 'Jornada'], ['edCelula', 'Célula e serviço'], ['edTreinos', 'Treinamentos'], ['edDisc', 'Discipulado']];
+  const secoes: [string, string][] = [['edDados', 'Dados pessoais'], ['edJornada', 'Jornada'], ['edCelula', 'Célula e serviço'], ['edTreinos', 'Treinamentos'], ['edDisc', 'Discipulado']].filter(([id]) => id !== 'edJornada' || regrasLideranca.temTrilha(r)) as [string, string][];
   $('detBody').innerHTML = `<form id="eForm" class="ed-form" novalidate aria-labelledby="edTitulo">
     <p class="ct-kick" id="edTitulo">Editar cadastro</p>
     <nav class="ed-nav" aria-label="Partes do cadastro">${secoes.map(([id, l]) => `<button type="button" data-ir="${id}">${l}</button>`).join('')}</nav>
@@ -53,9 +53,9 @@ function abrirEdicao(r: Registro) {
       ${campo('eNasc', 'Data de nascimento', `<input class="input" id="eNasc" type="date" min="1900-01-01" max="${isoData(new Date())}" value="${isoData(r._nasc)}">`)}
       <div class="sn-box">${simNao('recebeuJesus', 'Recebeu Jesus', r.recebeuJesus)}</div>
     </div>
-    ${grupoSN('edJornada', 'Etapas da jornada', r, JORNADA)}
+    ${regrasLideranca.temTrilha(r) ? grupoSN('edJornada', 'Etapas da jornada', r, JORNADA) : ''}
     <div class="det-sec" id="edCelula"><h4>Célula e serviço</h4>
-      ${campo('eCelula', 'Célula', `<select class="input" id="eCelula">${celulas}</select>`)}
+      ${regrasLideranca.ehLider(r) ? `<p class="field-hint ed-papel">${esc(regrasLideranca.rotulo(r))} · sem célula fixa</p><select class="hidden" id="eCelula"><option value="" selected></option></select>` : campo('eCelula', 'Célula', `<select class="input" id="eCelula">${celulas}</select>`)}
       ${campo('eSetor', 'Setor', `<select class="input" id="eSetor"><option value="">Sem setor</option>${opcoesSel(distintos('setor', SETORES), r.setor)}</select><p class="field-hint">Quem tem célula fica no setor dela.</p>`)}
       <div class="sn-box">${simNao('frequentaCultos', 'Congrega com frequência', r.frequentaCultos)}${simNao('serveMinisterio', 'Serve em ministério', r.serveMinisterio)}</div>
       ${campo('eMinisterio', 'Em qual ministério?', `<input class="input" id="eMinisterio" autocapitalize="sentences" value="${esc(r.ministerioNome)}">`)}
@@ -78,7 +78,8 @@ function abrirEdicao(r: Registro) {
 // O setor só é escolhido à parte por quem não tem célula; o ministério, só por quem serve
 function ajustarEdicao() {
   const f = $<HTMLFormElement>('eForm');
-  $('w_eSetor').classList.toggle('hidden', !!SETOR_DA_CELULA[$<HTMLSelectElement>('eCelula').value]);
+  const r = registroAberto();
+  $('w_eSetor').classList.toggle('hidden', !!SETOR_DA_CELULA[$<HTMLSelectElement>('eCelula').value] || (!!r && regrasLideranca.papel(r) === 'lider_area'));
   $('w_eMinisterio').classList.toggle('hidden', !f.querySelector('input[name="e_serveMinisterio"][value="S"]:checked'));
 }
 
