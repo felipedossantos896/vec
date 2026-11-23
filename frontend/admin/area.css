@@ -100,3 +100,23 @@
   .area-ferr-painel { position: static; width: auto; margin-top: 10px; border-radius: 14px; border: 1px solid var(--line); box-shadow: none; }
   .area-palco.modo-ferr .leaflet-top.leaflet-right { right: 0; }
 }
+
+/* ── Leque (Spec 012): os rostos do grupo se abrem em volta do centro da área ── */
+.leque { position: absolute; left: 50%; top: calc(var(--rosto, 40px) / 2 + 3px); width: 0; height: 0; pointer-events: none; }
+.lq-linhas { position: absolute; left: 0; top: 0; overflow: visible; opacity: 0; transition: opacity 0.2s; }
+.lq-linhas line { stroke: var(--grafite); stroke-opacity: 0.45; stroke-width: 1.5; }
+.lq-rosto { position: absolute; left: 0; top: 0; padding: 0; border-radius: 50%; opacity: 0; pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.35);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s; }
+.lq-rosto .rp { margin: 0; }
+.lq-rosto .rp-alerta { top: -4px; right: -4px; }
+.lq-nome { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); white-space: nowrap; font: 600 var(--t12)/1 var(--sans); background: #fff; color: var(--ink); padding: 4px 8px; border-radius: 99px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.mapa-grupo.aberto .lq-linhas { opacity: 1; }
+.mapa-grupo.aberto .lq-rosto { opacity: 1; pointer-events: auto; transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px))) scale(1); }
+.mapa-grupo.aberto > .rostos-pin { opacity: 0.35; }
+.mapa-grupo.aberto > .rp-nome, .mapa-grupo.aberto > .rp-alerta { opacity: 0; }
+.lq-rosto:hover .lq-nome, .lq-rosto:focus-visible .lq-nome { opacity: 1; }
+.lq-rosto:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 3px; }
+.lq-rosto:hover { z-index: 2; }
+.cartao-pop .leaflet-popup-content { margin: 12px 14px; }
+@media (prefers-reduced-motion: reduce) { .lq-rosto, .lq-linhas, .lq-nome { transition: none; } }

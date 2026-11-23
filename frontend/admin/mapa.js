@@ -99,6 +99,7 @@ function iniciarLeaflet() {
     // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
     mapaLeaflet.on('zoomend', () => { if (estado.aba === 'acompanhar' && ultimoFiltro)
         desenharGrupos(ultimoFiltro); });
+    ligarLeque();
     camadaFerr = L.layerGroup().addTo(mapaLeaflet);
     return true;
 }
@@ -161,6 +162,7 @@ function renderMapa() {
 // Marcadores das áreas: rostos empilhados com o tamanho do zoom atual (Spec 012)
 let ultimoFiltro = null;
 function desenharGrupos(f) {
+    fecharLeque();
     camadaGrupos.clearLayers();
     const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), matchMedia('(pointer: coarse), (max-width: 720px)').matches);
     $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
@@ -174,19 +176,137 @@ function desenharGrupos(f) {
         const rotulo = `Área ${i + 1}: ${pessoas.map(r => r.nome).join(', ') || regrasMapa.pessoas(g.linhas.length)}`;
         const grupo = grupoMult(pessoas[0]?.linha);
         const corPino = (r) => grupo === 'B' ? '#15171c' : corDaCelula(r.celula);
+        const alerta = (r) => naLente('cuidado', r) && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : '';
         const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
+        // Leque (Spec 012): todos os rostos do grupo, escondidos até abrir, com as linhas até o centro
+        const pos = pessoas.length > 1 ? regrasMapa.leque(pessoas.length, t) : [];
+        const leque = pos.length ? `<span class="leque" aria-hidden="true"><svg class="lq-linhas" width="1" height="1" aria-hidden="true">${pos.map(p => `<line x1="0" y1="0" x2="${p.x}" y2="${p.y}"/>`).join('')}</svg>` +
+            pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeCurto(r))}${naLente('cuidado', r) ? ', precisa de cuidado' : ''}"><span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>${alerta(r)}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
         const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-            `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
+            `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}${leque}`;
         const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
         const m = L.marker([g.lat, g.lng], {
             icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
             keyboard: true, title: rotulo
         });
-        m.bindPopup(`<p class="mapa-pop-t">${esc(`Área ${i + 1}: ${regrasMapa.pessoas(g.linhas.length)}`)}${g.peloBairro ? ' (algumas pelo bairro)' : ''}</p>${pessoasPopup(pessoas)}`);
         m.addTo(camadaGrupos);
-        m.getElement()?.setAttribute('aria-label', rotulo);
+        const el = m.getElement();
+        if (!el)
+            return;
+        el.setAttribute('aria-label', `${rotulo}. ${pos.length ? 'Enter abre os rostos.' : 'Enter abre o cartão.'}`);
+        el.querySelectorAll('.lq-rosto').forEach((b, j) => {
+            b.style.setProperty('--x', `${pos[j].x}px`); // CSSOM: o CSP não deixa style no HTML
+            b.style.setProperty('--y', `${pos[j].y}px`);
+            b.style.transitionDelay = `${Math.min(j, 12) * 14}ms`;
+        });
+        const gl = { m, el, pessoas, pos, t, fixo: false };
+        if (pos.length && temMouse()) {
+            el.addEventListener('mouseenter', () => { clearTimeout(tFecharLeque); if (lequeAberto?.m !== m)
+                abrirLeque(gl, false); });
+            el.addEventListener('mouseleave', () => { const la = lequeAberto; if (la && la.m === m && !la.fixo)
+                tFecharLeque = setTimeout(fecharLeque, 250); });
+        }
+        // Enter ou Espaço no marcador (o Leaflet só abriria um popup ligado a ele)
+        el.addEventListener('keydown', e => {
+            if ((e.key !== 'Enter' && e.key !== ' ') || e.target !== el)
+                return;
+            e.preventDefault();
+            if (!pos.length) {
+                abrirCartao(gl, 0);
+                return;
+            }
+            const la = lequeAberto;
+            if (la && la.m === m) {
+                fecharLeque();
+                return;
+            }
+            abrirLeque(gl, true);
+            el.querySelector('.lq-rosto')?.focus();
+        });
+        m.on('click', (ev) => {
+            const o = ev.originalEvent;
+            const alvo = o?.target instanceof Element ? o.target : null;
+            const peloTeclado = !!o && (o.type.startsWith('key') || o.detail === 0);
+            const rosto = alvo?.closest('.lq-rosto');
+            if (rosto) {
+                abrirCartao(gl, Number(rosto.dataset.lq));
+                return;
+            }
+            if (!pos.length) {
+                abrirCartao(gl, 0);
+                return;
+            }
+            const la = lequeAberto;
+            if (la && la.m === m && la.fixo) {
+                fecharLeque();
+                return;
+            }
+            abrirLeque(gl, true);
+            if (peloTeclado)
+                el.querySelector('.lq-rosto')?.focus();
+        });
     });
 }
+let lequeAberto = null;
+let cartaoDe = null;
+let tFecharLeque;
+const temMouse = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
+function abrirLeque(g, fixo) {
+    clearTimeout(tFecharLeque);
+    if (lequeAberto && lequeAberto.m !== g.m)
+        fecharLeque();
+    g.fixo = fixo || g.fixo;
+    lequeAberto = g;
+    g.el.classList.add('aberto');
+    g.m.setZIndexOffset(2000);
+    g.el.querySelector('.leque')?.removeAttribute('aria-hidden');
+    g.el.querySelectorAll('.lq-rosto').forEach(b => { b.tabIndex = 0; });
+}
+function fecharLeque() {
+    clearTimeout(tFecharLeque);
+    const g = lequeAberto;
+    if (!g)
+        return;
+    lequeAberto = null;
+    g.fixo = false;
+    g.el.classList.remove('aberto');
+    g.m.setZIndexOffset(0);
+    g.el.querySelector('.leque')?.setAttribute('aria-hidden', 'true');
+    g.el.querySelectorAll('.lq-rosto').forEach(b => { b.tabIndex = -1; });
+}
+// Cartão pequeno ancorado no rosto (ou no marcador, para quem está sozinho na área)
+function abrirCartao(g, j) {
+    const r = g.pessoas[j];
+    if (!r)
+        return;
+    if (g.pos.length)
+        abrirLeque(g, true);
+    const p = g.pos[j] || { x: 0, y: 0 };
+    const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPadding: [24, 24] })
+        .setLatLng(g.m.getLatLng()).setContent(pessoasPopup([r])).openOn(mapaLeaflet);
+    cartaoDe = { g, j };
+    pop.getElement()?.querySelector('button, a')?.focus({ preventScroll: true });
+}
+// Fecha o leque ao tocar no mapa, arrastar ou dar zoom; Esc fecha o cartão e depois o leque
+function ligarLeque() {
+    mapaLeaflet.on('click dragstart zoomstart', () => { mapaLeaflet.closePopup(); fecharLeque(); });
+    mapaLeaflet.on('popupclose', () => { cartaoDe = null; });
+}
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]'))
+        return;
+    if (cartaoDe) {
+        const { g, j } = cartaoDe;
+        mapaLeaflet.closePopup();
+        (g.el.querySelectorAll('.lq-rosto')[j] || g.el).focus();
+        return;
+    }
+    if (lequeAberto) {
+        const el = lequeAberto.el;
+        fecharLeque();
+        el.focus();
+    }
+});
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
 document.addEventListener('click', e => {
     const b = e.target instanceof Element ? e.target.closest('[data-mapa-pessoa]') : null;
