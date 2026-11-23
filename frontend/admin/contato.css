@@ -1,0 +1,39 @@
+/* Registrar contato e histórico (Spec 009) */
+.ct-titulo { font: 700 var(--t15) var(--display); margin: 14px 0 8px; }
+.ct-alerta { background: var(--coral-bg); color: var(--coral-ink); border-radius: 10px; padding: 10px 12px; font-size: var(--t13); font-weight: 600; }
+.ct-form { border: 1.5px solid var(--line); border-radius: 14px; padding: 4px 14px 14px; margin-top: 12px; }
+.ct-grupo { border: 0; padding: 0; margin: 10px 0 0; min-width: 0; }
+.ct-tipos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ct-tipo input, .ct-dia input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ct-tipo span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; min-height: 56px; justify-content: center; border: 1.5px solid var(--line-strong); border-radius: 11px; font-weight: 600; font-size: var(--t12); cursor: pointer; text-align: center; }
+.ct-tipo i { font-style: normal; font-size: 18px; line-height: 1; }
+.ct-tipo input:checked + span { background: var(--grafite); border-color: var(--grafite); color: #fff; }
+.ct-tipo input:focus-visible + span, .ct-dia input:focus-visible + span { outline: 3px solid var(--coral-ink); outline-offset: 2px; }
+.ct-dias { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ct-dia span { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border: 1.5px solid var(--line-strong); border-radius: 9px; font-weight: 600; font-size: var(--t13); cursor: pointer; }
+.ct-dia input:checked + span { border-color: var(--grafite); box-shadow: inset 0 0 0 1px var(--grafite); }
+.ct-outro { width: auto; height: 36px; }
+.ct-form .label { margin-top: 10px; }
+.ct-form .opc { font-weight: 500; color: var(--muted); font-size: var(--t12); }
+.ct-lembra { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 10px; }
+.ct-lembra .input { width: auto; }
+.ct-tl { position: relative; list-style: none; padding: 0; }
+.ct-tl::before { content: ''; position: absolute; left: 15px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.ct-ev { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 0 0 14px; position: relative; border: 0; }
+.ct-ic { width: 32px; height: 32px; border-radius: 50%; background: var(--white); border: 2px solid var(--line-strong); display: grid; place-items: center; font-size: 14px; z-index: 1; }
+.ct-ev.ligacao .ct-ic, .ct-ev.visita .ct-ic, .ct-ev.encontro .ct-ic { border-color: var(--grafite); }
+.ct-ev.whatsapp .ct-ic { border-color: var(--whatsapp); color: var(--whatsapp); }
+.ct-eh { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.ct-eh b { font: 700 var(--t15) var(--display); }
+.ct-eh span { font-size: var(--t12); color: var(--muted); white-space: nowrap; }
+.ct-et { font-size: var(--t13); line-height: 1.5; margin-top: 3px; }
+.ct-lem { font-size: var(--t12); color: var(--ok); font-weight: 600; margin-top: 4px; }
+.ct-kick { font: 600 11px var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.ct-dlg { width: min(520px, calc(100vw - 24px)); }
+.b-pri { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--grafite); background: var(--grafite); color: #fff; font-weight: 600; font-size: var(--t13); white-space: nowrap; }
+.b-pri:focus-visible, .b-sec:focus-visible, .b-zap:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 2px; }
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 2000; transform: translate(-50%, 140%); display: flex; gap: 16px; align-items: center; max-width: calc(100vw - 32px); background: var(--grafite); color: #fff; border-radius: 12px; padding: 12px 16px; font-weight: 600; font-size: var(--t13); box-shadow: var(--shadow-float); transition: transform 0.2s ease; }
+.toast.on { transform: translate(-50%, 0); }
+.toast-a { color: var(--coral); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+@media (max-width: 720px) { .ct-tipos { grid-template-columns: repeat(3, minmax(0, 1fr)); } .ct-lembra { grid-template-columns: 1fr; } .ct-lembra .input { width: 100%; } .toast { bottom: 16px; } }

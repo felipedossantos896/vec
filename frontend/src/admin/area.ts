@@ -43,7 +43,7 @@ function renderFaleCom(base: Registro[]) {
     (top.length ? `<ul class="fale-lista">${top.map(({ r, ...p }) => `<li class="fale-c" data-cor="${corDaCelula(r.celula as string)}">
       <div class="fale-t">${avatar(r, 'av-m')}<div><b>${esc(r.nome)}</b><span>${celulaChip(r.celula)}</span></div></div>
       <p class="fale-m">${esc(regrasArea.motivo(p))}</p>
-      <div class="fale-a">${botaoWhats(r)}<button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ver ficha</button></div></li>`).join('')}</ul>` : '');
+      <div class="fale-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>` : '');
 }
 
 function renderArea() {

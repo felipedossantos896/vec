@@ -56,7 +56,7 @@
 .fale-t span { font-size: var(--t12); color: var(--muted); }
 .av-m { --av: 48px; }
 .fale-m { font-size: var(--t13); font-weight: 600; color: var(--coral-ink); }
-.fale-a, .pop-a { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.fale-a, .pop-a { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
 .b-zap, .b-sec { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--line-strong); background: var(--white); color: var(--ink); font-weight: 600; font-size: var(--t13); white-space: nowrap; text-decoration: none; }
 .b-zap { color: var(--whatsapp); border-color: #b9e2cb; }
 .pop-a .b-zap, .pop-a .b-sec { min-height: 32px; }

@@ -65,7 +65,8 @@ type Resposta struct {
 	// DiscipuladorID é o cadastro do discipulador (0 = sem vínculo; o nome digitado fica em V).
 	DiscipuladorID int64
 	Consentimento  string            // ISO UTC de quando autorizou o uso dos dados ("" = antes do aceite)
-	UltimoContato  string            // ISO UTC da anotação mais recente ("" = nenhuma)
+	UltimoContato  string            // ISO UTC do contato mais recente ("" = nenhum)
+	ProximoContato string            // AAAA-MM-DD do lembrete do contato mais recente ("" = sem lembrete)
 	FotoEm         string            // ISO UTC da última troca de foto ("" = sem foto)
 	Jornada        map[string]string // etapa -> ISO UTC de quando foi marcada como concluída
 	V              map[string]string // chave do Campo -> valor
@@ -176,7 +177,8 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `SELECT id, criado_em, COALESCE(atualizado_em, ''), COALESCE(atualizado_por, ''), COALESCE(discipulador_id, 0), COALESCE(consentimento_em, ''),
-		      COALESCE((SELECT MAX(a.criado_em) FROM anotacoes a WHERE a.resposta_id = respostas.id), ''),
+		      COALESCE((SELECT MAX(` + QuandoContato + `) FROM anotacoes a WHERE a.resposta_id = respostas.id), ''),
+		      COALESCE((SELECT a.lembrar_em FROM anotacoes a WHERE a.resposta_id = respostas.id ORDER BY ` + QuandoContato + ` DESC, a.id DESC LIMIT 1), ''),
 		      COALESCE((SELECT f.atualizado_em FROM fotos f WHERE f.resposta_id = respostas.id), ''), ` + colunas() +
 			` FROM respostas WHERE excluido_em IS NULL AND ` + cond + ` ORDER BY id DESC`,
 		Args: args,
@@ -191,12 +193,12 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	for _, row := range res[0].Rows {
 		r := Resposta{
 			ID: turso.Int(row, 0), CriadoEm: turso.Str(row, 1), EditadoEm: turso.Str(row, 2), EditadoPor: turso.Str(row, 3),
-			DiscipuladorID: turso.Int(row, 4), Consentimento: turso.Str(row, 5), UltimoContato: turso.Str(row, 6), FotoEm: turso.Str(row, 7),
+			DiscipuladorID: turso.Int(row, 4), Consentimento: turso.Str(row, 5), UltimoContato: turso.Str(row, 6), ProximoContato: turso.Str(row, 7), FotoEm: turso.Str(row, 8),
 			Jornada: map[string]string{},
 			V:       make(map[string]string, len(Campos)),
 		}
 		for i, c := range Campos {
-			r.V[c.Chave] = turso.Str(row, i+8)
+			r.V[c.Chave] = turso.Str(row, i+9)
 		}
 		out = append(out, r)
 	}
