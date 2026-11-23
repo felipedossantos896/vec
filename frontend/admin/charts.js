@@ -71,7 +71,7 @@ function renderIndicadores() {
     document.querySelectorAll('[data-periodo]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.periodo) === periodoInd)));
     $('indSub').textContent = `Como a área está caminhando · últimos ${periodoInd} meses`;
     if (!total) {
-        $('gConteudo').innerHTML = `<div class="empty">${estado.regs.length ? 'Nenhum cadastro nesse setor ou célula.' : 'Ainda não há cadastros para mostrar.'}</div>`;
+        $('gConteudo').innerHTML = regrasEstados.html(estado.regs.length ? { tipo: 'busca', titulo: 'Ninguém nesse setor ou célula', texto: 'Escolha outro filtro acima para ver os números.' } : regrasEstados.listaVazia(0, '', false));
         return;
     }
     const agora = new Date();

@@ -167,7 +167,7 @@ function atalhos(itens: [string, string, string][]): string {
 function renderAcompanhar() {
   const base = baseIndicadores();
   if (!base.length) {
-    $('aConteudo').innerHTML = `<div class="empty">${estado.regs.length ? 'Ninguém nesse setor ou célula.' : 'Ainda não há cadastros para acompanhar.'}</div>`;
+    $('aConteudo').innerHTML = estado.regs.length ? regrasEstados.html({ tipo: 'busca', titulo: 'Ninguém nesse setor ou célula', texto: 'Escolha outro filtro acima.' }) : '';
     return;
   }
   const nCuidar = base.filter(algum(CUIDAR)).length;

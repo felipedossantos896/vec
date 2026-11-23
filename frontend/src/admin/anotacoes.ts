@@ -79,10 +79,12 @@ function atualizarContatoDe(r: Registro, lista: Anotacao[]) {
 }
 
 // Aviso rápido no rodapé, com uma ação opcional ("Desfazer").
-function avisoRapido(msg: string, acao?: { rotulo: string; fazer: () => void }) {
+function avisoRapido(msg: string, acao?: { rotulo: string; fazer: () => void }, tipo: 'ok' | 'erro' = 'ok') {
   let el = document.getElementById('toast');
   if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  el.innerHTML = `<span>${esc(msg)}</span>${acao ? `<button type="button" class="toast-a">${esc(acao.rotulo)}</button>` : ''}`;
+  el.classList.toggle('erro', tipo === 'erro');
+  el.setAttribute('role', tipo === 'erro' ? 'alert' : 'status');
+  el.innerHTML = `<span>${tipo === 'erro' ? '<b aria-hidden="true">!</b> ' : ''}${esc(msg)}</span>${acao ? `<button type="button" class="toast-a">${esc(acao.rotulo)}</button>` : ''}`;
   el.classList.add('on');
   const b = el.querySelector<HTMLButtonElement>('.toast-a');
   if (b && acao) b.onclick = () => { el!.classList.remove('on'); acao.fazer(); };
@@ -181,7 +183,7 @@ $('cForm').addEventListener('submit', async e => {
     avisoRapido(`Contato com ${curtoNome(r.nome)} registrado.`, id ? { rotulo: 'Desfazer', fazer: async () => {
       const s2 = lerSessao(); if (!s2) return;
       const d = await api<AnotacoesResult>({ acao: 'anotacao_excluir', id, linha: r.linha, token: s2.token });
-      if (d.ok) { atualizarContatoDe(r, d.anotacoes); avisoRapido('Registro desfeito.'); }
+      if (d.ok) { atualizarContatoDe(r, d.anotacoes); avisoRapido('Registro desfeito.'); } else avisoRapido('Não foi possível desfazer. Tente de novo.', undefined, 'erro');
     } } : undefined);
   } catch { $('cMsg').textContent = 'Não foi possível conectar. Verifique a internet.'; } finally { b.disabled = false; }
 });
@@ -190,3 +192,7 @@ document.addEventListener('click', e => {
   const r = b ? estado.regs.find(x => x.linha === Number(b.dataset.contato)) : undefined;
   if (r) abrirContato(r);
 });
+
+// Sem conexão e de volta (Spec 009): o que já está na tela continua
+window.addEventListener('offline', () => avisoRapido('Sem internet agora. O que você já viu continua aqui.', undefined, 'erro'));
+window.addEventListener('online', () => avisoRapido('Conexão de volta.'));

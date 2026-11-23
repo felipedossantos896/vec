@@ -75,7 +75,7 @@ function atualizarContatoDe(r, lista) {
     }
 }
 // Aviso rápido no rodapé, com uma ação opcional ("Desfazer").
-function avisoRapido(msg, acao) {
+function avisoRapido(msg, acao, tipo = 'ok') {
     let el = document.getElementById('toast');
     if (!el) {
         el = document.createElement('div');
@@ -84,7 +84,9 @@ function avisoRapido(msg, acao) {
         el.setAttribute('role', 'status');
         document.body.appendChild(el);
     }
-    el.innerHTML = `<span>${esc(msg)}</span>${acao ? `<button type="button" class="toast-a">${esc(acao.rotulo)}</button>` : ''}`;
+    el.classList.toggle('erro', tipo === 'erro');
+    el.setAttribute('role', tipo === 'erro' ? 'alert' : 'status');
+    el.innerHTML = `<span>${tipo === 'erro' ? '<b aria-hidden="true">!</b> ' : ''}${esc(msg)}</span>${acao ? `<button type="button" class="toast-a">${esc(acao.rotulo)}</button>` : ''}`;
     el.classList.add('on');
     const b = el.querySelector('.toast-a');
     if (b && acao)
@@ -218,6 +220,8 @@ $('cForm').addEventListener('submit', async (e) => {
                     atualizarContatoDe(r, d.anotacoes);
                     avisoRapido('Registro desfeito.');
                 }
+                else
+                    avisoRapido('Não foi possível desfazer. Tente de novo.', undefined, 'erro');
             } } : undefined);
     }
     catch {
@@ -233,3 +237,6 @@ document.addEventListener('click', e => {
     if (r)
         abrirContato(r);
 });
+// Sem conexão e de volta (Spec 009): o que já está na tela continua
+window.addEventListener('offline', () => avisoRapido('Sem internet agora. O que você já viu continua aqui.', undefined, 'erro'));
+window.addEventListener('online', () => avisoRapido('Conexão de volta.'));

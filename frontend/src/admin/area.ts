@@ -40,6 +40,7 @@ function renderFaleCom(base: Registro[]) {
   const precisam = base.filter(r => naLente('cuidado', r));
   const top = regrasArea.urgentes(precisam.map(r => ({ ...pessoaArea(r), r })), 6);
   $('faleCom').innerHTML = `<header class="fale-h"><h2 id="faleTitulo">Fale com eles esta semana</h2><p>${top.length ? `Os ${top.length === 1 ? 'mais urgente' : `${top.length} mais urgentes`}, na ordem — marcados com ! no mapa.` : 'Ninguém precisando de cuidado agora.'}</p></header>` +
+    (!top.length && base.length ? regrasEstados.html(regrasEstados.cuidadoEmDia(estado.celula ? `da ${estado.celula}` : estado.setor ? `do setor ${estado.setor}` : 'do seu escopo')) : '') +
     (top.length ? `<ul class="fale-lista">${top.map(({ r, ...p }) => `<li class="fale-c" data-cor="${corDaCelula(r.celula as string)}">
       <div class="fale-t">${avatar(r, 'av-m')}<div><b>${esc(r.nome)}</b><span>${celulaChip(r.celula)}</span></div></div>
       <p class="fale-m">${esc(regrasArea.motivo(p))}</p>
@@ -83,3 +84,12 @@ $('areaFerrPainel').addEventListener('click', e => {
 });
 // O resumo do painel não fecha a ferramenta: quem sai é o "Voltar ao mapa".
 ['anfPainel', 'multPainel'].forEach(k => $(k).querySelector('summary')?.addEventListener('click', e => { if (estado.ferramenta === k) e.preventDefault(); }));
+
+// "Ver todas as pessoas" do estado "tudo em dia"
+$('faleCom').addEventListener('click', e => {
+  if (!(e.target instanceof Element) || !e.target.closest('[data-ir="cadastros"]')) return;
+  Object.assign(estado, { situacao: 'todos', busca: '' });
+  $<HTMLInputElement>('fBusca').value = '';
+  mostrarAba('cadastros');
+  renderTudo();
+});
