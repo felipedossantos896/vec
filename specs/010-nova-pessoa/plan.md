@@ -1,6 +1,6 @@
 # Plano técnico — Cadastrar nova pessoa pelo painel
 
-- Status: **Aprovado** (2026-11-23)
+- Status: **Entregue** (v1.52.0)
 
 ## Dados
 - `0016_cadastro_painel.sql` (aditiva):
