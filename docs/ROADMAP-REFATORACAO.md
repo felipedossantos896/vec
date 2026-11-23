@@ -210,6 +210,7 @@ teste contra um banco de produção.
 - [x] Cadastrar nova pessoa pelo painel, com autorização verbal e bloqueio de
   duplicado (Spec 010).
 - [x] Nome curto dos membros nas listas, com o completo na ficha (Spec 011).
+- [x] Rostos maiores no mapa e grupos que se abrem em leque (Spec 012).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

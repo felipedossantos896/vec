@@ -123,6 +123,12 @@ treinamentos e "Onde agir") e **Ajustes** (Células e setores com cor e encontro
 só para quem pode). Quem é só discipulador vê **Meus discípulos** e Pessoas. No celular,
 o menu fica numa barra inferior.
 
+**Rostos no mapa** (Spec 012): o círculo cresce com o zoom (40 a 60 px; 52 no celular) e a foto
+preenche o círculo em qualquer proporção. Quem mora na mesma área de ~300 m se abre num leque em
+volta do ponto (círculo até 8, espiral acima disso), por mouse ou clique no computador, toque no
+celular ou Enter pelo teclado; tocar num rosto abre um cartão com Contato feito e Ficha. O leque
+é só visual: nenhuma posição real de pessoa aparece.
+
 **Contato e acompanhamento:** o formulário pede WhatsApp (opcional) e só grava o
 envio com a autorização de uso dos dados marcada; a data do aceite fica em
 `respostas.consentimento_em` (vazia para envios anteriores). No detalhe da pessoa,

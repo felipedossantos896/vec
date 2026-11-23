@@ -1,6 +1,6 @@
 # Spec 012 — Rostos maiores e grupos que se abrem no mapa
 
-- Status: **Aprovada** (2026-11-23)
+- Status: **Entregue** (v1.55.0, 2026-11-23) · [validação](release-validation.md)
 - Data: 2026-11-23
 - ADRs: [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (rostos no mapa, áreas de ~300 m), [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) e [0009](../../docs/architecture/adr/0009-identidade-visual.md). Sem ADR nova.
 
