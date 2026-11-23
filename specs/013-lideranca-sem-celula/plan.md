@@ -1,6 +1,6 @@
 # Plano técnico — Líderes de área e de setor sem célula fixa
 
-- Status: **Aprovado** (2026-11-23)
+- Status: **Entregue** (v1.57.0)
 
 ## Dados
 - `0017_papel_lideranca.sql` (aditiva): `respostas.papel TEXT NOT NULL DEFAULT 'membro'
