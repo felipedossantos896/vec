@@ -21,7 +21,7 @@ const regDe = (id: number): Registro | undefined => estado.regs.find(r => r.linh
 
 function nomesMapa(ids: number[]): string {
   const regs = ids.map(regDe).filter((r): r is Registro => Boolean(r)).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}">${esc(r.nome)}</button> <span class="nota-fraca">${celulaChip(r.celula)}</span></li>`).join('')}</ul>`;
+  return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</button> <span class="nota-fraca">${celulaChip(r.celula)}</span></li>`).join('')}</ul>`;
 }
 
 // Casas do ranking aberto (até 4), na posição aproximada da área de quem recebe.
@@ -43,7 +43,7 @@ function grupoMult(linha: number | undefined): string {
 
 // Popup: rosto, nome, célula, o motivo de cuidado e as ações.
 function pessoasPopup(rs: Registro[]): string {
-  return `<ul class="pop-pessoas">${rs.map(r => `<li>${avatar(r, 'av-s')}<div><b>${esc(r.nome)}</b><span>${celulaChip(r.celula)}${naLente('cuidado', r) ? ` · <em>${esc(regrasArea.motivo(pessoaArea(r)))}</em>` : ''}</span></div>
+  return `<ul class="pop-pessoas">${rs.map(r => `<li>${avatar(r, 'av-s')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</b><span>${celulaChip(r.celula)}${naLente('cuidado', r) ? ` · <em>${esc(regrasArea.motivo(pessoaArea(r)))}</em>` : ''}</span></div>
     <div class="pop-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>`;
 }
 
@@ -126,7 +126,7 @@ function renderMapa() {
       const corPino = (r: Registro): string => grupo === 'B' ? '#15171c' : corDaCelula(r.celula as string);
       const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
       const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-        `<span class="rp-nome">${esc(regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
+        `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
       const larg = 44 + Math.max(0, Math.min(pessoas.length, 3) - 1) * 18 + (pessoas.length > 3 ? 22 : 0);
       const m = L.marker([g.lat, g.lng], {
         icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, 66], iconAnchor: [larg / 2, 22] }),

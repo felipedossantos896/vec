@@ -87,7 +87,7 @@ $('detFoto').addEventListener('click', async e => {
   if (alvo.id === 'fotoBtn' && r.fotoUrl) { $('fotoMenu').toggleAttribute('hidden'); return; }
   fecharMenuFoto();
   if (alvo.id === 'fotoBtn' || alvo.dataset.foto === 'trocar') { $<HTMLInputElement>('fotoArquivo').click(); return; }
-  if (!confirm(`Remover a foto de ${curto(r.nome)}?`)) return;
+  if (!confirm(`Remover a foto de ${nomeCurto(r)}?`)) return;
   if (await enviarFoto(r, { acao: 'foto_excluir' })) aposFoto(r, '');
 });
 document.addEventListener('click', e => { if (e.target instanceof Element && !e.target.closest('#detFoto')) fecharMenuFoto(); });

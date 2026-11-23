@@ -98,7 +98,7 @@ $('npForm').addEventListener('submit', async e => {
       if (res.erro === 'sessao') { limparSessao(); novaDlg.close(); return mostrarLogin('Sua sessão expirou. Entre novamente.'); }
       if (res.erro === 'duplicado' && res.existente) {
         const ex = res.existente;
-        $('npDup').innerHTML = `<p><b>${esc(ex.nome)}</b> já tem cadastro${ex.celula ? ` na ${esc(ex.celula)}` : ''}. Não dá para cadastrar de novo.</p><button type="button" class="b-sec" data-abrir="${ex.linha}">Abrir cadastro</button>`;
+        $('npDup').innerHTML = `<p><b title="${esc(regrasNomes.completo(ex.nome))}">${esc(nomeCurtoId(ex.linha, ex.nome))}</b> já tem cadastro${ex.celula ? ` na ${esc(ex.celula)}` : ''}. Não dá para cadastrar de novo.</p><button type="button" class="b-sec" data-abrir="${ex.linha}">Abrir cadastro</button>`;
         $('npDup').classList.remove('hidden');
         $('npDup').querySelector<HTMLButtonElement>('button')?.focus();
         return;
@@ -118,7 +118,7 @@ $('npForm').addEventListener('submit', async e => {
     atualizarPainel();
     abaDetalhe = 'resumo';
     abrirDetalhe(x);
-    avisoRapido(`Cadastro de ${curtoNome(x.nome)} criado. Siga a trilha pela ficha.`);
+    avisoRapido(`Cadastro de ${nomeCurto(x)} criado. Siga a trilha pela ficha.`);
   } catch {
     $('npMsg').textContent = 'Não foi possível conectar. Verifique a internet. Ao tentar de novo, nada é duplicado.';
   } finally {

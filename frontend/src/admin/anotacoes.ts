@@ -134,7 +134,7 @@ $('detBody').addEventListener('submit', async e => {
   if (await notas(r, payloadContato(f), $<HTMLButtonElement>('nSalvar'))) {
     $<HTMLTextAreaElement>('nTexto').value = '';
     const id = novoId(ultimaLista);
-    avisoRapido(`Contato com ${curtoNome(r.nome)} registrado.`, id ? { rotulo: 'Desfazer', fazer: () => { notas(r, { acao: 'anotacao_excluir', id }); } } : undefined);
+    avisoRapido(`Contato com ${nomeCurto(r)} registrado.`, id ? { rotulo: 'Desfazer', fazer: () => { notas(r, { acao: 'anotacao_excluir', id }); } } : undefined);
   }
 });
 $('detBody').addEventListener('click', e => {
@@ -155,7 +155,7 @@ document.body.appendChild(contatoDlg);
 let contatoDe: Registro | null = null;
 function abrirContato(r: Registro) {
   contatoDe = r;
-  $('cTitulo').textContent = r.nome;
+  $('cTitulo').textContent = nomeCurto(r);
   ($('cForm') as HTMLFormElement).reset();
   $('cOutro').classList.add('hidden'); $('cMsg').textContent = ''; errosContato('c', {});
   contatoDlg.showModal();
@@ -180,7 +180,7 @@ $('cForm').addEventListener('submit', async e => {
     contatoDlg.close();
     atualizarContatoDe(r, res.anotacoes);
     const id = novoId(res.anotacoes);
-    avisoRapido(`Contato com ${curtoNome(r.nome)} registrado.`, id ? { rotulo: 'Desfazer', fazer: async () => {
+    avisoRapido(`Contato com ${nomeCurto(r)} registrado.`, id ? { rotulo: 'Desfazer', fazer: async () => {
       const s2 = lerSessao(); if (!s2) return;
       const d = await api<AnotacoesResult>({ acao: 'anotacao_excluir', id, linha: r.linha, token: s2.token });
       if (d.ok) { atualizarContatoDe(r, d.anotacoes); avisoRapido('Registro desfeito.'); } else avisoRapido('Não foi possível desfazer. Tente de novo.', undefined, 'erro');

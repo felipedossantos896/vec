@@ -146,3 +146,7 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 .np-dup .b-sec { margin-top: 8px; min-height: 40px; }
 .np-form .btn-primary { margin-top: 14px; }
 @media (max-width: 480px) { .np-duas { grid-template-columns: 1fr; } .np-acoes { width: 100%; } .np-acoes > * { flex: 1; } }
+
+/* Nome completo abaixo do nome curto na ficha (Spec 011) */
+.det-head .det-completo { margin-top: 1px; color: var(--muted); font-size: var(--t12); font-weight: 500; }
+.det-completo[hidden] { display: none; }

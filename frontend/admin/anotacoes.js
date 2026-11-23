@@ -152,7 +152,7 @@ $('detBody').addEventListener('submit', async (e) => {
     if (await notas(r, payloadContato(f), $('nSalvar'))) {
         $('nTexto').value = '';
         const id = novoId(ultimaLista);
-        avisoRapido(`Contato com ${curtoNome(r.nome)} registrado.`, id ? { rotulo: 'Desfazer', fazer: () => { notas(r, { acao: 'anotacao_excluir', id }); } } : undefined);
+        avisoRapido(`Contato com ${nomeCurto(r)} registrado.`, id ? { rotulo: 'Desfazer', fazer: () => { notas(r, { acao: 'anotacao_excluir', id }); } } : undefined);
     }
 });
 $('detBody').addEventListener('click', e => {
@@ -173,7 +173,7 @@ document.body.appendChild(contatoDlg);
 let contatoDe = null;
 function abrirContato(r) {
     contatoDe = r;
-    $('cTitulo').textContent = r.nome;
+    $('cTitulo').textContent = nomeCurto(r);
     $('cForm').reset();
     $('cOutro').classList.add('hidden');
     $('cMsg').textContent = '';
@@ -211,7 +211,7 @@ $('cForm').addEventListener('submit', async (e) => {
         contatoDlg.close();
         atualizarContatoDe(r, res.anotacoes);
         const id = novoId(res.anotacoes);
-        avisoRapido(`Contato com ${curtoNome(r.nome)} registrado.`, id ? { rotulo: 'Desfazer', fazer: async () => {
+        avisoRapido(`Contato com ${nomeCurto(r)} registrado.`, id ? { rotulo: 'Desfazer', fazer: async () => {
                 const s2 = lerSessao();
                 if (!s2)
                     return;

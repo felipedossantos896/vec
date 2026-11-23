@@ -146,7 +146,7 @@ $('detBody').addEventListener('click', async (e) => {
         $('anfCorpo').querySelector('[data-anf="editar"]')?.focus();
     }
     else if (b.dataset.anf === 'remover') {
-        if (!confirm(`Remover a confirmação de anfitrião de ${curto(r.nome)}? Ela é apagada de vez.`))
+        if (!confirm(`Remover a confirmação de anfitrião de ${nomeCurto(r)}? Ela é apagada de vez.`))
             return;
         const res = await chamarAnfitriao(r, { acao: 'anfitriao_excluir' }, b);
         if (!res?.ok)
@@ -217,7 +217,7 @@ function desenharRanking(d) {
             ? 'Nenhum membro desta célula tem endereço localizado. Cadastre os endereços na ficha.'
             : 'Nenhuma casa confirmada com endereço localizado no seu escopo.');
     const avisos = regrasAnfitriao.avisos(d);
-    const nome = (linha) => regDe(linha)?.nome || `Cadastro nº ${linha}`;
+    const nome = (linha) => { const r = regDe(linha); return r ? nomeCurto(r) : `Cadastro nº ${linha}`; };
     $('anfLista').innerHTML =
         `<p class="anf-aviso">Distância em linha reta, não é tempo de trajeto. A decisão é sempre da liderança.</p>` +
             (avisos.length ? `<ul class="anf-fora">${avisos.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : '') +

@@ -161,7 +161,7 @@ $('detBody').addEventListener('click', async e => {
   if (b.dataset.end === 'editar') formEndereco();
   else if (b.dataset.end === 'cancelar') { renderEndereco(); $('endCorpo').querySelector<HTMLButtonElement>('[data-end="editar"]')?.focus(); }
   else if (b.dataset.end === 'remover') {
-    if (!confirm(`Remover o endereço de ${curto(r.nome)}? Ele é apagado de vez.`)) return;
+    if (!confirm(`Remover o endereço de ${nomeCurto(r)}? Ele é apagado de vez.`)) return;
     const res = await chamarEndereco(r, { acao: 'endereco_excluir' }, b);
     if (!res?.ok) return;
     enderecoAtual = null;

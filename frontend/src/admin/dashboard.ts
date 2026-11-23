@@ -38,6 +38,7 @@ async function carregar() {
       return derivar(x);
     }).sort((a, b) => b.linha - a.linha);
     marcarDuplicados();
+    aplicarNomesCurtos();
     montarFiltros();
     renderTudo();
     atualizarBotoesNova(); // Spec 010: só para quem pode cadastrar
@@ -55,6 +56,17 @@ $('btnRefresh').addEventListener('click', () => {
   $('loading').innerHTML = regrasEstados.carregando('Carregando as pessoas do seu escopo…');
   carregar();
 });
+
+// ── Nome curto (Spec 011): o mesmo em toda a tela, sem dois iguais entre quem o líder vê ──
+let nomesCurtos = new Map<number, string>();
+function aplicarNomesCurtos() {
+  const vistos = new Map<number, string>();
+  estado.pessoas.forEach(p => vistos.set(p.id, p.nome));
+  estado.regs.forEach(r => vistos.set(r.linha, r.nome));
+  nomesCurtos = regrasNomes.semColisao([...vistos].map(([id, nome]) => ({ id, nome })));
+}
+const nomeCurtoId = (id: number, nome: string): string => nomesCurtos.get(id) || regrasNomes.curto(nome);
+const nomeCurto = (r: { linha: number; nome: string }): string => nomeCurtoId(r.linha, r.nome);
 
 // Campos calculados a partir das respostas; refeitos quando o cadastro é editado
 function derivar(x: Registro): Registro {
@@ -150,9 +162,9 @@ const precisaCuidado = (r: Registro): boolean => regrasContato.semContato(r._con
 function colunaDiscipulador(r: Registro): string {
   if (r.discipuladorId) {
     const nome = String(r.discipulador || estado.pessoas.find(p => p.id === r.discipuladorId)?.nome || '');
-    return `<span class="it-disc">${avatarDe(Number(r.discipuladorId), nome, 'av-p')}<span>${esc(curto(nome))}</span></span>`;
+    return `<span class="it-disc">${avatarDe(Number(r.discipuladorId), nome, 'av-p')}<span title="${esc(regrasNomes.completo(nome))}">${esc(nomeCurtoId(Number(r.discipuladorId), nome))}</span></span>`;
   }
-  if (r.discipulador) return `<span class="it-disc"><span>${esc(curto(String(r.discipulador)))}</span><em class="tag">sem vínculo</em></span>`;
+  if (r.discipulador) return `<span class="it-disc"><span>${esc(regrasNomes.curto(String(r.discipulador)))}</span><em class="tag">sem vínculo</em></span>`;
   return '<span class="tag-c">Sem discipulador</span>';
 }
 
@@ -177,7 +189,7 @@ function renderLista() {
   const head = '<div class="thead" aria-hidden="true"><span>Pessoa</span><span>Célula</span><span>Discipulador</span><span>Jornada</span><span>Contato</span></div>';
   $('list').innerHTML = head + lista.slice(0, mostra).map(r => `
     <button type="button" class="item${String(r.linha) === aberto ? ' sel' : ''}" data-i="${estado.regs.indexOf(r)}" data-linha="${r.linha}"${String(r.linha) === aberto ? ' aria-current="true"' : ''}>
-      <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n">${esc(r.nome)}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaChip(r.celula)}</span></span></span>
+      <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaChip(r.celula)}</span></span></span>
       <span class="it-cell">${celulaChip(r.celula)}</span>
       <span class="it-dsc">${colunaDiscipulador(r)}</span>
       <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span></span>

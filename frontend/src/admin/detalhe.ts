@@ -22,9 +22,12 @@ function jornadaResumo(r: Registro): string {
 function abrirDetalhe(r: Registro) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   const agora = new Date();
-  $('detNome').textContent = r.nome;
+  $('detNome').textContent = nomeCurto(r);
+  const completo = regrasNomes.completo(r.nome);
+  $('detNomeCompleto').textContent = completo;
+  $('detNomeCompleto').hidden = completo === nomeCurto(r); // Spec 011: o completo logo abaixo
   renderFotoDetalhe(r);
-  $('detSub').innerHTML = [r.celula ? celulaChip(r.celula) : 'Sem célula', r._idade != null ? `${r._idade} anos` : '', r.discipulador ? `discipulado por ${esc(curto(String(r.discipulador)))}` : '']
+  $('detSub').innerHTML = [r.celula ? celulaChip(r.celula) : 'Sem célula', r._idade != null ? `${r._idade} anos` : '', r.discipulador ? `discipulado por ${esc(r.discipuladorId ? nomeCurtoId(Number(r.discipuladorId), String(r.discipulador)) : regrasNomes.curto(String(r.discipulador)))}` : '']
     .filter(Boolean).join('<span aria-hidden="true"> · </span>');
 
   const nasc = r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento);

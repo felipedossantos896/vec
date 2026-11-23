@@ -71,7 +71,7 @@ async function carregarMultiplicacao(celula, grupos, movido) {
         }
     }
 }
-const nomeMult = (linha) => regDe(linha)?.nome || `Cadastro nº ${linha}`;
+const nomeMult = (linha) => { const r = regDe(linha); return r ? nomeCurto(r) : `Cadastro nº ${linha}`; };
 function desenharMultiplicacao() {
     const m = multAtual;
     if (!m)
