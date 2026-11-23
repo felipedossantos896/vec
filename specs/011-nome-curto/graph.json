@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    { "id": "T001", "issue": 154, "depends_on": [] },
+    { "id": "T002", "issue": 155, "depends_on": ["T001"] },
+    { "id": "T003", "issue": 156, "depends_on": ["T002"] }
+  ]
+}
