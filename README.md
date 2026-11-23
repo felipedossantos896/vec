@@ -98,6 +98,12 @@ célula obrigatórios, com a autorização verbal da pessoa registrada (`respost
 WhatsApp, é bloqueado; se ele for de outra célula fora do escopo, o aviso não diz quem é.
 Depois de salvar, a ficha abre para seguir a trilha.
 
+**Nome curto** (Spec 011): nas listas, no mapa e nos cartões cada membro aparece pelo primeiro
+nome e último sobrenome ("Felipe dos Santos Carneiro" → Felipe Carneiro). Com partícula antes do
+último sobrenome, vale o anterior; nome composto conhecido fica sem sobrenome ("Ana Clara");
+Filho/Júnior/Neto saem; nomes curtos repetidos ganham as iniciais do meio. A ficha mostra o
+curto e o completo abaixo; busca, CSV e edição usam o nome completo. O cadastro não muda.
+
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do
