@@ -203,6 +203,9 @@ type adminReq struct {
 	Linha  int64                      `json:"linha"`
 	Imagem string                     `json:"imagem"` // foto de perfil em base64
 	Dados  map[string]json.RawMessage `json:"dados"`
+	// Nova pessoa pelo painel (Spec 010): id do envio (idempotência) e autorização verbal
+	RequestID string `json:"requestId"`
+	Autorizou bool   `json:"autorizou"`
 	// Endereço da pessoa (Spec 002): consentimento marcado agora por quem salva
 	Endereco      *enderecoIn `json:"endereco"`
 	Consentimento bool        `json:"consentimento"`
@@ -289,6 +292,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.anotacaoExcluir(ctx, req)
 		case "registro_salvar":
 			rep = s.registroSalvar(ctx, req)
+		case "registro_criar":
+			rep = s.registroCriar(ctx, req)
 		case "registro_excluir":
 			rep = s.registroExcluir(ctx, req)
 		case "foto_salvar":

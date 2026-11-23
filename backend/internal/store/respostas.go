@@ -56,12 +56,16 @@ var Campos = []Campo{
 const CamposLegados = 25
 
 type Resposta struct {
-	ID         int64
-	CriadoEm   string // ISO UTC
-	RequestID  string // chave de reenvio do formulário público
-	ImportKey  string // chave estável de importação
-	EditadoEm  string // ISO UTC ("" se nunca foi editada pelo painel)
-	EditadoPor string // usuário do painel que fez a última edição
+	ID        int64
+	CriadoEm  string // ISO UTC
+	RequestID string // chave de reenvio do formulário público
+	ImportKey string // chave estável de importação
+	// Origem do cadastro (Spec 010): "formulario" (padrão) ou "painel"; no painel,
+	// CadastradoPor é o usuário que cadastrou e registrou a autorização verbal.
+	Origem        string
+	CadastradoPor string
+	EditadoEm     string // ISO UTC ("" se nunca foi editada pelo painel)
+	EditadoPor    string // usuário do painel que fez a última edição
 	// DiscipuladorID é o cadastro do discipulador (0 = sem vínculo; o nome digitado fica em V).
 	DiscipuladorID int64
 	Consentimento  string            // ISO UTC de quando autorizou o uso dos dados ("" = antes do aceite)
@@ -85,14 +89,18 @@ func (s *Store) InsertResposta(ctx context.Context, r Resposta) error {
 	if r.RequestID == "" {
 		return errors.New("id de envio vazio")
 	}
-	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+3), ", ")
-	args := make([]any, 0, len(Campos)+3)
-	args = append(args, r.RequestID, r.CriadoEm, idOuNuloTexto(r.Consentimento))
+	origem := r.Origem
+	if origem == "" {
+		origem = "formulario"
+	}
+	marks := strings.TrimSuffix(strings.Repeat("?, ", len(Campos)+5), ", ")
+	args := make([]any, 0, len(Campos)+5)
+	args = append(args, r.RequestID, r.CriadoEm, idOuNuloTexto(r.Consentimento), origem, idOuNuloTexto(r.CadastradoPor))
 	for _, c := range Campos {
 		args = append(args, r.V[c.Chave])
 	}
 	stmts := append([]turso.Stmt{{
-		SQL:  `INSERT INTO respostas (request_id, criado_em, consentimento_em, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
+		SQL:  `INSERT INTO respostas (request_id, criado_em, consentimento_em, origem, cadastrado_por, ` + colunas() + `) VALUES (` + marks + `) ON CONFLICT(request_id) DO NOTHING`,
 		Args: args,
 	}}, jornadaDoEnvio(r.RequestID)...)
 	_, err := s.DB.Tx(ctx, stmts...)
@@ -287,4 +295,42 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 		return false, err
 	}
 	return res[0].Affected > 0, nil
+}
+
+// IDDoEnvio devolve o cadastro gravado com este id de envio (0 = nenhum ou excluído).
+func (s *Store) IDDoEnvio(ctx context.Context, requestID string) (int64, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT id FROM respostas WHERE request_id = ? AND excluido_em IS NULL`, Args: []any{requestID}})
+	if err != nil || len(res[0].Rows) == 0 {
+		return 0, err
+	}
+	return turso.Int(res[0].Rows[0], 0), nil
+}
+
+// Candidato é um cadastro que pode ser a mesma pessoa de um cadastro novo (Spec 010).
+type Candidato struct {
+	ID             int64
+	Nome           string
+	Nascimento     string
+	Telefone       string
+	Setor          string
+	Celula         string
+	DiscipuladorID int64
+}
+
+// CandidatosDuplicado busca, na área inteira e sem os excluídos, quem tem a mesma data
+// de nascimento ou o mesmo telefone. A comparação do nome fica com quem chama.
+func (s *Store) CandidatosDuplicado(ctx context.Context, nascimento, telefone string) ([]Candidato, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `SELECT id, nome, nascimento, telefone, setor, celula, COALESCE(discipulador_id, 0) FROM respostas
+		      WHERE excluido_em IS NULL AND ((? <> '' AND nascimento = ?) OR (? <> '' AND telefone = ?))`,
+		Args: []any{nascimento, nascimento, telefone, telefone},
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Candidato, 0, len(res[0].Rows))
+	for _, row := range res[0].Rows {
+		out = append(out, Candidato{ID: turso.Int(row, 0), Nome: turso.Str(row, 1), Nascimento: turso.Str(row, 2), Telefone: turso.Str(row, 3), Setor: turso.Str(row, 4), Celula: turso.Str(row, 5), DiscipuladorID: turso.Int(row, 6)})
+	}
+	return out, nil
 }
