@@ -313,6 +313,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.anfitrioesRanking(ctx, req)
 		case "mapa":
 			rep = s.mapa(ctx, req)
+		case "indicadores_tendencia":
+			rep = s.indicadoresTendencia(ctx, req)
 		case "usuarios_listar":
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":

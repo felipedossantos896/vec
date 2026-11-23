@@ -20,7 +20,7 @@ test('aplica componentes reutilizáveis sem remover contratos antigos', () => {
   assert.match(dashboard, /\.filters, \.ui-filter-bar/);
   assert.match(dashboard, /\.stat span, \.ui-kpi span/);
   assert.match(dashboard, /\.filters select, \.ui-filter-bar select/);
-  assert.match(charts, /class="stat kpi ui-kpi/);
+  assert.match(charts, /class="ind-kpi"/);
   assert.match(charts, /class="panel ui-card"/);
 });
 
@@ -30,19 +30,20 @@ test('rotula os três grupos de filtros', () => {
   }
 });
 
-test('organiza indicadores em seções e preserva todas as métricas', () => {
-  for (const id of ['indicadoresResumo', 'indicadoresJornada', 'indicadoresPerfil']) {
-    assert.match(charts, new RegExp(`aria-labelledby="${id}"`));
-  }
-  for (const metrica of ['Total de pessoas', 'Novos em 30 dias', 'Idade média', 'Jornada completa', 'Etapas por pessoa']) {
+test('indicadores da Spec 009: cinco números com tendência e os painéis do preview', () => {
+  for (const metrica of ['Pessoas na área', 'Novos cadastros', 'Jornada completa', 'Com discipulador', 'Precisam de cuidado']) {
     assert.match(charts, new RegExp(metrica));
   }
+  for (const painel of ['Cadastros por mês', 'Faixa etária', 'Treinamentos', 'Onde agir']) {
+    assert.match(charts, new RegExp(painel));
+  }
+  assert.match(charts, /mapaJornada\(base\)/);
   assert.match(charts, /class="chart-scroll" role="region" aria-label=/);
 });
 
-test('central de atenção reutiliza filtros existentes de Pessoas', () => {
-  assert.match(charts, /id="centralAtencao"/);
-  assert.match(charts, /data-sit="\$\{situacao\}"/);
-  assert.match(charts, /jornadaIncompleta/);
-  assert.match(charts, /semDiscipulador/);
+test('Onde agir reutiliza os filtros de Pessoas e a lente da Área', () => {
+  assert.match(charts, /id="indAgir"/);
+  assert.match(charts, /data-sit="semDiscipulador"/);
+  assert.match(charts, /data-sit="batizar"/);
+  assert.match(charts, /data-lente="cuidado"/);
 });
