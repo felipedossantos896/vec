@@ -69,6 +69,8 @@ type Registro = {
   telefone?: string;
   consentimentoEm?: string;
   ultimoContato?: string;
+  proximoContato?: string; // AAAA-MM-DD do lembrete do contato mais recente (Spec 009)
+  _lembrete?: Date | null;
   fotoUrl?: string; // endereço assinado da foto de perfil ("" = sem foto)
   jornadaDatas?: Record<string, string>; // etapa -> quando foi marcada como concluída
 };
@@ -137,7 +139,7 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   semVinculo:     { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
   podeDiscipular: { label: 'Fizeram o Expresso 01 e ainda não discipulam', f: r => r.expresso01 === 'S' && !discipula(r) },
   discipulosDe:   { label: 'Discípulos de…', f: r => !!estado.discipuladorDe && r.discipuladorId === estado.discipuladorDe },
-  semContato:     { label: `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`, f: r => !r._contato || Date.now() - r._contato.getTime() > DIAS_SEM_CONTATO * 864e5 },
+  semContato:     { label: `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`, f: r => regrasContato.semContato(r._contato, r._lembrete || null, new Date()) }, // o lembrete adia (Spec 009)
   meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)

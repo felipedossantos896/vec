@@ -216,6 +216,9 @@ type adminReq struct {
 	DiaSemana   string `json:"diaSemana"`
 	Horario     string `json:"horario"`
 	AnfitriaoID int64  `json:"anfitriaoId"`
+	// Contato estruturado (Spec 009): o tipo vai em "tipo"
+	ContatoEm string `json:"contatoEm"`
+	LembrarEm string `json:"lembrarEm"`
 	// Multiplicação (Spec 005): divisão ajustada pelo líder, dois grupos de cadastros
 	Grupos [][]int64 `json:"grupos"`
 }

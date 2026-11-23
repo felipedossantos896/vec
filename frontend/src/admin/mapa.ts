@@ -44,7 +44,7 @@ function grupoMult(linha: number | undefined): string {
 // Popup: rosto, nome, célula, o motivo de cuidado e as ações.
 function pessoasPopup(rs: Registro[]): string {
   return `<ul class="pop-pessoas">${rs.map(r => `<li>${avatar(r, 'av-s')}<div><b>${esc(r.nome)}</b><span>${celulaChip(r.celula)}${naLente('cuidado', r) ? ` · <em>${esc(regrasArea.motivo(pessoaArea(r)))}</em>` : ''}</span></div>
-    <div class="pop-a">${botaoWhats(r)}<button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>`;
+    <div class="pop-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>`;
 }
 
 let mapaPedindo = false; // evita pedir o mapa de novo enquanto um pedido está no ar

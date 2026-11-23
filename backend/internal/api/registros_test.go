@@ -97,7 +97,14 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			if d.foto != nil && st.Args[0] == int64(7) {
 				out[i].Rows = [][]any{{d.foto, "image/png", "2026-11-14T10:00:00Z"}}
 			}
-		case strings.HasPrefix(st.SQL, "UPDATE"), strings.HasPrefix(st.SQL, "INSERT INTO anotacoes"), strings.HasPrefix(st.SQL, "DELETE FROM anotacoes"):
+		case strings.HasPrefix(st.SQL, "SELECT 1 FROM respostas WHERE id = ?"):
+			if d.afetadas > 0 {
+				out[i].Rows = [][]any{{int64(1)}}
+			}
+		case strings.HasPrefix(st.SQL, "INSERT INTO anotacoes"):
+			d.escritas = append(d.escritas, st)
+			out[i].Affected = d.afetadas
+		case strings.HasPrefix(st.SQL, "UPDATE"), strings.HasPrefix(st.SQL, "DELETE FROM anotacoes"):
 			out[i].Affected = d.afetadas
 		}
 	}

@@ -55,6 +55,7 @@ function derivar(x: Registro): Registro {
   x._idade = idade(x._nasc);
   x._jornada = metricasIndicadores.etapasConcluidas(x);
   x._contato = parseData(x.ultimoContato);
+  x._lembrete = parseData(x.proximoContato);
   x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
   return x;
 }
