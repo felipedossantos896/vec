@@ -3,7 +3,7 @@ mod preflight;
 mod process;
 mod review;
 
-use graph::{prepare_agent_command, resolve_graph_command, validate_graph_command};
+use graph::{resolve_graph_command, validate_graph_command};
 use preflight::preflight_command;
 use review::{BLOCKED_DRY_RUN, review_pr_command};
 use std::env;
@@ -25,12 +25,9 @@ fn execute(args: Vec<String>) -> Result<()> {
     match args.first().map(String::as_str) {
         Some("validate-graph") if args.len() == 1 => validate_graph_command(),
         Some("resolve-graph") if args.len() == 1 => resolve_graph_command(),
-        Some("prepare-agent") if args.len() == 1 => prepare_agent_command(),
         Some("preflight") if args.len() == 1 => preflight_command(),
         Some("review-pr") => review_pr_command(&args[1..]),
-        _ => Err(
-            "usage: vec-automation <validate-graph|resolve-graph|prepare-agent|preflight|review-pr>".into(),
-        ),
+        _ => Err("usage: vec-automation <validate-graph|resolve-graph|preflight|review-pr>".into()),
     }
 }
 
