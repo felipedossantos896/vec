@@ -131,3 +131,11 @@ $('fotoArquivo').addEventListener('change', async (e) => {
     if (res)
         aposFoto(r, res.fotoUrl || '');
 });
+// Arte do login (Spec 009): grupos de rostos ilustrados com sementes fixas, que não são de ninguém
+(function arteLogin() {
+    const el = document.getElementById('loginArte');
+    if (!el)
+        return;
+    const grupos = [[3, 11, 19, 27], [5, 13, 21, 29], [7, 15, 23, 31], [9, 17, 25, 33]];
+    el.innerHTML = grupos.map((g, i) => `<div class="la-g la-g${i}">${g.map(n => `<i class="la-av">${regrasAvatar.svg(n)}</i>`).join('')}</div>`).join('');
+})();

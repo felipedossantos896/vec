@@ -14,6 +14,24 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="form-page">
+<div class="fp">
+<aside class="fp-lado" aria-label="Etapas do formulário">
+  <span class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v16M7 9h10"/></svg></span>Área VEC</span>
+  <div class="fp-pitch">
+    <p class="eyebrow">Formulário de membro</p>
+    <p class="fp-h" id="ladoTitulo">Queremos conhecer você e caminhar junto.</p>
+    <p class="fp-t" id="ladoTexto">São 5 etapas rápidas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.</p>
+  </div>
+  <ol class="fp-passos" id="ladoPassos">
+    <li><span class="fp-n" aria-hidden="true">1</span><span><b>Dados pessoais</b><small>Nome, nascimento e contato</small></span></li>
+    <li><span class="fp-n" aria-hidden="true">2</span><span><b>Sua fé</b><small>Onde você está na caminhada</small></span></li>
+    <li><span class="fp-n" aria-hidden="true">3</span><span><b>Sua célula</b><small>Onde você se reúne</small></span></li>
+    <li><span class="fp-n" aria-hidden="true">4</span><span><b>Treinamentos</b><small>O que você já fez</small></span></li>
+    <li><span class="fp-n" aria-hidden="true">5</span><span><b>Para terminar</b><small>Interesses e autorização</small></span></li>
+  </ol>
+  <p class="fp-priv"><span class="fp-rostos" id="ladoRostos" aria-hidden="true"></span>Seus dados ficam só com a liderança da Área VEC e você pode pedir para apagá-los quando quiser.</p>
+</aside>
+<div class="fp-main">
 
 <header class="topbar" id="topbar">
   <div class="topbar-inner">
@@ -22,7 +40,7 @@
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v16M7 9h10"/></svg></span>
         Área VEC
       </span>
-      <span class="topbar-count" id="progressText" aria-live="polite">Etapa 1 de 5</span>
+      <span class="topbar-count" id="progressText">Etapa 1 de 5</span>
     </div>
     <div class="progress" role="progressbar" aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" aria-valuetext="Etapa 1 de 5" id="progressBar">
       <div class="progress-fill" id="progressFill"></div>
@@ -41,6 +59,7 @@
 <main class="wrap">
 
   <form id="vecForm" novalidate>
+    <div class="passo-topo"><p class="passo-k" id="passoK" aria-live="polite">Etapa 1 de 5 · Dados pessoais</p><span class="segs" id="segs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
 
     <!-- 1. Dados pessoais -->
     <section class="card" aria-labelledby="s1">
@@ -74,7 +93,7 @@
     <section class="card" aria-labelledby="s2" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">2</span>
-        <div><h2 id="s2" tabindex="-1">Etapas da jornada</h2><p>Você já participou de:</p></div>
+        <div><h2 id="s2" tabindex="-1">Sua fé</h2><p>Onde você está na caminhada. Você já participou de:</p></div>
       </div>
       <div class="qgrid" data-group="jornada"></div>
     </section>
@@ -83,27 +102,28 @@
     <section class="card" aria-labelledby="s3" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">3</span>
-        <div><h2 id="s3" tabindex="-1">Célula e serviço</h2><p>Onde você caminha e serve.</p></div>
+        <div><h2 id="s3" tabindex="-1">Sua célula</h2><p>Onde você se reúne e serve.</p></div>
       </div>
 
-      <div role="radiogroup" aria-labelledby="l-celula">
-        <p class="field-label" id="l-celula">Qual é a sua célula?</p>
+      <div role="radiogroup" aria-labelledby="l-celula" aria-describedby="d-celula">
+        <p class="field-label" id="l-celula">Em qual célula você está?</p><p class="q-sub" id="d-celula">Se ainda não participa, escolha “Ainda não tenho célula”.</p>
         <!-- Lista de reserva: o app.js troca pelas células ativas cadastradas no painel -->
         <div id="celulasOpcoes">
         <p class="opt-group" id="g-fogo">Setor Fogo no Altar</p>
         <div class="opts cols" data-setor="Fogo no Altar" role="group" aria-labelledby="g-fogo">
-          <label class="opt"><input type="radio" name="celula" value="Hope"><span>Hope</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Ramos da Videira"><span>Ramos da Videira</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Ashrei"><span>Ashrei</span></label>
+          <label class="opt"><input type="radio" name="celula" value="Hope"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Hope</b></span></span></label>
+          <label class="opt"><input type="radio" name="celula" value="Ramos da Videira"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Ramos da Videira</b></span></span></label>
+          <label class="opt"><input type="radio" name="celula" value="Ashrei"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Ashrei</b></span></span></label>
         </div>
         <p class="opt-group" id="g-tabernaculo">Setor Tabernáculo de Deus</p>
         <div class="opts cols" data-setor="Tabernáculo de Deus" role="group" aria-labelledby="g-tabernaculo">
-          <label class="opt"><input type="radio" name="celula" value="Betânia"><span>Betânia</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Despertar"><span>Despertar</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Pi-Hairote"><span>Pi-Hairote</span></label>
-          <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span>Vencedores em Cristo</span></label>
+          <label class="opt"><input type="radio" name="celula" value="Betânia"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Betânia</b></span></span></label>
+          <label class="opt"><input type="radio" name="celula" value="Despertar"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Despertar</b></span></span></label>
+          <label class="opt"><input type="radio" name="celula" value="Pi-Hairote"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Pi-Hairote</b></span></span></label>
+          <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Vencedores em Cristo</b></span></span></label>
         </div>
         </div>
+        <label class="opt opt-sem"><input type="radio" name="celula" value=""><span><span class="opt-t"><b>Ainda não tenho célula</b><small>A liderança vai te ajudar a encontrar uma</small></span></span></label>
       </div>
 
       <div class="sub-block qgrid" data-group="servico"></div>
@@ -118,7 +138,7 @@
     <section class="card" aria-labelledby="s4" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">4</span>
-        <div><h2 id="s4" tabindex="-1">Treinamentos</h2><p>Você já fez ou participa de:</p></div>
+        <div><h2 id="s4" tabindex="-1">Treinamentos</h2><p>O que você já fez ou participa.</p></div>
       </div>
       <div class="qgrid" data-group="treinamentos"></div>
     </section>
@@ -127,7 +147,7 @@
     <section class="card" aria-labelledby="s5" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">5</span>
-        <div><h2 id="s5" tabindex="-1">Discipulado e interesses</h2><p>Última etapa. Falta pouco!</p></div>
+        <div><h2 id="s5" tabindex="-1">Para terminar</h2><p>Conte como você quer servir. Não é compromisso.</p></div>
       </div>
 
       <div class="field">
@@ -138,8 +158,8 @@
       <div class="qgrid" data-group="interesses"></div>
 
       <div class="field sub-block">
-        <label class="field-label" for="sugestao">Sugestão de melhoria para as células</label>
-        <textarea id="sugestao" name="sugestao" autocapitalize="sentences" placeholder="Escreva sua sugestão (opcional)"></textarea>
+        <label class="field-label" for="sugestao">Sugestão para as células <span class="opcional">opcional</span></label>
+        <textarea id="sugestao" name="sugestao" autocapitalize="sentences" placeholder="O que faria as células ainda melhores?"></textarea>
       </div>
 
       <div class="field aceite" id="f-consentimento">
@@ -164,14 +184,19 @@
 
   <section class="done" id="done" aria-live="polite">
     <div class="done-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <h2>Formulário enviado</h2>
-    <p>Obrigado! Suas informações foram registradas e já estão com a liderança.</p>
-    <button type="button" class="btn-again" id="btnAgain">Preencher outro formulário</button>
+    <h2 id="doneTitulo" tabindex="-1">Recebemos!</h2>
+    <p id="doneTexto">Suas respostas já estão com a liderança da Área VEC.</p>
+    <p class="done-enc hidden" id="doneEnc"></p>
+    <button type="button" class="btn-again" id="btnAgain">Enviar outro formulário</button>
+    <p class="done-pe">Quer corrigir algo? Fale com a liderança da sua célula.</p>
   </section>
 
 </main>
+</div>
+</div>
 
 <script src="celula-regras.js" defer></script>
+<script src="admin/avatar-regras.js" defer></script>
 <script src="app.js" defer></script>
 <script src="contato.js" defer></script>
 

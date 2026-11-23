@@ -122,6 +122,21 @@ function atualizarProgresso() {
   byId<HTMLElement>('progressBar').setAttribute('aria-valuetext', `Etapa ${etapaAtual + 1} de ${etapas.length}`);
 }
 
+const NOMES_ETAPAS = ['Dados pessoais', 'Sua fé', 'Sua célula', 'Treinamentos', 'Para terminar'];
+// Lado do computador e topo da etapa (Spec 009): etapa atual, as já vistas com ✓ e o título
+function atualizarPassos() {
+  const ultima = etapaAtual === etapas.length - 1;
+  byId<HTMLElement>('passoK').textContent = `Etapa ${etapaAtual + 1} de ${etapas.length} · ${NOMES_ETAPAS[etapaAtual] || ''}`;
+  byId<HTMLElement>('segs').querySelectorAll('i').forEach((i, n) => i.classList.toggle('on', n <= etapaAtual));
+  byId<HTMLElement>('ladoPassos').querySelectorAll('li').forEach((li, n) => {
+    li.classList.toggle('feito', n < etapaAtual);
+    if (n === etapaAtual) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+  byId<HTMLElement>('ladoTitulo').textContent = ultima ? 'Falta pouco.' : 'Queremos conhecer você e caminhar junto.';
+  byId<HTMLElement>('ladoTexto').textContent = ultima ? 'Conte como você quer servir e autorize o uso dos dados para enviar.'
+    : 'São 5 etapas rápidas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.';
+}
+
 function mostrarEtapa(focar = false) {
   etapas.forEach((etapa, i) => {
     etapa.hidden = i !== etapaAtual;
@@ -133,6 +148,7 @@ function mostrarEtapa(focar = false) {
   btnSend.classList.toggle('hidden', etapaAtual !== etapas.length - 1);
   byId<HTMLElement>('intro').hidden = etapaAtual !== 0;
   atualizarProgresso();
+  atualizarPassos();
   if (focar) etapas[etapaAtual].querySelector('h2')?.focus();
 }
 
@@ -253,6 +269,18 @@ function mostrarErro(msg: string): void {
   sendError.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// Tela final com o primeiro nome e, se houver, a célula e o dia do encontro (sem casa nem bairro)
+function mostrarRecebido(nome: string, celula: string) {
+  const primeiro = nome.trim().split(/\s+/)[0] || '';
+  byId<HTMLElement>('doneTitulo').textContent = primeiro ? `Recebemos, ${primeiro}!` : 'Recebemos!';
+  byId<HTMLElement>('doneTexto').textContent = 'Suas respostas já estão com a liderança da Área VEC.' + (celula ? ` Logo alguém da ${celula} vai falar com você.` : ' Logo alguém da liderança vai falar com você.');
+  const enc = celula ? (encontroDaCelula[celula] || '') : '';
+  byId<HTMLElement>('doneEnc').textContent = enc ? `A ${celula} se reúne: ${enc}.` : '';
+  byId<HTMLElement>('doneEnc').classList.toggle('hidden', !enc);
+  setTimeout(() => byId<HTMLElement>('doneTitulo').focus(), 50);
+}
+const encontroDaCelula: Record<string, string> = {}; // preenchido por contato.ts
+
 let enviando = false;
 
 form.addEventListener('submit', async (e: SubmitEvent): Promise<void> => {
@@ -290,8 +318,10 @@ form.addEventListener('submit', async (e: SubmitEvent): Promise<void> => {
       return;
     }
     requestId = novoRequestId();
+    mostrarRecebido(valor('nome'), valor('celula'));
     form.style.display = 'none';
     byId<HTMLElement>('done').classList.add('show');
+    document.body.classList.add('enviado');
     byId<HTMLElement>('topbar').style.display = 'none';
     byId<HTMLElement>('intro').hidden = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -312,6 +342,7 @@ byId<HTMLButtonElement>('btnAgain').addEventListener('click', () => {
   form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
   ministerioWrap.classList.remove('show');
   byId<HTMLElement>('done').classList.remove('show');
+  document.body.classList.remove('enviado');
   byId<HTMLElement>('topbar').style.display = '';
   form.style.display = '';
   mostrarEtapa(true);

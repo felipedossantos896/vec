@@ -117,6 +117,23 @@ function atualizarProgresso() {
     byId('progressBar').setAttribute('aria-valuenow', String(pct));
     byId('progressBar').setAttribute('aria-valuetext', `Etapa ${etapaAtual + 1} de ${etapas.length}`);
 }
+const NOMES_ETAPAS = ['Dados pessoais', 'Sua fé', 'Sua célula', 'Treinamentos', 'Para terminar'];
+// Lado do computador e topo da etapa (Spec 009): etapa atual, as já vistas com ✓ e o título
+function atualizarPassos() {
+    const ultima = etapaAtual === etapas.length - 1;
+    byId('passoK').textContent = `Etapa ${etapaAtual + 1} de ${etapas.length} · ${NOMES_ETAPAS[etapaAtual] || ''}`;
+    byId('segs').querySelectorAll('i').forEach((i, n) => i.classList.toggle('on', n <= etapaAtual));
+    byId('ladoPassos').querySelectorAll('li').forEach((li, n) => {
+        li.classList.toggle('feito', n < etapaAtual);
+        if (n === etapaAtual)
+            li.setAttribute('aria-current', 'step');
+        else
+            li.removeAttribute('aria-current');
+    });
+    byId('ladoTitulo').textContent = ultima ? 'Falta pouco.' : 'Queremos conhecer você e caminhar junto.';
+    byId('ladoTexto').textContent = ultima ? 'Conte como você quer servir e autorize o uso dos dados para enviar.'
+        : 'São 5 etapas rápidas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.';
+}
 function mostrarEtapa(focar = false) {
     etapas.forEach((etapa, i) => {
         etapa.hidden = i !== etapaAtual;
@@ -130,6 +147,7 @@ function mostrarEtapa(focar = false) {
     btnSend.classList.toggle('hidden', etapaAtual !== etapas.length - 1);
     byId('intro').hidden = etapaAtual !== 0;
     atualizarProgresso();
+    atualizarPassos();
     if (focar)
         etapas[etapaAtual].querySelector('h2')?.focus();
 }
@@ -254,6 +272,17 @@ function mostrarErro(msg) {
     sendError.classList.add('show');
     sendError.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+// Tela final com o primeiro nome e, se houver, a célula e o dia do encontro (sem casa nem bairro)
+function mostrarRecebido(nome, celula) {
+    const primeiro = nome.trim().split(/\s+/)[0] || '';
+    byId('doneTitulo').textContent = primeiro ? `Recebemos, ${primeiro}!` : 'Recebemos!';
+    byId('doneTexto').textContent = 'Suas respostas já estão com a liderança da Área VEC.' + (celula ? ` Logo alguém da ${celula} vai falar com você.` : ' Logo alguém da liderança vai falar com você.');
+    const enc = celula ? (encontroDaCelula[celula] || '') : '';
+    byId('doneEnc').textContent = enc ? `A ${celula} se reúne: ${enc}.` : '';
+    byId('doneEnc').classList.toggle('hidden', !enc);
+    setTimeout(() => byId('doneTitulo').focus(), 50);
+}
+const encontroDaCelula = {}; // preenchido por contato.ts
 let enviando = false;
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -294,8 +323,10 @@ form.addEventListener('submit', async (e) => {
             return;
         }
         requestId = novoRequestId();
+        mostrarRecebido(valor('nome'), valor('celula'));
         form.style.display = 'none';
         byId('done').classList.add('show');
+        document.body.classList.add('enviado');
         byId('topbar').style.display = 'none';
         byId('intro').hidden = true;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -317,6 +348,7 @@ byId('btnAgain').addEventListener('click', () => {
     form.querySelectorAll('.field.invalid').forEach(f => f.classList.remove('invalid'));
     ministerioWrap.classList.remove('show');
     byId('done').classList.remove('show');
+    document.body.classList.remove('enviado');
     byId('topbar').style.display = '';
     form.style.display = '';
     mostrarEtapa(true);
