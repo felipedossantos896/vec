@@ -104,6 +104,7 @@ async function notas(r: Registro, payload: object, botao?: HTMLButtonElement): P
       return false;
     }
     renderNotas(res.anotacoes);
+    renderResumoNotas(res.anotacoes);
     atualizarContatoDe(r, res.anotacoes);
     ultimaLista = res.anotacoes;
     return true;

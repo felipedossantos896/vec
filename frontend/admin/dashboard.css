@@ -142,11 +142,6 @@
 .dots i.on { background: var(--navy-2); }
 
 /* ── Detalhe do cadastro ── */
-.det-journey { display: grid; gap: 10px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--gold-soft); border-radius: var(--r-md); background: var(--gold-wash); color: var(--muted); }
-.det-journey b { color: var(--ink); }
-.det-journey .dots { display: flex; gap: 5px; }
-.det-journey .dots i { flex: 1; height: 8px; border-radius: 4px; background: var(--gold-soft); }
-.det-journey .dots i.on { background: var(--navy); }
 .det-sec { margin-bottom: 22px; }
 .det-sec:last-child { margin-bottom: 0; }
 .det-sec h4 { margin: 0 2px 8px; color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
