@@ -1,6 +1,6 @@
 # Spec 009 — Nova identidade e telas centradas no mapa
 
-- Status: **Aprovada** (2026-11-22)
+- Status: **Entregue** (2026-11-23) · aprovada em 2026-11-22 · [validação](release-validation.md)
 - Data: 2026-11-22
 - ADRs: [0009](../../docs/architecture/adr/0009-identidade-visual.md), [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) e [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (Aceitos); [0005](../../docs/architecture/adr/0005-mapa-membros.md), [0006](../../docs/architecture/adr/0006-recomendacao-anfitrioes.md), [0007](../../docs/architecture/adr/0007-planejamento-novas-celulas.md) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md) (Aceitos)
 - Previews (dados fictícios): [`previews/`](previews/)

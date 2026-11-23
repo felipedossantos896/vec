@@ -204,6 +204,9 @@ teste contra um banco de produção.
   assinada e limite por IP, sem serviço externo (Spec 007).
 - [x] CSP estrito (sem `unsafe-inline`), fontes locais e estilos sem inline
   (Spec 008); o smoke de dev reprova qualquer violação.
+- [x] Nova identidade e telas centradas no mapa: Área com rostos, contato com
+  lembrete, ficha em gaveta, Indicadores com retrato mensal agregado, formulário e
+  login novos, visão do discipulador e estados de tela padronizados (Spec 009).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

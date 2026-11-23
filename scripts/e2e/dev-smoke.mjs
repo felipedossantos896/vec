@@ -94,8 +94,11 @@ async function iniciarServidor(porta) {
 
 async function entrar(page, base, cred) {
   await page.goto(`${base}/admin/`);
+  // Espera o painel terminar de iniciar antes de digitar (o foco inicial vem depois da carga)
+  await page.waitForFunction(() => typeof estado !== 'undefined' && document.activeElement?.id === 'usuario', null, { timeout: 10_000 }).catch(() => {});
   await page.fill('#usuario', cred.usuario);
   await page.fill('#senha', cred.senha);
+  if (await page.inputValue('#usuario') !== cred.usuario || !(await page.inputValue('#senha'))) throw new Etapa('login: campos não ficaram preenchidos');
   await page.click('#btnLogin');
   await page.locator('#tabIndicadores').waitFor({ state: 'visible', timeout: 20_000 });
 }
@@ -125,8 +128,8 @@ async function validarViewport(navegador, base, cred, viewport) {
     await page.click('#tabIndicadores');
     await page.locator('#indicadoresView').waitFor({ state: 'visible' });
     // Os dados chegam depois da aba: espera os KPIs (ou o estado vazio) renderizarem.
-    await page.locator('#gConteudo .ui-kpi, #gConteudo .empty').first().waitFor({ state: 'visible', timeout: 20_000 });
-    const kpis = await page.locator('#gConteudo .ui-kpi').count();
+    await page.locator('#gConteudo .ind-kpi, #gConteudo .estado').first().waitFor({ state: 'visible', timeout: 20_000 });
+    const kpis = await page.locator('#gConteudo .ind-kpi').count(); // os cinco números da Spec 009
     kpis === KPIS ? ok(`${rotulo}: ${KPIS} KPIs`) : falha(`${rotulo}: ${kpis} KPIs, esperado ${KPIS}`);
 
     const opcoes = await page.locator('#gSetor option').evaluateAll(os => os.map(o => o.value).filter(Boolean));
@@ -187,7 +190,7 @@ async function validarVazio(navegador, base, cred) {
   try {
     await entrar(page, base, cred);
     await page.click('#tabIndicadores');
-    const texto = await page.locator('#gConteudo .empty').textContent({ timeout: 10_000 });
+    const texto = await page.locator('#gConteudo .estado-t').textContent({ timeout: 10_000 }); // estado de tela da Spec 009
     texto?.includes('Ainda não há cadastros') ? ok('estado vazio de Indicadores') : falha('estado vazio de Indicadores ausente');
     await sair(page);
   } finally {
