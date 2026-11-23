@@ -1,6 +1,6 @@
 # Spec 011 — Nome curto dos membros nas listas
 
-- Status: **Aprovada** (2026-11-23)
+- Status: **Entregue** (v1.53.0, 2026-11-23) · [validação](release-validation.md)
 - Data: 2026-11-23
 - ADRs: [0009](../../docs/architecture/adr/0009-identidade-visual.md) (identidade e escala de texto) e [0008](../../docs/architecture/adr/0008-privacidade-autorizacao.md). Sem ADR nova.
 

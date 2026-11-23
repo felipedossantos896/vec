@@ -1,6 +1,6 @@
 # Plano técnico — Nome curto dos membros
 
-- Status: **Aprovado** (2026-11-23)
+- Status: **Entregue** (v1.53.0)
 
 ## Regras (`frontend/src/admin/nomes-regras.ts`, puras, com teste em Node)
 - `regrasNomes.curto(nome)`: a regra da spec. Partículas: de, da, do, das, dos, e.

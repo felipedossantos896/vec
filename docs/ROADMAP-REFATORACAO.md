@@ -209,6 +209,7 @@ teste contra um banco de produção.
   login novos, visão do discipulador e estados de tela padronizados (Spec 009).
 - [x] Cadastrar nova pessoa pelo painel, com autorização verbal e bloqueio de
   duplicado (Spec 010).
+- [x] Nome curto dos membros nas listas, com o completo na ficha (Spec 011).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 
