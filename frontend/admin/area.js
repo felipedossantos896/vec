@@ -31,7 +31,7 @@ function renderPainelArea(base) {
     $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div><div><b>${nCuidado}</b><span>precisam de cuidado</span></div></div>
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
-    <p class="ap-kick">Ferramentas</p><div class="ap-ferr"><button type="button" data-ferr="anfPainel">Escolher anfitrião <span aria-hidden="true">→</span></button><button type="button" data-ferr="multPainel">Planejar multiplicação <span aria-hidden="true">→</span></button></div>`;
+    <p class="ap-kick">Ferramentas</p><div class="ap-ferr"><button type="button" data-ferr="anfPainel">Escolher anfitrião <span aria-hidden="true">→</span></button><button type="button" data-ferr="multPainel">Planejar multiplicação <span aria-hidden="true">→</span></button>${celulasNova().length ? '<button type="button" data-nova-pessoa>Nova pessoa <span aria-hidden="true">+</span></button>' : ''}</div>`;
     $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Toque num rosto para ver a pessoa e agir.`;
 }
 function renderFaleCom(base) {
