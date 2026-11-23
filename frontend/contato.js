@@ -40,7 +40,9 @@ async function carregarCelulas() {
             const d = (s.detalhes || []).find(x => x.nome === c);
             const cor = d ? regrasCelula.cor(d.cor || '', d.posicao ?? -1) : '';
             const enc = d ? regrasCelula.encontro(d.diaSemana || '', d.horario || '', true) : '';
-            return `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span>${cor ? `<span class="cel-chip" data-cor="${cor}"><i aria-hidden="true"></i>${e(c)}</span>` : e(c)}${enc ? `<span class="enc">${e(enc)}</span>` : ''}</span></label>`;
+            if (enc)
+                encontroDaCelula[c] = enc;
+            return `<label class="opt"><input type="radio" name="celula" value="${e(c)}"${c === marcada ? ' checked' : ''}><span><i class="opt-bar"${cor ? ` data-cor="${cor}"` : ''} aria-hidden="true"></i><span class="opt-t"><b>${e(c)}</b>${enc ? `<small>${e(enc)}</small>` : ''}</span></span></label>`;
         }).join('')}</div>`).join('');
         // A cor vai por CSSOM: o CSP não deixa usar style no HTML.
         byId('celulasOpcoes').querySelectorAll('[data-cor]').forEach(el => { if (regrasCelula.corValida(el.dataset.cor))
@@ -49,3 +51,7 @@ async function carregarCelulas() {
     catch { /* mantém a lista do HTML */ }
 }
 carregarCelulas();
+// Rostos ilustrados ao lado do aviso de privacidade (sementes fixas: não são de ninguém)
+const ladoRostos = document.getElementById('ladoRostos');
+if (ladoRostos && typeof regrasAvatar !== 'undefined')
+    ladoRostos.innerHTML = [3, 8, 14, 21, 27].map(n => `<i class="fp-av">${regrasAvatar.svg(n)}</i>`).join('');
