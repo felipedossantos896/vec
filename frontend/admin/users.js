@@ -12,7 +12,13 @@ const MSG_USUARIO = {
     cadastro_obrigatorio: 'Escolha o cadastro desta pessoa: é por ele que ela vê os próprios discípulos.',
     cadastro_invalido: 'Esse cadastro não está mais disponível. Escolha outro.',
     nao_encontrado: 'Usuário não encontrado. Atualize a lista e tente de novo.',
-    auto_bloqueio: 'Você não pode desativar o próprio acesso nem remover sua permissão de gerenciar usuários.'
+    auto_bloqueio: 'Você não pode desativar o próprio acesso nem remover sua permissão de gerenciar usuários.',
+    // Cadastro do líder (Spec 013)
+    nascimento_invalido: 'Informe a data de nascimento do líder para criar o cadastro.',
+    telefone_invalido: 'Confira o WhatsApp do líder: DDD e número.',
+    consentimento: 'Marque a autorização para criar o cadastro do líder.',
+    duplicado: 'Esta pessoa já tem cadastro. Ligue o login ao cadastro existente em "Cadastro desta pessoa".',
+    duplicado_fora: 'Esta pessoa já tem cadastro. Ligue o login ao cadastro existente em "Cadastro desta pessoa".'
 };
 let editando = null;
 const abas = [...document.querySelectorAll('#tabs button')];
@@ -165,7 +171,17 @@ function preencherChks(id, tipo, marcados) {
 }
 const marcados = (id) => [...$(id).querySelectorAll('input:checked')].map(i => i.value);
 const perfilAtual = () => document.querySelector('input[name="uPerfil"]:checked')?.value || '';
+// Liderança sem célula (Spec 013): login de área ou setor sem cadastro pode criar o cadastro junto
+function atualizarLiderUI() {
+    const p = perfilAtual();
+    const pode = estado.escopo.todos && (p === 'AREA' || p === 'SETOR') && !$('uCadastro').value;
+    $('uLiderWrap').classList.toggle('hidden', !pode);
+    $('uLiderCampos').classList.toggle('hidden', !pode || !$('uCriarCad').checked);
+}
+$('uCadastro').addEventListener('change', atualizarLiderUI);
+$('uCriarCad').addEventListener('change', atualizarLiderUI);
 function atualizarPerfilUI() {
+    atualizarLiderUI();
     const p = perfilAtual();
     $('uSetoresWrap').classList.toggle('hidden', p !== 'SETOR');
     $('uCelulasWrap').classList.toggle('hidden', p !== 'SETOR' && p !== 'CELULA');
@@ -198,6 +214,11 @@ function abrirUsuario(u) {
     $('uGerencia').checked = u ? u.gerencia : false;
     $('uAtivo').disabled = eu;
     $('uGerencia').disabled = eu;
+    $('uCriarCad').checked = false;
+    $('uNasc').value = '';
+    $('uTel').value = '';
+    $('uAut').checked = false;
+    $('uNasc').max = regrasContato.iso(new Date());
     atualizarPerfilUI();
     $('uMsg').textContent = '';
     $('uCampos').classList.remove('hidden');
@@ -235,8 +256,11 @@ $('uForm').addEventListener('submit', async (e) => {
         celulas: perfil === 'SETOR' || perfil === 'CELULA' ? marcados('uCelulas') : [],
         cadastro: Number($('uCadastro').value) || 0,
         ativo: $('uAtivo').checked,
-        gerencia: $('uGerencia').checked
+        gerencia: $('uGerencia').checked,
+        ...(!$('uLiderWrap').classList.contains('hidden') && $('uCriarCad').checked
+            ? { criarCadastro: { nascimento: $('uNasc').value, telefone: regrasNovaPessoa.digitos($('uTel').value), autorizou: $('uAut').checked } } : {})
     };
+    const criaCadastro = 'criarCadastro' in dados;
     const msg = $('uMsg');
     let erro = '';
     if (!dados.nome)
@@ -253,6 +277,10 @@ $('uForm').addEventListener('submit', async (e) => {
         erro = 'escopo_obrigatorio';
     else if (perfil === 'DISCIPULADOR' && !dados.cadastro)
         erro = 'cadastro_obrigatorio';
+    else if (criaCadastro && !/^\d{4}-\d{2}-\d{2}$/.test($('uNasc').value))
+        erro = 'nascimento_invalido';
+    else if (criaCadastro && !$('uAut').checked)
+        erro = 'consentimento';
     if (erro) {
         msg.textContent = MSG_USUARIO[erro];
         return;
@@ -274,6 +302,8 @@ $('uForm').addEventListener('submit', async (e) => {
         if (r.token && r.expiraEm)
             salvarSessao({ ...s, token: r.token, expira: Date.now() + (r.expiraEm - 60) * 1000 });
         carregarUsuarios();
+        if (criaCadastro)
+            carregar(); // o cadastro novo do líder entra na lista e na escolha de discipulador
         if (dados.senha) {
             const txt = `Olá, ${dados.nome}! Este é o seu acesso ao painel da Área VEC:\n\nEndereço: ${location.origin}/admin\nUsuário: ${dados.usuario}\nSenha: ${dados.senha}\n\nNão compartilhe esta senha com outras pessoas.`;
             $('uShareTxt').textContent = txt;

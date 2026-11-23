@@ -63,7 +63,7 @@ function barras(itens: [string, number][], total: number, cor: string, comTotal:
 }
 
 function renderIndicadores() {
-  const base = baseIndicadores();
+  const base = baseMembros(); // indicadores contam só membros de célula (Spec 013)
   const total = base.length;
   if (retratos === null && estado.aba === 'indicadores') carregarRetratos();
   document.querySelectorAll<HTMLButtonElement>('[data-periodo]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.periodo) === periodoInd)));

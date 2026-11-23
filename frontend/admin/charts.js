@@ -64,7 +64,7 @@ function barras(itens, total, cor, comTotal) {
     return `<ul class="hbars ${cor}">${itens.map(([l, n]) => `<li><span class="hb-l">${esc(l)}</span><span class="hb-b"><i data-w="${Math.round((n / (comTotal ? Math.max(total, 1) : max)) * 100)}"></i></span><span class="hb-v"><b>${n}</b>${comTotal ? `<small>/${total}</small>` : ''}</span></li>`).join('')}</ul>`;
 }
 function renderIndicadores() {
-    const base = baseIndicadores();
+    const base = baseMembros(); // indicadores contam só membros de célula (Spec 013)
     const total = base.length;
     if (retratos === null && estado.aba === 'indicadores')
         carregarRetratos();

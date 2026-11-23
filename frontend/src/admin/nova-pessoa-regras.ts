@@ -2,7 +2,7 @@
 // Células em que o líder pode cadastrar, a validação igual à do servidor e as mensagens
 // das respostas. Sem DOM, para serem testadas em Node.
 
-type NovaPessoa = { nome: string; nascimento: string; celula: string; telefone: string; autorizou: boolean };
+type NovaPessoa = { nome: string; nascimento: string; celula: string; telefone: string; autorizou: boolean; papel?: string; setor?: string };
 
 const regrasNovaPessoa = {
   // Células ativas do escopo: todas para a área; as das células e dos setores de quem lidera
@@ -26,7 +26,9 @@ const regrasNovaPessoa = {
     const e: Record<string, string> = {};
     if (p.nome.trim().length < 3) e.nome = 'Informe o nome completo.';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(p.nascimento) || p.nascimento < '1900-01-01' || p.nascimento > hoje) e.nascimento = 'Informe a data de nascimento.';
-    if (!p.celula) e.celula = 'Escolha a célula.';
+    const papel = p.papel || 'membro';
+    if (papel === 'membro' && !p.celula) e.celula = 'Escolha a célula.';
+    if (papel === 'lider_setor' && !p.setor) e.setor = 'Escolha o setor que ele lidera.';
     const d = regrasNovaPessoa.digitos(p.telefone);
     if (d && !((d.length === 10 || d.length === 11) && d[0] !== '0')) e.telefone = 'Confira o WhatsApp: DDD e número.';
     if (!p.autorizou) e.autorizou = 'Marque a autorização para cadastrar.';
@@ -42,7 +44,8 @@ const regrasNovaPessoa = {
       telefone_invalido: 'Confira o WhatsApp: DDD e número.',
       discipulador_invalido: 'Esse discipulador não está mais disponível. Escolha outro.',
       sem_permissao: 'Só líderes cadastram pessoas novas.',
-      duplicado_fora: 'Esta pessoa já tem cadastro em outra célula. Fale com a liderança da área.'
+      duplicado_fora: 'Esta pessoa já tem cadastro em outra célula. Fale com a liderança da área.',
+      setor_obrigatorio: 'Escolha o setor que ele lidera.'
     } as Record<string, string>)[erro] || 'Não foi possível cadastrar agora. Tente de novo.';
   }
 };

@@ -23,21 +23,24 @@ function abrirDetalhe(r) {
     $('detNomeCompleto').textContent = completo;
     $('detNomeCompleto').hidden = completo === nomeCurto(r); // Spec 011: o completo logo abaixo
     renderFotoDetalhe(r);
-    $('detSub').innerHTML = [r.celula ? celulaChip(r.celula) : 'Sem célula', r._idade != null ? `${r._idade} anos` : '', r.discipulador ? `discipulado por ${esc(r.discipuladorId ? nomeCurtoId(Number(r.discipuladorId), String(r.discipulador)) : regrasNomes.curto(String(r.discipulador)))}` : '']
+    $('detSub').innerHTML = [regrasLideranca.ehLider(r) ? celulaOuPapel(r) : r.celula ? celulaChip(r.celula) : 'Sem célula', r._idade != null ? `${r._idade} anos` : '', r.discipulador ? `discipulado por ${esc(r.discipuladorId ? nomeCurtoId(Number(r.discipuladorId), String(r.discipulador)) : regrasNomes.curto(String(r.discipulador)))}` : '']
         .filter(Boolean).join('<span aria-hidden="true"> · </span>');
     const nasc = r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento);
     const interesses = INTERESSES.filter(([k]) => r[k] === 'S');
-    const cuidado = regrasContato.semContato(r._contato, r._lembrete || null, agora);
-    const ultimo = r._contato ? `<span class="${cuidado ? 'det-alerta' : ''}">${fmtData(r._contato)} · ${regrasPessoas.haQuanto(r._contato, agora)}</span>` : '<span class="det-alerta">Nenhum registrado</span>';
-    const etiquetas = regrasPessoas.etiquetas({ contato: r._contato, lembrete: r._lembrete || null, semDiscipulador: SITUACOES.semDiscipulador.f(r), celula: String(r.celula || ''), duplicados: r._dup }, agora);
-    const resumo = jornadaResumo(r) +
+    const cuidado = SITUACOES.semContato.f(r); // o líder de área fica fora da trilha (Spec 013)
+    const ultimo = r._contato ? `<span class="${cuidado ? 'det-alerta' : ''}">${fmtData(r._contato)} · ${regrasPessoas.haQuanto(r._contato, agora)}</span>` : `<span class="${cuidado ? 'det-alerta' : 'nota-fraca'}">Nenhum registrado</span>`;
+    const etiquetas = regrasPessoas.etiquetas({ contato: r._contato, lembrete: r._lembrete || null, semDiscipulador: SITUACOES.semDiscipulador.f(r), celula: String(r.celula || ''), duplicados: r._dup, papel: regrasLideranca.papel(r) }, agora);
+    const trilha = regrasLideranca.temTrilha(r); // o líder de área não tem jornada (Spec 013)
+    const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
+    const resumo = (trilha ? jornadaResumo(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
         secao('Contato e cuidado', [
             linhasContato(r)[0],
             ['Último contato', ultimo],
             ...(r._lembrete ? [['Falar de novo em', fmtData(r._lembrete)]] : []),
-            ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : '<button type="button" class="btn-link det-alerta" data-acao="editar">Vincular</button>'],
+            ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : `<button type="button" class="btn-link${regrasLideranca.temTrilha(r) ? ' det-alerta' : ''}" data-acao="editar">Vincular</button>`],
             ['Congrega com frequência', pill(r.frequentaCultos)],
-            ['Nascimento', nasc]
+            ['Nascimento', nasc],
+            ...(regrasLideranca.ehLider(r) ? [['Discípulos', String(discipulos)]] : [])
         ]) +
         (interesses.length ? `<div class="det-sec"><h4>Quer servir como</h4><p class="det-tags">${interesses.map(([, l]) => `<span>${l}</span>`).join('')}</p></div>` : '') +
         '<div class="det-sec" id="detUltima" hidden></div>' +
@@ -46,12 +49,13 @@ function abrirDetalhe(r) {
         blocoEndereco() +
         blocoAnfitriao() +
         secao('Célula e serviço', [
-            ['Setor', txt(r.setor)], ['Célula', r.celula ? celulaChip(r.celula) : txt('')],
+            ...(regrasLideranca.ehLider(r) ? [['Papel', esc(regrasLideranca.rotulo(r))]] : []),
+            ['Setor', txt(r.setor)], ['Célula', r.celula ? celulaChip(r.celula) : regrasLideranca.ehLider(r) ? '<span class="nota-fraca">Sem célula fixa</span>' : txt('')],
             ['Congrega com frequência', pill(r.frequentaCultos)],
             ['Serve em ministério', pill(r.serveMinisterio)],
             ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
         ]) +
-        secao('Etapas da jornada', JORNADA.map(([k, l]) => [l, dataEtapa(r, k) + pill(r[k])])) +
+        (trilha ? secao('Etapas da jornada', JORNADA.map(([k, l]) => [l, dataEtapa(r, k) + pill(r[k])])) : '') +
         secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
         secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
         (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +

@@ -140,7 +140,11 @@ function medidor(label, n, total) {
 }
 const pips = (r) => `<span class="dots" aria-hidden="true">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>`;
 // Resumo e jornada consideram o setor e a célula escolhidos, mas não a busca nem a situação
-const baseIndicadores = () => metricasIndicadores.filtrar(estado.regs, estado.setor, estado.celula);
+// Área e cuidado: membros e líder de setor; Indicadores: só membros de célula (Spec 013)
+const baseIndicadores = () => metricasIndicadores.filtrar(estado.regs.filter(regrasLideranca.temTrilha), estado.setor, estado.celula);
+const baseMembros = () => metricasIndicadores.filtrar(estado.regs.filter(regrasLideranca.ehMembro), estado.setor, estado.celula);
+// Célula da pessoa ou, para líder de área e de setor, o papel
+const celulaOuPapel = (r) => regrasLideranca.ehLider(r) ? `<span class="tag-lider">${esc(regrasLideranca.rotuloCurto(r))}</span>` : celulaChip(r.celula);
 // Etiquetas dos filtros ativos; o × de cada uma tira só aquele filtro
 function renderChips() {
     const chips = [];
@@ -173,7 +177,7 @@ $('chipLista').addEventListener('click', e => {
 });
 // Paginação: volta à primeira página quando os filtros mudam
 let limiteLista = regrasPessoas.PAGINA, chaveLista = '';
-const precisaCuidado = (r) => regrasContato.semContato(r._contato, r._lembrete || null, new Date());
+const precisaCuidado = (r) => SITUACOES.semContato.f(r); // o líder de área fica fora (Spec 013)
 // Coluna Discipulador: rosto e nome, ou a etiqueta de quem ainda não tem
 function colunaDiscipulador(r) {
     if (r.discipuladorId) {
@@ -182,7 +186,7 @@ function colunaDiscipulador(r) {
     }
     if (r.discipulador)
         return `<span class="it-disc"><span>${esc(regrasNomes.curto(String(r.discipulador)))}</span><em class="tag">sem vínculo</em></span>`;
-    return '<span class="tag-c">Sem discipulador</span>';
+    return regrasLideranca.temTrilha(r) ? '<span class="tag-c">Sem discipulador</span>' : '<span class="nota-fraca">—</span>';
 }
 function renderLista() {
     const lista = filtrados();
@@ -206,10 +210,10 @@ function renderLista() {
     const head = '<div class="thead" aria-hidden="true"><span>Pessoa</span><span>Célula</span><span>Discipulador</span><span>Jornada</span><span>Contato</span></div>';
     $('list').innerHTML = head + lista.slice(0, mostra).map(r => `
     <button type="button" class="item${String(r.linha) === aberto ? ' sel' : ''}" data-i="${estado.regs.indexOf(r)}" data-linha="${r.linha}"${String(r.linha) === aberto ? ' aria-current="true"' : ''}>
-      <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaChip(r.celula)}</span></span></span>
-      <span class="it-cell">${celulaChip(r.celula)}</span>
+      <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaOuPapel(r)}</span></span></span>
+      <span class="it-cell">${celulaOuPapel(r)}</span>
       <span class="it-dsc">${colunaDiscipulador(r)}</span>
-      <span class="it-jornada">${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span></span>
+      <span class="it-jornada">${regrasLideranca.temTrilha(r) ? `${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span>` : '<span class="nota-fraca">—<span class="sr-only"> sem jornada</span></span>'}</span>
       <span class="it-contato${precisaCuidado(r) ? ' alerta' : ''}"><span class="sr-only">Último contato: </span>${regrasPessoas.haQuanto(r._contato, new Date())}</span>
       <span class="it-seta" aria-hidden="true">›</span>
     </button>`).join('') +

@@ -25,8 +25,11 @@ const regrasNovaPessoa = {
             e.nome = 'Informe o nome completo.';
         if (!/^\d{4}-\d{2}-\d{2}$/.test(p.nascimento) || p.nascimento < '1900-01-01' || p.nascimento > hoje)
             e.nascimento = 'Informe a data de nascimento.';
-        if (!p.celula)
+        const papel = p.papel || 'membro';
+        if (papel === 'membro' && !p.celula)
             e.celula = 'Escolha a célula.';
+        if (papel === 'lider_setor' && !p.setor)
+            e.setor = 'Escolha o setor que ele lidera.';
         const d = regrasNovaPessoa.digitos(p.telefone);
         if (d && !((d.length === 10 || d.length === 11) && d[0] !== '0'))
             e.telefone = 'Confira o WhatsApp: DDD e número.';
@@ -43,7 +46,8 @@ const regrasNovaPessoa = {
             telefone_invalido: 'Confira o WhatsApp: DDD e número.',
             discipulador_invalido: 'Esse discipulador não está mais disponível. Escolha outro.',
             sem_permissao: 'Só líderes cadastram pessoas novas.',
-            duplicado_fora: 'Esta pessoa já tem cadastro em outra célula. Fale com a liderança da área.'
+            duplicado_fora: 'Esta pessoa já tem cadastro em outra célula. Fale com a liderança da área.',
+            setor_obrigatorio: 'Escolha o setor que ele lidera.'
         }[erro] || 'Não foi possível cadastrar agora. Tente de novo.';
     }
 };

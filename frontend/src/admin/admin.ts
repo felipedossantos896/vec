@@ -29,7 +29,7 @@ new MutationObserver(mudancas => {
 }).observe(document.documentElement, { childList: true, subtree: true });
 
 type Escopo = { todos: boolean; setores: string[]; celulas: string[]; perfil?: string };
-type Pessoa = { id: number; nome: string; celula: string };
+type Pessoa = { id: number; nome: string; celula: string; papel?: string; setor?: string };
 type Registro = {
   [key: string]: string | number | Date | null | undefined | Record<string, string>;
   nome: string;
@@ -147,13 +147,23 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
 
+// Liderança sem célula (Spec 013): filtro próprio; sem célula só vale para membros; o líder
+// de área fica fora da trilha (jornada, cuidado e discipulador)
+SITUACOES.lideranca = { label: 'Liderança (área e setor)', f: r => regrasLideranca.ehLider(r) };
+{
+  const semCelula = SITUACOES.semCelula.f;
+  SITUACOES.semCelula.f = r => regrasLideranca.ehMembro(r) && semCelula(r);
+  ['naoBatizados', 'naoRecebeu', 'naoFrequenta', 'semDiscipulador', 'jornadaIncompleta', 'batizar', 'quaseLa', 'semContato', 'podeDiscipular', ...JORNADA.map(([k]) => 'sem_' + k)]
+    .filter(k => SITUACOES[k]).forEach(k => { const f = SITUACOES[k].f; SITUACOES[k].f = r => regrasLideranca.temTrilha(r) && f(r); });
+}
+
 // Grupos do filtro de situação; uma situação fora da lista cai em "Outras"
 const GRUPOS_SITUACAO: [string, string[]][] = [
   ['Cuidado', ['semContato', 'semDiscipulador', 'naoFrequenta', 'semCelula', 'naoRecebeu']],
   ['Jornada', ['jornadaIncompleta', 'naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
   ['Discipulado', ['meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
   ['Interesses e serviço', ['querLiderar', 'querCuidar', 'querAnfitriao', 'servem']],
-  ['Cadastro', ['duplicados']]
+  ['Cadastro', ['lideranca', 'duplicados']]
 ];
 
 const CSV_COLS: [string, string][] = [
