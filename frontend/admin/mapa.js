@@ -96,6 +96,9 @@ function iniciarLeaflet() {
     L.tileLayer(TILES_OSM, { maxZoom: ZOOM_MAX, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
     mapaLeaflet.attributionControl.setPrefix(false);
     camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
+    // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
+    mapaLeaflet.on('zoomend', () => { if (estado.aba === 'acompanhar' && ultimoFiltro)
+        desenharGrupos(ultimoFiltro); });
     camadaFerr = L.layerGroup().addTo(mapaLeaflet);
     return true;
 }
@@ -124,31 +127,11 @@ function renderMapa() {
         const largo = matchMedia('(min-width: 721px)').matches;
         const folga = largo ? { paddingTopLeft: [340, 40], paddingBottomRight: [estado.ferramenta ? 440 : 40, 40] } : { padding: [36, 36] };
         if (pontos.length)
-            mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_MAX, ...folga });
+            mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_MAX, ...folga, animate: false });
         else
             mapaLeaflet.setView([-14.2, -51.9], 4);
-        f.grupos.forEach((g, i) => {
-            // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
-            // e com "!" quando precisa de cuidado (Spec 009, ADR-0011). Mesma área de ~300 m.
-            const pessoas = g.linhas.map(regDe).filter((r) => Boolean(r))
-                .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
-            const acesas = pessoas.filter(r => naLente(estado.lente, r));
-            const cuidado = pessoas.some(r => naLente('cuidado', r));
-            const rotulo = `Área ${i + 1}: ${pessoas.map(r => r.nome).join(', ') || regrasMapa.pessoas(g.linhas.length)}`;
-            const grupo = grupoMult(pessoas[0]?.linha);
-            const corPino = (r) => grupo === 'B' ? '#15171c' : corDaCelula(r.celula);
-            const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
-            const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-                `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
-            const larg = 44 + Math.max(0, Math.min(pessoas.length, 3) - 1) * 18 + (pessoas.length > 3 ? 22 : 0);
-            const m = L.marker([g.lat, g.lng], {
-                icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, 66], iconAnchor: [larg / 2, 22] }),
-                keyboard: true, title: rotulo
-            });
-            m.bindPopup(`<p class="mapa-pop-t">${esc(`Área ${i + 1}: ${regrasMapa.pessoas(g.linhas.length)}`)}${g.peloBairro ? ' (algumas pelo bairro)' : ''}</p>${pessoasPopup(pessoas)}`);
-            m.addTo(camadaGrupos);
-            m.getElement()?.setAttribute('aria-label', rotulo);
-        });
+        ultimoFiltro = f;
+        desenharGrupos(f);
         // Anfitrião: casas numeradas (no centro da área de ~300 m de quem recebe) e linhas da
         // casa 1 até as áreas dos membros. Distância em linha reta, como no ranking.
         if (casas.length) {
@@ -174,6 +157,35 @@ function renderMapa() {
             secao('Sem endereço cadastrado', f.semEndereco);
     renderPainelAnfitriao();
     renderPainelMultiplicacao();
+}
+// Marcadores das áreas: rostos empilhados com o tamanho do zoom atual (Spec 012)
+let ultimoFiltro = null;
+function desenharGrupos(f) {
+    camadaGrupos.clearLayers();
+    const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), matchMedia('(pointer: coarse), (max-width: 720px)').matches);
+    $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
+    f.grupos.forEach((g, i) => {
+        // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
+        // e com "!" quando precisa de cuidado (Spec 009, ADR-0011). Mesma área de ~300 m.
+        const pessoas = g.linhas.map(regDe).filter((r) => Boolean(r))
+            .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
+        const acesas = pessoas.filter(r => naLente(estado.lente, r));
+        const cuidado = pessoas.some(r => naLente('cuidado', r));
+        const rotulo = `Área ${i + 1}: ${pessoas.map(r => r.nome).join(', ') || regrasMapa.pessoas(g.linhas.length)}`;
+        const grupo = grupoMult(pessoas[0]?.linha);
+        const corPino = (r) => grupo === 'B' ? '#15171c' : corDaCelula(r.celula);
+        const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
+        const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
+            `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}`;
+        const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
+        const m = L.marker([g.lat, g.lng], {
+            icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
+            keyboard: true, title: rotulo
+        });
+        m.bindPopup(`<p class="mapa-pop-t">${esc(`Área ${i + 1}: ${regrasMapa.pessoas(g.linhas.length)}`)}${g.peloBairro ? ' (algumas pelo bairro)' : ''}</p>${pessoasPopup(pessoas)}`);
+        m.addTo(camadaGrupos);
+        m.getElement()?.setAttribute('aria-label', rotulo);
+    });
 }
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
 document.addEventListener('click', e => {

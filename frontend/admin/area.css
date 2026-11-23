@@ -28,12 +28,15 @@
 
 /* Rostos no mapa */
 .rostos-pin { display: flex; justify-content: center; }
-.rp { display: block; margin-left: -18px; border-radius: 50%; }
+.rp { display: block; margin-left: calc(var(--rosto, 40px) * -0.45); border-radius: 50%; }
 .rp:first-child { margin-left: 0; }
-.av-pin { --av: 40px; border: 3px solid var(--cel, #b7b3a8); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25); }
-.rp-mais { display: grid; place-items: center; width: 34px; height: 34px; margin: 3px 0 0 -10px; border-radius: 50%; background: var(--grafite); color: #fff; font: 700 var(--t12) var(--sans); border: 2px solid #fff; }
+.av.av-pin { --av: var(--rosto, 40px); border: calc(2px + var(--rosto, 40px) * 0.03) solid var(--cel, #b7b3a8); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25); transition: width 0.15s, height 0.15s; }
+/* A regra do Leaflet para imagens de marcador (largura automática, sem limite) deixava a foto
+   no tamanho natural. Aqui ela preenche o círculo, centralizada e um pouco acima (Spec 012). */
+.leaflet-container .leaflet-marker-pane .av img { width: 100%; height: 100%; max-width: 100% !important; max-height: 100% !important; object-fit: cover; object-position: 50% 30%; }
+.rp-mais { display: grid; place-items: center; align-self: center; width: calc(var(--rosto, 40px) * 0.85); height: calc(var(--rosto, 40px) * 0.85); margin: 0 0 0 calc(var(--rosto, 40px) * -0.25); border-radius: 50%; background: var(--grafite); color: #fff; font: 700 var(--t12) var(--sans); border: 2px solid #fff; }
 .rp-nome { display: table; margin: 3px auto 0; white-space: nowrap; font: 600 var(--t12)/1 var(--sans); background: #fff; color: var(--ink); padding: 4px 8px; border-radius: 99px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
-.rp-alerta { position: absolute; top: -6px; right: -6px; width: 19px; height: 19px; border-radius: 50%; background: var(--coral); color: #fff; font: 800 11px/19px var(--sans); text-align: center; border: 2px solid #fff; }
+.rp-alerta { position: absolute; top: -6px; right: -6px; width: calc(var(--rosto, 40px) * 0.45); height: calc(var(--rosto, 40px) * 0.45); border-radius: 50%; background: var(--coral); color: #fff; font: 800 calc(var(--rosto, 40px) * 0.27)/calc(var(--rosto, 40px) * 0.45) var(--sans); text-align: center; border: 2px solid #fff; }
 .mapa-grupo.apagado { opacity: 0.32; filter: grayscale(0.7); }
 .mapa-grupo:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 4px; border-radius: 12px; }
 

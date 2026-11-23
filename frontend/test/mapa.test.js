@@ -42,3 +42,13 @@ test('não guarda coordenada de pessoa: só centros recebidos do servidor', () =
   assert.match(fonte, /OpenStreetMap<\/a> contributors/);
   assert.doesNotMatch(fonte, /localStorage|sessionStorage\.setItem/);
 });
+
+test('tamanho do rosto acompanha o zoom (Spec 012)', () => {
+  assert.equal(regras.tamanhoRosto(4, false), 40);
+  assert.equal(regras.tamanhoRosto(12, false), 40);
+  assert.equal(regras.tamanhoRosto(14, false), 50);
+  assert.equal(regras.tamanhoRosto(16, false), 60);
+  assert.equal(regras.tamanhoRosto(18, false), 60);
+  assert.equal(regras.tamanhoRosto(16, true), 52);
+  assert.equal(regras.tamanhoRosto(13, true), 45);
+});
