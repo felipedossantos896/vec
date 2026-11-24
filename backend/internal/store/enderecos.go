@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"vec/backend/internal/turso"
@@ -180,18 +181,30 @@ type PontoMapa struct {
 	Lat, Lng *float64
 	Precisao string
 	Pendente bool
+	// Destaques (Spec 014): células que a pessoa lidera (login de célula ativo ligado ao
+	// cadastro) e células que se reúnem na casa dela. Só células ativas.
+	LiderCelula, CasaCelula []string
 }
 
+// sqlLiderCelula e sqlCasaCelula listam as células ativas, separadas por quebra de linha.
+const sqlLiderCelula = `(SELECT group_concat(nome, char(10)) FROM (SELECT DISTINCT c.nome, c.ordem FROM usuarios u
+	  JOIN usuario_escopos ue ON ue.usuario = u.usuario AND ue.tipo = 'CELULA'
+	  JOIN celulas c ON c.nome = ue.nome AND c.ativa = 1
+	  WHERE u.resposta_id = e.resposta_id AND u.ativo = 1 AND u.perfil = 'CELULA' ORDER BY c.ordem, c.nome))`
+const sqlCasaCelula = `(SELECT group_concat(nome, char(10)) FROM (SELECT c.nome FROM celulas c
+	  WHERE c.anfitriao_id = e.resposta_id AND c.ativa = 1 ORDER BY c.ordem, c.nome))`
+
 // PontosMapa devolve, no escopo, todas as pessoas com endereço e a situação da
-// coordenada (com posição, sem posição ou pendente).
+// coordenada (com posição, sem posição ou pendente). Inclui os líderes de área e de
+// setor (Spec 014), com o mesmo escopo de Pessoas.
 func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
 	cond, args, ok := escopoSQL(sc)
 	if !ok {
 		return nil, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao, e.geo_em IS NULL FROM enderecos e
-		      WHERE e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND papel = 'membro' AND ` + cond + `)`,
+		SQL: `SELECT e.resposta_id, e.lat, e.lng, e.geo_precisao, e.geo_em IS NULL, ` + sqlLiderCelula + `, ` + sqlCasaCelula + ` FROM enderecos e
+		      WHERE e.resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
 		Args: args,
 	})
 	if err != nil {
@@ -208,9 +221,18 @@ func (s *Store) PontosMapa(ctx context.Context, sc Scope) ([]PontoMapa, error) {
 		}
 		pend, _ := r[4].(int64)
 		p.Pendente = pend == 1
+		p.LiderCelula, p.CasaCelula = linhasDe(turso.Str(r, 5)), linhasDe(turso.Str(r, 6))
 		out = append(out, p)
 	}
 	return out, nil
+}
+
+// linhasDe separa o group_concat por quebra de linha; vazio vira nil.
+func linhasDe(s string) []string {
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, "\n")
 }
 
 func numOuNulo(v *float64) any {

@@ -46,14 +46,14 @@ func TestAgruparMapaNaGradeSemCoordenadaExata(t *testing.T) {
 func TestAcaoMapaUsaEscopoENaoDevolveCoordenadaExata(t *testing.T) {
 	s, db, token := painelServer(t, 1)
 	db.pontos = [][]any{
-		{int64(7), -3.731234, -38.521234, "rua", int64(0)},
-		{int64(8), nil, nil, nil, int64(1)},
+		{int64(7), -3.731234, -38.521234, "rua", int64(0), "Hope", "Hope\nAshrei"},
+		{int64(8), nil, nil, nil, int64(1), nil, nil},
 	}
 	rep := s.mapa(context.Background(), adminReq{Token: token})
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
 	}
-	if len(db.leituras) != 1 || !strings.Contains(db.leituras[0].SQL, "excluido_em IS NULL AND papel = 'membro' AND (celula IN (?))") || db.leituras[0].Args[0] != "Hope" {
+	if len(db.leituras) != 1 || !strings.Contains(db.leituras[0].SQL, "excluido_em IS NULL AND (celula IN (?))") || db.leituras[0].Args[0] != "Hope" {
 		t.Fatalf("mapa sem escopo: %#v", db.leituras)
 	}
 	b, _ := json.Marshal(rep.body)
@@ -68,6 +68,10 @@ func TestAcaoMapaUsaEscopoENaoDevolveCoordenadaExata(t *testing.T) {
 			t.Errorf("resposta contém %q: %s", chave, corpo)
 		}
 	}
+	// Destaques (Spec 014) só de quem tem; sem nada, a pessoa não aparece na lista
+	if !strings.Contains(corpo, `"destaques":{"7":{"casaCelula":["Hope","Ashrei"],"liderCelula":["Hope"]}}`) {
+		t.Errorf("destaques: %s", corpo)
+	}
 	if !strings.Contains(corpo, `"pendentes":[8]`) || !strings.Contains(corpo, `"linhas":[7]`) {
 		t.Errorf("conteúdo inesperado: %s", corpo)
 	}
@@ -76,7 +80,7 @@ func TestAcaoMapaUsaEscopoENaoDevolveCoordenadaExata(t *testing.T) {
 func TestAcaoMapaVaziaDevolveListasVazias(t *testing.T) {
 	s, _, token := painelServer(t, 1)
 	b, _ := json.Marshal(s.mapa(context.Background(), adminReq{Token: token}).body)
-	for _, k := range []string{`"grupos":[]`, `"soCidade":[]`, `"naoLocalizados":[]`, `"pendentes":[]`} {
+	for _, k := range []string{`"grupos":[]`, `"soCidade":[]`, `"naoLocalizados":[]`, `"pendentes":[]`, `"destaques":{}`} {
 		if !strings.Contains(string(b), k) {
 			t.Errorf("faltou %s em %s", k, b)
 		}
