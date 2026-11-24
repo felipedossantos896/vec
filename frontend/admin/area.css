@@ -135,12 +135,14 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .lq-rosto:hover .lq-nome, .lq-rosto:focus-visible .lq-nome { opacity: 1; }
 .lq-rosto:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 3px; }
 .lq-rosto:hover { z-index: 2; }
-.cartao-pop .leaflet-popup-content { margin: 12px 14px; }
+.lq-rosto.ativo { z-index: 3; }
+.lq-rosto.ativo .av.av-pin { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--coral), 0 3px 8px rgba(0, 0, 0, 0.25); }
+.mapa-grupo.aberto .lq-rosto.ativo .lq-nome { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .lq-rosto, .lq-linhas, .lq-nome, .gaveta, .gv-linha .ic, .area-canvas .leaflet-bottom { transition: none; } }
 
 /* ── Spec 014: selos de liderança e casa da célula, cartão enxuto ── */
 .rp { position: relative; }
-.selo .ic, .cp-ic .ic, .b-ic .ic, .cartao-x .ic { display: block; }
+.selo .ic, .cp-ic .ic, .ca-ic .ic, .cartao-x .ic { display: block; }
 .selo { position: absolute; left: -4px; display: grid; place-items: center; width: max(16px, calc(var(--rosto, 40px) * 0.42)); height: max(16px, calc(var(--rosto, 40px) * 0.42)); border-radius: 50%; border: 2px solid #fff; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-size: max(10px, calc(var(--rosto, 40px) * 0.25)); z-index: 1; }
 .selo-cima { top: -4px; }
 .selo-baixo { bottom: -2px; }
@@ -152,25 +154,37 @@ body.na-area .wrap { max-width: none; padding: 0; }
 /* Casa da célula: anel grosso na cor da célula, marcando onde ela se reúne */
 .rp-casa .av.av-pin { border-width: calc(3px + var(--rosto, 40px) * 0.06); box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(0, 0, 0, 0.3); }
 
-.cartao-pop .leaflet-popup-content { margin: 0; min-width: 232px; }
+.cartao-pop .leaflet-popup-content { margin: 0; width: min(340px, calc(100vw - 48px)) !important; }
+.cartao-pop .leaflet-popup-content-wrapper { border-radius: 22px; box-shadow: 0 18px 48px rgba(21, 23, 28, 0.22), 0 2px 6px rgba(21, 23, 28, 0.08); }
 .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { transform-origin: 50% calc(100% + 12px); animation: cartao-entra 160ms ease-out; }
 .cartao-pop.cartao-saindo .leaflet-popup-content-wrapper, .cartao-pop.cartao-saindo .leaflet-popup-tip-container { animation: cartao-sai 180ms ease-in forwards; }
 @keyframes cartao-entra { from { opacity: 0; transform: translateY(6px) scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes cartao-sai { to { opacity: 0; transform: translateY(10px) scale(0.55); } }
-.cartao { position: relative; display: grid; gap: 10px; padding: 14px; }
-.cartao-x { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
+/* Cartão (Spec 017): rosto grande, nome, "célula · papel", faixa de atenção e dois botões */
+.cartao { position: relative; display: grid; gap: 14px; padding: 18px; }
+.cartao-x { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #8a8f9c; font-size: 22px; cursor: pointer; }
 .cartao-x:hover { background: var(--sunken); color: var(--ink); }
-.cartao-x:focus-visible, .b-ic:focus-visible { outline: var(--focus); outline-offset: 2px; }
-.cartao-topo { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding-right: 38px; min-height: 36px; }
-.cartao-topo b { display: block; font: 700 var(--t15) var(--display); }
-.cartao-topo span { font-size: var(--t12); color: var(--muted); }
-.cartao-papeis { display: grid; gap: 4px; }
-.cartao-papeis li { display: flex; align-items: center; gap: 8px; font-size: var(--t13); font-weight: 600; color: var(--ink); }
-.cp-ic { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--selo); color: #fff; font-size: 13px; }
-.cartao-a { display: flex; gap: 8px; justify-content: flex-end; }
-.b-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: var(--white); color: var(--ink); font-size: 22px; cursor: pointer; text-decoration: none; }
-.b-ic:hover { background: var(--sunken); }
-.b-ic-zap { color: var(--whatsapp); border-color: #b9e2cb; }
+.cartao-x:focus-visible, .b-contato:focus-visible, .b-perfil:focus-visible { outline: var(--focus); outline-offset: 2px; }
+.cartao-topo { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; padding-right: 34px; }
+.cartao-rosto { display: grid; width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 0 0 3px var(--white), 0 0 0 5px var(--cel, var(--line-strong)); }
+.av.av-c { --av: 64px; }
+.cartao-nome { display: block; font: 800 var(--t21)/1.15 var(--display); letter-spacing: -0.01em; color: var(--ink); overflow-wrap: anywhere; }
+.cartao-sub { display: block; margin-top: 3px; font-size: var(--t15); color: var(--muted); }
+.cartao-papeis { display: flex; flex-wrap: wrap; gap: 6px; }
+.cartao-papeis li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--sunken); font-size: var(--t12); font-weight: 600; color: var(--ink); }
+.cp-ic { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--selo); color: #fff; font-size: 12px; }
+.cartao-atencao { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--atencao-bg); color: var(--atencao-ink); }
+.ca-ic { display: block; color: var(--atencao-ic); font-size: 28px; line-height: 0; }
+.cartao-atencao p { font-size: var(--t15); line-height: 1.35; }
+.cartao-atencao b { display: block; font: 800 var(--t17)/1.25 var(--display); }
+.cartao-a { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; }
+.b-contato, .b-perfil { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; border-radius: 14px; font: 700 var(--t15) var(--sans); white-space: nowrap; text-decoration: none; cursor: pointer; }
+.b-contato, .leaflet-container a.b-contato { background: var(--whatsapp); border: 1.5px solid var(--whatsapp); color: #fff; }
+.leaflet-container a.b-perfil { color: var(--ink); }
+.b-contato:hover { filter: brightness(0.94); }
+.b-perfil { background: var(--white); border: 1.5px solid var(--line-strong); color: var(--ink); }
+.b-perfil:hover { background: var(--sunken); }
+@media (max-width: 380px) { .cartao-a { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
   .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation: none; }
 }

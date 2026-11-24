@@ -92,3 +92,16 @@ test('resumo separa membros e líderes quando há líderes no mapa (Spec 014)', 
   assert.equal(regras.resumo(f, id => id === 2), '3 membros · 1 líder no mapa, em 2 áreas.');
   assert.equal(regras.resumo(f, () => false), '4 pessoas no mapa, em 2 áreas.');
 });
+
+test('subtítulo e ação do cartão (Spec 017)', () => {
+  const d = (lider = [], casa = []) => ({ liderCelula: lider, casaCelula: casa });
+  const sub = (p, c) => { const s = regras.subtituloCartao(p, c); return [s.texto, [...s.extras].map(x => x.texto)]; };
+  assert.deepEqual(sub({ papel: 'membro' }, 'Pi-Hairote'), ['Pi-Hairote · Membro', []]);
+  assert.deepEqual(sub({ papel: 'membro', destaque: d(['Hope'], ['Hope']) }, 'Hope'), ['Hope · Líder da célula', ['Anfitrião da célula Hope']]);
+  assert.deepEqual(sub({ papel: 'membro', destaque: d(['Ashrei']) }, 'Hope'), ['Hope · Membro', ['Líder da célula Ashrei']]);
+  assert.deepEqual(sub({ papel: 'lider_setor', setor: 'Fogo no Altar' }, ''), ['Líder do setor Fogo no Altar', []]);
+  assert.deepEqual(sub({ papel: 'lider_area', destaque: d([], ['Hope']) }, ''), ['Líder de área', ['Anfitrião da célula Hope']]);
+  assert.deepEqual(sub({ papel: 'membro' }, ''), ['Membro', []]);
+  assert.deepEqual({ ...regras.acaoContato('https://wa.me/5585999990000') }, { tipo: 'whatsapp', rotulo: 'Entrar em contato' });
+  assert.deepEqual({ ...regras.acaoContato('') }, { tipo: 'registrar', rotulo: 'Registrar contato' });
+});

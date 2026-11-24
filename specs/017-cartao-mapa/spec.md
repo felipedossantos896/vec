@@ -35,6 +35,9 @@ atenção e o próximo passo.
      tempo de levar o mouse até os botões;
    - **clicar fixa** o cartão, que só fecha no "x", no Esc, em outro rosto ou no mapa;
    - no celular, nada muda: abre pelo toque.
+   - num grupo, o cartão abre **acima do leque inteiro**, para não cobrir os outros rostos, e o
+     rosto da pessoa fica destacado com um anel. Isso apareceu na validação: abrindo sobre o
+     rosto, o cartão tapava os vizinhos e não dava para passar o mouse neles.
 2. **Visual novo do cartão** (organização do print, cores do painel):
    - **cabeça:**
      - rosto grande (foto ou avatar ilustrado, com o anel na cor da célula);

@@ -37,7 +37,9 @@ export const ICONES = [
   ['privado', 'lock-simple', 'bold'],
   // Spec 016: gaveta da Área e Voltar ao mapa
   ['voltar', 'arrow-left', 'bold'],
-  ['subir', 'caret-up', 'bold']
+  ['subir', 'caret-up', 'bold'],
+  // Spec 017: faixa "Precisa de atenção" do cartão
+  ['aviso', 'warning-circle', 'fill']
 ];
 
 export function gerar(raiz) {
