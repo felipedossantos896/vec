@@ -3,7 +3,7 @@
 // Ordem de urgência de "Fale com eles", texto do motivo, rótulo de cada ponto do mapa e
 // link do WhatsApp. Sem DOM, para serem testadas em Node.
 const regrasArea = {
-    LENTES: [['todos', 'Todos'], ['cuidado', 'Precisam de cuidado'], ['semDisc', 'Sem discipulador'], ['servir', 'Prontos para servir']],
+    LENTES: [['todos', 'Todos'], ['semDisc', 'Sem discipulador'], ['servir', 'Prontos para servir']],
     DIAS_ALERTA: 60,
     // Quanto maior, mais urgente: tempo sem contato pesa mais; sem contato nenhum conta
     // como o mais longo; sem discipulador, sem célula e sem batismo somam.

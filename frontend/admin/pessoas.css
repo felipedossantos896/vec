@@ -15,8 +15,6 @@
 .it-cell, .it-dsc, .it-seta { display: none; }
 .it-jornada { grid-area: 1 / 2; flex-direction: row; align-items: center; gap: 6px; padding-top: 0; }
 .it-jornada .jlabel { display: none; }
-.it-contato { grid-area: 2 / 2; align-self: start; font-size: var(--t12); }
-.it-contato.alerta { color: var(--coral-ink); font-weight: 700; }
 .item.sel { background: var(--coral-bg); box-shadow: inset 3px 0 0 var(--coral); }
 .it-disc { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-weight: 600; }
 .it-disc > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -25,16 +23,15 @@
 .lista-pe .btn-link { color: var(--coral-ink); font-weight: 700; }
 
 @media (min-width: 1024px) {
-  .thead, .item { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 150px 96px 14px; gap: 16px; padding: 10px 20px; }
+  .thead, .item { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 150px 14px; gap: 16px; padding: 10px 20px; }
   .item { min-height: 60px; }
-  .it-name, .it-jornada, .it-contato { grid-area: auto; }
+  .it-name, .it-jornada { grid-area: auto; }
   .it-nt small { display: block; }
   .it-cel-m { display: none; }
   .it-cell, .it-dsc { display: block; min-width: 0; font-size: var(--t13); }
   .it-dsc { display: flex; }
   .it-seta { display: block; color: var(--muted); font-size: 1.2rem; }
   .it-jornada .jlabel { display: inline; }
-  .it-contato { align-self: center; font-size: var(--t13); }
 }
 
 /* ── Gaveta ── */

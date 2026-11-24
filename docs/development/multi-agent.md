@@ -120,7 +120,7 @@ token Turso de 1 dia com permissões mínimas (leitura geral; escrita apenas em
 `usuarios`, `usuario_escopos` e `login_falhas`), cria um usuário AREA
 `e2e-<aleatório>` com senha em arquivo `0600`, sobe o servidor em porta livre
 com `AUTO_MIGRATE=0` e valida, em 1440×900 e 390×844 com movimento reduzido:
-login, cinco KPIs de Indicadores, filtro de setor compartilhado entre as abas,
+login, quatro KPIs de Indicadores, filtro de setor compartilhado entre as abas,
 foco de teclado visível (estilo muda com o foco), CSS sem animações com movimento reduzido, ausência de overflow horizontal, console e HTTP sem
 erros, estado vazio (resposta simulada, nada é gravado) e logout.
 

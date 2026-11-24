@@ -81,11 +81,9 @@ function renderIndicadores() {
 
   const completa = base.filter(r => r._jornada === JORNADA.length).length;
   const comDisc = base.filter(r => !SITUACOES.semDiscipulador.f(r)).length;
-  const cuidado = base.filter(SITUACOES.semContato.f).length;
   const cadastros = porMes(base, periodoInd);
   const novos = cadastros[cadastros.length - 1].n;
   const nomeMes = agora.toLocaleDateString('pt-BR', { month: 'long' });
-  const dCuidado = regrasIndicadores.tendencia(cuidado, serie('precisam_cuidado'));
 
   const idades = base.map(r => r._idade).filter((i): i is number => i != null);
   const maior = cadastros.reduce((m, c, i) => c.n > cadastros[m].n ? i : m, 0);
@@ -94,7 +92,6 @@ function renderIndicadores() {
   const batizar = base.filter(SITUACOES.batizar.f).length;
   const agir: [number, string, string, string][] = ([
     [semDisc, semDisc === 1 ? 'pessoa sem discipulador vinculado' : 'pessoas sem discipulador vinculado', 'Vincular', 'data-sit="semDiscipulador"'],
-    [cuidado, `sem contato há mais de ${DIAS_SEM_CONTATO} dias`, 'Ver no mapa', 'data-lente="cuidado"'],
     [batizar, batizar === 1 ? 'recebeu Jesus e não foi batizada' : 'receberam Jesus e não foram batizadas', 'Ver pessoas', 'data-sit="batizar"']
   ] as [number, string, string, string][]).filter(([n]) => n);
 
@@ -103,8 +100,7 @@ function renderIndicadores() {
       cartao(estado.celula || estado.setor ? 'Pessoas no filtro' : 'Pessoas na área', total, tend('pessoas', total), comVivo('pessoas', total), 'grafite') +
       cartao('Novos cadastros', novos, `em ${nomeMes}`, cadastros.map(c => c.n), 'grafite') +
       cartao('Jornada completa', completa, `${regrasIndicadores.pct(completa, total)}% ${estado.celula || estado.setor ? 'do filtro' : 'da área'}`, comVivo('jornada_completa', completa), 'verde', 'verde') +
-      cartao('Com discipulador', comDisc, `${regrasIndicadores.pct(comDisc, total)}% ${estado.celula || estado.setor ? 'do filtro' : 'da área'}`, comVivo('com_discipulador', comDisc), 'ouro', 'ouro') +
-      cartao('Precisam de cuidado', cuidado, regrasIndicadores.textoTendencia(dCuidado), comVivo('precisam_cuidado', cuidado), 'coral', dCuidado && dCuidado > 0 ? 'coral' : '')
+      cartao('Com discipulador', comDisc, `${regrasIndicadores.pct(comDisc, total)}% ${estado.celula || estado.setor ? 'do filtro' : 'da área'}`, comVivo('com_discipulador', comDisc), 'ouro', 'ouro')
     }</div>
     <div class="ind-grid">
       ${mapaJornada(base)}
@@ -117,21 +113,13 @@ function renderIndicadores() {
     </div>`;
 }
 
-// Período e o atalho "Ver no mapa" (Área com a lente de cuidado)
+// Período dos indicadores
 document.addEventListener('click', e => {
   const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-periodo]') : null;
   if (!b) return;
   periodoInd = Number(b.dataset.periodo) || 12;
   renderIndicadores();
 });
-$('gConteudo').addEventListener('click', e => {
-  const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-lente]') : null;
-  if (!b) return;
-  estado.lente = b.dataset.lente || 'cuidado';
-  mostrarAba('acompanhar');
-  renderMapa();
-});
-
 // ── Dica ao passar o mouse ou focar uma coluna ──
 function mostrarDica(e: Event) {
   const alvo = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-tip]') : null;

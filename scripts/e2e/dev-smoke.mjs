@@ -23,7 +23,7 @@ import { BANCO, urlDoBanco } from './banco.mjs';
 
 const run = promisify(execFile);
 const VIEWPORTS = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
-const KPIS = 5;
+const KPIS = 4;
 const PERMISSOES = [
   'all:data_read',
   'usuarios:data_add,data_update,data_delete',
@@ -129,7 +129,7 @@ async function validarViewport(navegador, base, cred, viewport) {
     await page.locator('#indicadoresView').waitFor({ state: 'visible' });
     // Os dados chegam depois da aba: espera os KPIs (ou o estado vazio) renderizarem.
     await page.locator('#gConteudo .ind-kpi, #gConteudo .estado').first().waitFor({ state: 'visible', timeout: 20_000 });
-    const kpis = await page.locator('#gConteudo .ind-kpi').count(); // os cinco números da Spec 009
+    const kpis = await page.locator('#gConteudo .ind-kpi').count();
     kpis === KPIS ? ok(`${rotulo}: ${KPIS} KPIs`) : falha(`${rotulo}: ${kpis} KPIs, esperado ${KPIS}`);
 
     const opcoes = await page.locator('#gSetor option').evaluateAll(os => os.map(o => o.value).filter(Boolean));
