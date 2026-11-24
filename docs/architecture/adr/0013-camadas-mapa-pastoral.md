@@ -1,6 +1,6 @@
 # ADR-0013 — Camadas de representação e privacidade do mapa pastoral
 
-- Status: **Proposto** (2026-11-24); requer aprovação.
+- Status: **Aprovado para P0/P1** (2026-11-24). P2 adiado.
 - Complementa ADRs 0005, 0008, 0010 e 0011; não substitui decisões de localização aproximada.
 - Spec: [018](../../../specs/018-mapa-inteligencia-pastoral/spec.md).
 
@@ -26,4 +26,4 @@ Testes de escopo, precisão, grupos pequenos, ataques de diferença entre filtro
 
 ## Recorte da primeira entrega
 
-Escopo inicial aprovado em 24/11/2026 com Leaflet/OSM e centros aproximados existentes. P2 adiado. Territórios e calor exigem revisão específica de privacidade antes de serem replanejados, incluindo limiar de supressão e proteção contra inferência entre filtros. O status final deste ADR acompanha a conclusão da T001.
+Escopo inicial aprovado em 24/11/2026 com Leaflet/OSM e centros aproximados existentes. P2 adiado. Territórios e calor exigem revisão específica de privacidade antes de serem replanejados, incluindo limiar de supressão e proteção contra inferência entre filtros. A ativação do P2 exige decisão específica após revisão de privacidade.

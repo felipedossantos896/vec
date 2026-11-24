@@ -25,4 +25,6 @@
 - Registrar screenshot sintético, resultados efetivamente executados e limitações por PR.
 
 ## Release e rollback
-Uma tarefa por branch/PR, dependências no grafo e aprovação antes de executar. Revisão independente e CI antes de merge. P2 isolado e desligado até aprovação específica. Reverter PRs por ordem inversa; nenhuma migration prevista. Verificar /version e /healthz após deploy autorizado e registrar release-validation.md. 
+Uma tarefa por branch/PR, dependências no grafo e aprovação antes de executar. Revisão independente e CI antes de merge. P2 isolado e desligado até aprovação específica. Reverter PRs por ordem inversa; nenhuma migration prevista. Verificar /version e /healthz após deploy autorizado e registrar release-validation.md.
+
+A primeira entrega cobre P0/P1. T007 e T008 ficam no backlog do P2. T009 valida P0/P1 após T006.

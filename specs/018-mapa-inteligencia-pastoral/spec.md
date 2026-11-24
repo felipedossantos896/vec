@@ -1,8 +1,8 @@
 # Spec 018 — Mapa de inteligência pastoral
 
-- Status: **Proposta** — requer aprovação explícita antes da implementação.
+- Status: **Aprovada para a primeira entrega (P0/P1)** — P2 adiado.
 - Data: 2026-11-24
-- ADRs: 0005, 0006, 0007, 0008, 0009, 0010, 0011 e [0013 (proposto)](../../docs/architecture/adr/0013-camadas-mapa-pastoral.md).
+- ADRs: 0005, 0006, 0007, 0008, 0009, 0010, 0011 e [0013](../../docs/architecture/adr/0013-camadas-mapa-pastoral.md).
 - Relacionadas: Specs 003, 004, 005, 009, 012, 014, 016 e 017.
 
 ## Objetivo
@@ -52,4 +52,4 @@ Preview claro versus painel escuro atual; menu compacto opcional; apresentação
 
 ## Decisão de escopo — T001
 
-Escopo da primeira entrega aprovado em 24/11/2026. Validar preview com superfícies claras de alto contraste e menu grafite em 390×844 e 1440×900. Adiar o menu compacto. Exibir as seis etapas sob demanda, com estados independentes, quando a fonte existente sustentar a apresentação. Manter Leaflet/OSM. Adiar P2 nesta entrega. A aprovação final da Spec permanece pendente da validação do preview.
+Escopo da primeira entrega aprovado em 24/11/2026. Validar preview com superfícies claras de alto contraste e menu grafite em 390×844 e 1440×900. Adiar o menu compacto. Exibir as seis etapas sob demanda, com estados independentes, quando a fonte existente sustentar a apresentação. Manter Leaflet/OSM. Adiar P2 nesta entrega. Preview de layout validado em 390×844 e 1440×900. A validação funcional fica para as tarefas de implementação.

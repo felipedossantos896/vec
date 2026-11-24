@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spec 018 — Preview da Área</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#20362a;font:16px system-ui;background:#edf2e9}
+.shell{display:grid;grid-template-columns:13rem minmax(0,1fr);min-height:100dvh}
+nav{padding:1rem;background:#252a29;color:#fff}main{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+form,aside,footer{background:#fff;padding:1rem}form{display:flex;flex-wrap:wrap;gap:.5rem}
+input,select,button{font:inherit;padding:.5rem;border:1px solid #68786c;border-radius:.4rem;min-height:44px;color:inherit;background:#fff;max-width:100%}
+.map{position:relative;min-height:18rem;background:repeating-linear-gradient(35deg,#e1eadc 0 55px,#f4f3e9 56px 64px,#e1eadc 65px 95px);padding:1rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:1rem}
+aside{border-radius:.6rem;box-shadow:0 4px 18px #20362a22}.credit{align-self:flex-end;background:#fff;padding:.25rem}.pin{align-self:center;background:#246242;color:#fff}.map article{align-self:center;background:white;padding:.65rem;border-radius:.5rem}
+summary{cursor:pointer;padding:.5rem}h1,p{margin:.25rem 0}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(max-width:600px){.shell{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}nav,form,footer,.map{padding:.6rem}input{flex-basis:100%}}
+</style>
+<div class="shell">
+<nav aria-label="Menu principal"><strong>VEC</strong> · Área</nav>
+<main>
+<form aria-label="Filtros do mapa">
+<input aria-label="Buscar pessoa ou célula" placeholder="Buscar pessoa ou célula">
+<select aria-label="Setor"><option>Todos os setores</option></select>
+<select aria-label="Célula"><option>Todas as células</option></select>
+<button type="reset">Limpar</button>
+</form>
+<section class="map" aria-label="Mapa ilustrativo com dados fictícios">
+<aside><h1>Área</h1><p>14 pessoas · 11 no mapa</p><button type="button">Reenquadrar</button></aside>
+<details>
+<summary class="pin">Pessoa fictícia</summary>
+<article><p>Precisa de atenção</p><button type="button">Ver perfil</button></article>
+</details>
+<small class="credit">Mapa ilustrativo · sem tiles externos</small>
+</section>
+<footer><details><summary>Central de cuidado · 3 pessoas</summary><p>Lista ilustrativa de pessoas que precisam de acompanhamento.</p></details></footer>
+</main>
+</div>
+</html>

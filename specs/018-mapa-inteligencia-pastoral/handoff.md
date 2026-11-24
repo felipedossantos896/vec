@@ -1,7 +1,7 @@
 # Handoff — Spec 018
-- Estado: proposta documentada; nenhuma implementação iniciada.
+- Estado: escopo P0/P1 aprovado e preview validado; nenhuma implementação iniciada.
 - Baseline: Specs 016 e 017 entregues segundo documentação; mapa e central existentes devem ser reaproveitados.
-- Próxima ação: T001 / #204, revisão e aprovação explícita de escopo e ADR-0013.
+- Próxima ação: revisão independente da T001 no PR #214. Após merge e validação, iniciar T002 / #205.
 - Issues #204–#212 e dependências em graph.json.
 - Codex/Claude Code: seguir AGENTS.md, uma tarefa por worktree/PR; verificar estado real das Issues e reserva antes de executar.
 - Registrar branch/PR, arquivos, testes efetivos, evidências sintéticas, riscos e próximo passo. Não registrar dados reais.
@@ -15,6 +15,7 @@
 - Evidência: grafo, Spec e ADR conferidos. Preview e testes de aplicação ficam pendentes.
 - Próximo passo: registrar as decisões aprovadas e atualizar a Spec, a ADR e o grafo conforme necessário. A T002 / #205 aguarda a conclusão da T001.
 
-## Decisão registrada em 24/11/2026
 
-Escopo inicial aprovado durante a revisão da T001. O preview nas duas dimensões ainda precisa ser validado. Atualizar o plano e o grafo de entrega para refletir o adiamento de P2 antes de concluir a T001. A T002 aguarda essa conclusão.
+## Validação do preview
+
+Chromium via Playwright em 390×844 e 1440×900. Navegação, filtros, painel, atribuição ilustrativa e gaveta ficaram dentro do viewport com cartão e gaveta fechados e abertos. Largura rolável igual à largura do viewport. Preview estático com dados fictícios; gestos do mapa, busca e integração não fazem parte desta evidência. P2 adiado; T009 depende de T006 nesta entrega.

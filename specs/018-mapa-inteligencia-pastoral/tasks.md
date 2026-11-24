@@ -11,4 +11,4 @@
 - [ ] **T009 — Validação e release** (#212): evidências, CI, testes negativos, performance e rollback.
 
 ## Dependências
-T001 precede T002; T002 precede T003; T003 precede T004 e T005; T004 e T005 precedem T006; T006 precede T007 e T008; T007 e T008 precedem T009. P2 pode ser explicitamente adiado pelo responsável mediante atualização da spec e do grafo revisada; não fechar tarefa não entregue como se estivesse concluída.
+T001 precede T002; T002 precede T003; T003 precede T004 e T005; T004 e T005 precedem T006; T006 precede T007 e T008; T006 precede T009 nesta primeira entrega. T007 e T008 ficam no backlog do P2. P2 pode ser explicitamente adiado pelo responsável mediante atualização da spec e do grafo revisada; não fechar tarefa não entregue como se estivesse concluída.
