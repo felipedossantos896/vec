@@ -64,7 +64,7 @@ func (s *Server) registroSalvar(ctx context.Context, req adminReq) reply {
 	}
 	ok, err := s.Store.UpdateResposta(ctx, a.scope, req.Linha, v, discipulador, a.user.Usuario, now)
 	if errors.Is(err, store.ErrBatismoRequisitos) {
-		return failReply("batismo_requisitos")
+		return failReply(erroBatismo(v))
 	}
 	if err != nil {
 		return s.internal("registro_salvar", err)

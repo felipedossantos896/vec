@@ -86,14 +86,15 @@ func TestFormularioBirthDateUsesFortalezaDayBoundary(t *testing.T) {
 }
 
 func TestFormularioBatismoRequerCafeENovaCriatura(t *testing.T) {
-	for _, campos := range []string{
-		`"cafePastor":"S","novaCriatura":"N"`,
-		`"cafePastor":"N","novaCriatura":"S"`,
+	for campos, codigo := range map[string]string{
+		`"cafePastor":"S","novaCriatura":"N"`: "batismo_nova_criatura",
+		`"cafePastor":"N","novaCriatura":"S"`: "batismo_cafe_pastor",
+		`"cafePastor":"N","novaCriatura":"N"`: "batismo_requisitos",
 	} {
 		db := &apiTestDB{}
 		s := testAPIServer(db)
 		rep := enviarFormulario(s, []byte(`{"_requestId":"0123456789abcdef0123456789abcdef","consentimento":"S","nome":"Ana Silva","nascimento":"1990-01-01","batismo":"S",`+campos+`}`))
-		if rep.body["erro"] != "batismo_requisitos" || len(db.txCalls) != 0 {
+		if rep.body["erro"] != codigo || len(db.txCalls) != 0 {
 			t.Fatalf("resposta = %#v, transações = %d", rep.body, len(db.txCalls))
 		}
 	}

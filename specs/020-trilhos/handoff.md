@@ -5,4 +5,5 @@
 - Novos batismos exigem Café com o Pastor e Nova Criatura. Edições preservam batismos históricos incompletos, sem permitir retirar requisitos já cumpridos. Importação histórica, schema e escopos preservados.
 - Typecheck, build, 93 testes frontend, gofmt, go vet, go test e go build passaram. Testes Go cobrem recusa de cada requisito ausente e respostas de edição histórica e fora do escopo.
 - Chrome com dados fictícios, 1440 × 900 e 390 × 844, perfis Área e Discipulador: três trilhos, aviso de requisitos, vínculo à célula, WhatsApp e quatro KPIs. A gravação não foi reproduzida no navegador.
+- Ajustes da primeira revisão: mensagens específicas por requisito, identificação do alvo visível na mesma transação e teste da guarda SQL em SQLite. O teste preserva cada combinação histórica, rejeita retirar cada requisito e valida uma nova marcação com e sem os requisitos. Suítes Go e frontend passaram novamente.
 - Próximo passo: CI e revisão independente, merge e verificação do deploy. Rollback por reversão do PR.

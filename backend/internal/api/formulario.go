@@ -162,7 +162,7 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 	}
 
 	if store.BatismoSemRequisitos(v) {
-		return failReply("batismo_requisitos")
+		return failReply(erroBatismo(v))
 	}
 	if requestID == "" {
 		requestID, err = newRequestID()
@@ -185,6 +185,17 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 
 // telefoneBR deixa só os dígitos de um telefone brasileiro com DDD (10 ou 11 dígitos),
 // sem o código do país. Vazio é aceito: o campo é opcional.
+func erroBatismo(v map[string]string) string {
+	switch {
+	case v["cafePastor"] == "S":
+		return "batismo_nova_criatura"
+	case v["novaCriatura"] == "S":
+		return "batismo_cafe_pastor"
+	default:
+		return "batismo_requisitos"
+	}
+}
+
 func telefoneBR(s string) (string, bool) {
 	var b strings.Builder
 	for _, r := range s {

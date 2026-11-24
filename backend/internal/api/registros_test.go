@@ -3,10 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"os/exec"
 	"strings"
 	"testing"
 
 	"vec/backend/internal/auth"
+	"vec/backend/internal/backup"
+	"vec/backend/internal/store"
 	"vec/backend/internal/turso"
 )
 
@@ -224,7 +227,7 @@ func TestRegistroSalvarDistingueBatismoHistoricoEAlvoForaDoEscopo(t *testing.T) 
 		erro     string
 	}{
 		{"histórico", 1, true, ""},
-		{"novo batismo ou retirada de requisito", 0, true, "batismo_requisitos"},
+		{"novo batismo ou retirada de requisito", 0, true, "batismo_cafe_pastor"},
 		{"fora do escopo", 0, false, "nao_encontrado"},
 	} {
 		t.Run(caso.nome, func(t *testing.T) {
@@ -240,6 +243,52 @@ func TestRegistroSalvarDistingueBatismoHistoricoEAlvoForaDoEscopo(t *testing.T) 
 				t.Fatalf("guarda de batismo ausente: %#v", db.escritas)
 			}
 		})
+	}
+}
+
+func TestGuardaBatismoNaEdicaoSQLite(t *testing.T) {
+	sqlite, err := exec.LookPath("sqlite3")
+	if err != nil {
+		t.Skip("sqlite3 não disponível")
+	}
+	cols := []string{"id INTEGER PRIMARY KEY", "excluido_em", "discipulador_id", "atualizado_em", "atualizado_por"}
+	for _, c := range store.Campos {
+		cols = append(cols, c.Coluna+" TEXT")
+	}
+	for _, tt := range []struct{ antes, cafe, curso, quer string }{
+		{"'S','N','S'", "N", "S", "1|S|N|S"},
+		{"'S','S','N'", "S", "N", "1|S|S|N"},
+		{"'S','S','S'", "N", "S", "0|S|S|S"},
+		{"'S','S','S'", "S", "N", "0|S|S|S"},
+		{"'N','N','S'", "N", "S", "0|N|N|S"},
+		{"'N','S','S'", "S", "S", "1|S|S|S"},
+	} {
+		s, db, token := painelServer(t, 1)
+		s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
+			"nome": "Ana Silva", "celula": "Hope", "batismo": "S", "cafePastor": tt.cafe, "novaCriatura": tt.curso,
+		})})
+		if len(db.escritas) != 1 {
+			t.Fatalf("escritas = %d", len(db.escritas))
+		}
+		st := db.escritas[0]
+		partes := strings.Split(st.SQL, "?")
+		var q strings.Builder
+		for i, arg := range st.Args {
+			lit, err := backup.Literal(arg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			q.WriteString(partes[i] + lit)
+		}
+		q.WriteString(partes[len(partes)-1])
+		cmd := exec.Command(sqlite, "-batch", "-bail", ":memory:")
+		cmd.Stdin = strings.NewReader("CREATE TABLE respostas (" + strings.Join(cols, ",") + ");" +
+			"INSERT INTO respostas (id, celula, batismo, cafe_pastor, nova_criatura) VALUES (7,'Hope'," + tt.antes + ");" +
+			q.String() + "; SELECT changes(),batismo,cafe_pastor,nova_criatura FROM respostas;")
+		out, err := cmd.CombinedOutput()
+		if err != nil || strings.TrimSpace(string(out)) != tt.quer {
+			t.Fatalf("antes %s, edição %s/%s = %s (%v), queria %s", tt.antes, tt.cafe, tt.curso, out, err, tt.quer)
+		}
 	}
 }
 

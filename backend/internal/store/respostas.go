@@ -276,18 +276,16 @@ func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[st
 			Args: []any{id, id},
 		},
 	}
-	res, err := s.DB.Tx(ctx, append(stmts, jornadaDaEdicao(id, v, por, now)...)...)
+	stmts = append(stmts, jornadaDaEdicao(id, v, por, now)...)
+	if guardaBatismo != "" {
+		stmts = append(stmts, turso.Stmt{SQL: `SELECT id FROM respostas` + alvo, Args: append([]any{id}, escopoArgs...)})
+	}
+	res, err := s.DB.Tx(ctx, stmts...)
 	if err != nil {
 		return false, err
 	}
-	if res[0].Affected == 0 && guardaBatismo != "" {
-		visivel, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT id FROM respostas` + alvo, Args: append([]any{id}, escopoArgs...)})
-		if err != nil {
-			return false, err
-		}
-		if len(visivel[0].Rows) > 0 {
-			return false, ErrBatismoRequisitos
-		}
+	if res[0].Affected == 0 && guardaBatismo != "" && len(res[len(res)-1].Rows) > 0 {
+		return false, ErrBatismoRequisitos
 	}
 	return res[0].Affected > 0, nil
 }

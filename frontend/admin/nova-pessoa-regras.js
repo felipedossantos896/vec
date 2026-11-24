@@ -40,6 +40,8 @@ const regrasNovaPessoa = {
     mensagem(erro) {
         return {
             batismo_requisitos: 'Para marcar Batismo nas Águas, confirme Café com o Pastor e Nova Criatura.',
+            batismo_cafe_pastor: 'Para marcar Batismo nas Águas, falta confirmar Café com o Pastor.',
+            batismo_nova_criatura: 'Para marcar Batismo nas Águas, falta confirmar Nova Criatura.',
             consentimento: 'Marque a autorização para cadastrar.',
             celula_invalida: 'Essa célula não está disponível para você. Escolha outra.',
             nome_invalido: 'Informe o nome completo.',
