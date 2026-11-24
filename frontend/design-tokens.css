@@ -59,6 +59,9 @@
   --coral-bg: var(--gold-wash);
   --verde: var(--ok);
   --whatsapp: #16955a;
+  --selo-area: #b07a00;  /* Spec 014: estrela do líder de área (contraste 3:1 com o ícone branco) */
+  --selo-setor: #6a3fd0; /* escudo do líder de setor */
+  --selo-casa: var(--ok); /* casa da célula */
 
   /* Medidas */
   --space-1: 4px;

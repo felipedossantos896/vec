@@ -4,7 +4,10 @@
 // só o centro de cada área de ~300 m (nunca a coordenada de alguém).
 
 type GrupoMapa = { lat: number; lng: number; linhas: number[]; peloBairro: number };
-type DadosMapa = { grupos: GrupoMapa[]; soCidade: number[]; naoLocalizados: number[]; pendentes: number[] };
+type DestaqueMapa = { liderCelula: string[]; casaCelula: string[] };
+type DadosMapa = { grupos: GrupoMapa[]; soCidade: number[]; naoLocalizados: number[]; pendentes: number[]; destaques?: Record<string, DestaqueMapa> };
+type PessoaNoMapa = { papel?: string; setor?: string; destaque?: DestaqueMapa };
+type SeloMapa = 'area' | 'setor' | 'celula' | 'casa';
 type MapaFiltrado = {
   grupos: GrupoMapa[]; soCidade: number[]; naoLocalizados: number[]; pendentes: number[];
   semEndereco: number[]; noMapa: number;
@@ -59,15 +62,46 @@ const regrasMapa = {
     };
   },
 
+  // Selos do rosto (Spec 014): liderança no canto de cima (área > setor > célula) e a casa
+  // da célula no de baixo. Até dois por rosto.
+  selos(p: PessoaNoMapa): { cima?: SeloMapa; baixo?: SeloMapa } {
+    const d = p.destaque;
+    const cima: SeloMapa | undefined = p.papel === 'lider_area' ? 'area' : p.papel === 'lider_setor' ? 'setor' : d && d.liderCelula.length ? 'celula' : undefined;
+    return { ...(cima ? { cima } : {}), ...(d && d.casaCelula.length ? { baixo: 'casa' as SeloMapa } : {}) };
+  },
+
+  NOME_SELO: { area: 'Líder de área', setor: 'Líder de setor', celula: 'Líder de célula', casa: 'Casa da célula' } as Record<SeloMapa, string>,
+
+  // "Hope", "Hope e Ashrei", "Hope, Ashrei e Betânia"
+  lista(nomes: string[]): string {
+    return nomes.length < 2 ? (nomes[0] || '') : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
+  },
+
+  // Papéis do card, na ordem dos selos: liderança da área ou do setor, das células e a casa
+  papeisDoCard(p: PessoaNoMapa): { selo: SeloMapa; texto: string }[] {
+    const out: { selo: SeloMapa; texto: string }[] = [];
+    const d = p.destaque || { liderCelula: [], casaCelula: [] };
+    const cel = (n: string[]): string => `${n.length > 1 ? 'das células' : 'da célula'} ${regrasMapa.lista(n)}`;
+    if (p.papel === 'lider_area') out.push({ selo: 'area', texto: 'Líder de área' });
+    if (p.papel === 'lider_setor') out.push({ selo: 'setor', texto: p.setor ? `Líder do setor ${p.setor}` : 'Líder de setor' });
+    if (d.liderCelula.length) out.push({ selo: 'celula', texto: `Líder ${cel(d.liderCelula)}` });
+    if (d.casaCelula.length) out.push({ selo: 'casa', texto: `Anfitrião ${cel(d.casaCelula)}` });
+    return out;
+  },
+
   pessoas(n: number): string {
     return `${n} ${n === 1 ? 'pessoa' : 'pessoas'}`;
   },
 
-  // Frase de situação acima do mapa.
-  resumo(f: MapaFiltrado): string {
+  // Frase de situação acima do mapa. Com líderes no mapa, separa membros e líderes (Spec 014).
+  resumo(f: MapaFiltrado, ehLider: (id: number) => boolean = () => false): string {
     const fora = f.soCidade.length + f.naoLocalizados.length + f.pendentes.length + f.semEndereco.length;
     if (!f.noMapa && !fora) return 'Ninguém neste filtro.';
     const areas = f.grupos.length === 1 ? '1 área' : `${f.grupos.length} áreas`;
-    return `${regrasMapa.pessoas(f.noMapa)} no mapa, em ${areas}` + (fora ? `; ${regrasMapa.pessoas(fora)} sem posição (lista abaixo).` : '.');
+    const lideres = f.grupos.reduce((n, g) => n + g.linhas.filter(ehLider).length, 0);
+    const quem = lideres
+      ? `${f.noMapa - lideres} ${f.noMapa - lideres === 1 ? 'membro' : 'membros'} · ${lideres} ${lideres === 1 ? 'líder' : 'líderes'}`
+      : regrasMapa.pessoas(f.noMapa);
+    return `${quem} no mapa, em ${areas}` + (fora ? `; ${regrasMapa.pessoas(fora)} sem posição (lista abaixo).` : '.');
   }
 };

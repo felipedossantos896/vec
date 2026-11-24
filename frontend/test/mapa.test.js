@@ -72,3 +72,23 @@ test('leque em círculo até 8 e espiral acima disso, sem rostos sobrepostos (Sp
   const e = regras.leque(15, 50).map(p => Math.hypot(p.x, p.y));
   assert.ok(e.every((d, i) => i === 0 || d >= e[i - 1] - 1));
 });
+
+test('selos e papéis do card (Spec 014)', () => {
+  const d = (lider = [], casa = []) => ({ liderCelula: lider, casaCelula: casa });
+  assert.deepEqual({ ...regras.selos({ papel: 'membro' }) }, {});
+  assert.deepEqual({ ...regras.selos({ papel: 'lider_area', destaque: d([], ['Hope']) }) }, { cima: 'area', baixo: 'casa' });
+  assert.deepEqual({ ...regras.selos({ papel: 'lider_setor' }) }, { cima: 'setor' });
+  assert.deepEqual({ ...regras.selos({ papel: 'membro', destaque: d(['Hope'], ['Hope']) }) }, { cima: 'celula', baixo: 'casa' });
+  const p = regras.papeisDoCard({ papel: 'membro', destaque: d(['Hope', 'Ashrei'], ['Hope']) });
+  assert.deepEqual([...p].map(x => x.texto), ['Líder das células Hope e Ashrei', 'Anfitrião da célula Hope']);
+  assert.deepEqual([...regras.papeisDoCard({ papel: 'lider_setor', setor: 'Fogo no Altar' })].map(x => x.texto), ['Líder do setor Fogo no Altar']);
+  assert.deepEqual([...regras.papeisDoCard({ papel: 'lider_area' })].map(x => x.selo), ['area']);
+  assert.deepEqual([...regras.papeisDoCard({})], []);
+  assert.equal(regras.lista(['A', 'B', 'C']), 'A, B e C');
+});
+
+test('resumo separa membros e líderes quando há líderes no mapa (Spec 014)', () => {
+  const f = regras.filtrar(dados(), new Set([1, 2, 3, 4]));
+  assert.equal(regras.resumo(f, id => id === 2), '3 membros · 1 líder no mapa, em 2 áreas.');
+  assert.equal(regras.resumo(f, () => false), '4 pessoas no mapa, em 2 áreas.');
+});

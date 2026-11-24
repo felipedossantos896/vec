@@ -1,0 +1,9 @@
+// <svg> do ícone, com a cor do texto (currentColor). Com rótulo, é uma imagem com nome
+// acessível; sem rótulo, é decorativo (aria-hidden). Nome desconhecido devolve ''.
+function icone(nome: string, opcoes: { rotulo?: string; classe?: string } = {}): string {
+  const corpo = ICONES_SVG[nome];
+  if (!corpo) return '';
+  const attr = (t: string): string => t.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const a11y = opcoes.rotulo ? `role="img" aria-label="${attr(opcoes.rotulo)}"` : 'aria-hidden="true"';
+  return `<svg class="ic${opcoes.classe ? ' ' + attr(opcoes.classe) : ''}" viewBox="0 0 256 256" fill="currentColor" focusable="false" ${a11y}>${corpo}</svg>`;
+}

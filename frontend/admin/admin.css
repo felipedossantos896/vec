@@ -31,6 +31,7 @@ select.input { -webkit-appearance: none; appearance: none; min-width: 0; padding
 .btn-link { min-height: 44px; padding: 0 10px; color: var(--muted); font-weight: 700; font-size: 0.95rem; text-decoration: underline; text-underline-offset: 3px; }
 .icon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); color: var(--navy); font-weight: 600; font-size: 0.95rem; }
 .icon-btn svg { flex-shrink: 0; }
+.icon-btn .ic { width: 18px; height: 18px; }
 .icon-btn:disabled { opacity: 0.5; cursor: wait; }
 .msg { color: var(--danger); font-weight: 700; font-size: 0.95rem; }
 .msg:not(:empty) { margin-bottom: 14px; padding: 10px 14px; border-radius: var(--r-sm); background: var(--danger-bg); }
