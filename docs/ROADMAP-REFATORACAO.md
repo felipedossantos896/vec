@@ -213,6 +213,7 @@ teste contra um banco de produção.
 - [x] Rostos maiores no mapa e grupos que se abrem em leque (Spec 012).
 - [x] Líderes de área e de setor como discipuladores, sem célula fixa (Spec 013).
 - [x] Liderança e casa da célula no mapa, cartão enxuto e pacote de ícones (Spec 014).
+- [x] Ícones do painel e do formulário com o Phosphor (Spec 015).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

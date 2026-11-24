@@ -1,6 +1,6 @@
 # Spec 015 — Ícones do painel e do formulário com o Phosphor
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.60.0, 2026-11-24) · [validação](release-validation.md)
 - Data: 2026-11-24
 - ADRs: [0012](../../docs/architecture/adr/0012-pacote-de-icones.md) (pacote de ícones) e
   [0009](../../docs/architecture/adr/0009-identidade-visual.md) (identidade visual). Sem
