@@ -141,24 +141,27 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 	return res[0].Affected > 0, nil
 }
 
-// ExcluirEndereco apaga de fato o endereço de um cadastro do escopo. Devolve false
-// se o cadastro não existe, foi excluído ou está fora do escopo (ter ou não
-// endereço não importa).
-func (s *Store) ExcluirEndereco(ctx context.Context, sc Scope, respostaID int64) (bool, error) {
+// ExcluirEndereco só apaga a versão vista por quem pediu a remoção.
+func (s *Store) ExcluirEndereco(ctx context.Context, sc Scope, respostaID int64, versao *string) (bool, error) {
 	cond, args, ok := escopoSQL(sc)
 	if !ok {
 		return false, nil
 	}
 	alvo := append([]any{respostaID}, args...)
 	dono := `SELECT id FROM respostas WHERE id = ? AND excluido_em IS NULL AND ` + cond
-	res, err := s.DB.Do(ctx,
-		turso.Stmt{SQL: dono, Args: alvo},
-		turso.Stmt{SQL: `DELETE FROM enderecos WHERE resposta_id IN (` + dono + `)`, Args: alvo},
-	)
+	guarda := `COALESCE(geo_precisao, '') <> 'manual'`
+	if versao != nil {
+		guarda = `atualizado_em = ?`
+		alvo = append([]any{*versao}, alvo...)
+	}
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL:  `DELETE FROM enderecos WHERE ` + guarda + ` AND resposta_id IN (` + dono + `)`,
+		Args: alvo,
+	})
 	if err != nil {
 		return false, err
 	}
-	return len(res[0].Rows) > 0, nil
+	return res[0].Affected > 0, nil
 }
 
 // ---------------------------------------------------------------------------

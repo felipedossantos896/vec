@@ -203,12 +203,22 @@ func (s *Server) enderecoExcluir(ctx context.Context, req adminReq) reply {
 	if req.Linha <= 0 {
 		return failReply("dados_invalidos")
 	}
-	ok, err := s.Store.ExcluirEndereco(ctx, a.scope, req.Linha)
+	ok, err := s.Store.ExcluirEndereco(ctx, a.scope, req.Linha, req.VersaoEndereco)
 	if err != nil {
 		return s.internal("endereco_excluir", err)
 	}
 	if !ok {
-		return failReply("nao_encontrado")
+		_, tem, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
+		if err != nil {
+			return s.internal("endereco_excluir", err)
+		}
+		if !visivel {
+			return failReply("nao_encontrado")
+		}
+		if tem {
+			return failReply("endereco_desatualizado")
+		}
+		return okReply(nil)
 	}
 	s.Log.Info("endereço removido", "linha", req.Linha, "por", a.user.Usuario)
 	return okReply(nil)

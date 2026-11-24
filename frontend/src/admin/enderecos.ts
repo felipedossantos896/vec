@@ -25,6 +25,7 @@ const CAMPOS_ENDERECO: [keyof EnderecoForm, string, string][] = [
   ['cidade', 'Cidade', 'address-level2'], ['uf', 'UF', 'address-level1']
 ];
 let enderecoAtual: EnderecoSalvo | null = null;
+let revisaoEndereco = 0;
 let editorPonto: any = null;
 let pinoEndereco: any = null;
 let pontoRascunho: PontoEndereco | null = null;
@@ -75,7 +76,7 @@ function renderEndereco() {
   $('endCorpo').innerHTML = e
     ? `<address class="end-linhas">${regrasEndereco.linhas(e).map(l => `<span>${esc(l)}</span>`).join('')}</address>
       <p class="field-hint">Autorizado em ${soData(e.consentimentoEm)} por ${esc(e.consentimentoPor)}. Atualizado em ${soData(e.atualizadoEm)} por ${esc(e.atualizadoPor)}.</p>
-      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button></div>`
+      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button><button type="button" class="btn-link" data-end="recarregar" hidden>Recarregar endereço</button></div>`
     : `<p class="nota-fraca">Sem endereço cadastrado.</p>
       <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Cadastrar endereço</button></div>`;
 }
@@ -135,10 +136,11 @@ async function chamarEndereco(r: Registro, payload: { acao: string; [chave: stri
   const s = lerSessao();
   if (!s) { $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
   if (botao) botao.disabled = true;
+  const revisao = revisaoEndereco;
   try {
     const res = await api<EnderecoResult>({ ...payload, linha: r.linha, token: s.token });
     if (lerSessao()?.token !== s.token) return null;
-    if (registroAberto() !== r || !$<HTMLDialogElement>('det').open || !document.getElementById('endCorpo')) return null;
+    if (revisao !== revisaoEndereco || registroAberto() !== r || !$<HTMLDialogElement>('det').open || !document.getElementById('endCorpo')) return null;
     if (!res.ok && res.erro === 'sessao') { limparSessao(); $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
     if (!res.ok) $('endMsg').textContent = ERROS_ENDERECO[res.erro || ''] || 'Não foi possível concluir. Atualize o painel e tente de novo.';
     if (res.erro === 'endereco_desatualizado') {
@@ -147,7 +149,7 @@ async function chamarEndereco(r: Registro, payload: { acao: string; [chave: stri
     }
     return res;
   } catch (err) {
-    if (document.getElementById('endMsg')) $('endMsg').textContent = 'Não foi possível conectar. Verifique a internet.';
+    if (revisao === revisaoEndereco && document.getElementById('endMsg')) $('endMsg').textContent = 'Não foi possível conectar. Verifique a internet.';
     return null;
   } finally {
     if (payload.acao !== 'endereco_ler' && lerSessao()?.token === s.token) atualizarMapaDeEndereco();
@@ -156,13 +158,15 @@ async function chamarEndereco(r: Registro, payload: { acao: string; [chave: stri
 }
 
 async function carregarEnderecoDe(r: Registro) {
+  revisaoEndereco++;
   limparEditorPonto();
   enderecoAtual = null;
   const res = await chamarEndereco(r, { acao: 'endereco_ler' });
-  if (!res) return;
-  if (!res.ok) { $('endCorpo').innerHTML = '<p class="nota-fraca">Endereço indisponível.</p>'; return; }
+  if (!res) return false;
+  if (!res.ok) { $('endCorpo').innerHTML = '<p class="nota-fraca">Endereço indisponível.</p>'; return false; }
   enderecoAtual = res.endereco || null;
   renderEndereco();
+  return true;
 }
 
 // ── Busca pelo CEP (T005) ──
@@ -249,7 +253,7 @@ $('detBody').addEventListener('click', async e => {
   else if (b.dataset.end === 'cancelar') { renderEndereco(); $('endCorpo').querySelector<HTMLButtonElement>('[data-end="editar"]')?.focus(); }
   else if (b.dataset.end === 'remover') {
     if (!confirm(`Remover o endereço de ${nomeCurto(r)}? Ele é apagado de vez.`)) return;
-    const res = await chamarEndereco(r, { acao: 'endereco_excluir' }, b);
+    const res = await chamarEndereco(r, { acao: 'endereco_excluir', versaoEndereco: enderecoAtual?.versao }, b);
     if (!res?.ok) return;
     enderecoAtual = null;
     renderEndereco();
@@ -262,4 +266,8 @@ function atualizarMapaDeEndereco() {
   if (estado.aba === 'acompanhar') void carregarMapa();
 }
 
-$('det').addEventListener('close', limparEditorPonto);
+$('det').addEventListener('close', () => {
+  if ($<HTMLDialogElement>('det').open) return;
+  revisaoEndereco++;
+  limparEditorPonto();
+});

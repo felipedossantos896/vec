@@ -52,6 +52,8 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	edicaoAntiga.Numero = "99"
 	edicaoAntiga.VersaoEsperada = &versao
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
+	st.ExcluirEndereco(ctx, Scope{Todos: true}, 7, &versao)
+	st.ExcluirEndereco(ctx, Scope{Todos: true}, 7, nil)
 	edicaoAntiga.VersaoEsperada = nil
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
 	e.Ponto, e.RevogarPonto = nil, true
@@ -81,7 +83,7 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	cmd := exec.Command(bin, "-batch", "-bail", ":memory:")
 	cmd.Stdin = strings.NewReader(script.String())
 	out, err := cmd.CombinedOutput()
-	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
+	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
 	if err != nil || strings.TrimSpace(string(out)) != esperado {
 		t.Fatalf("SQLite: %v\n%s", err, out)
 	}

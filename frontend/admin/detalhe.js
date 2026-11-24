@@ -94,9 +94,9 @@ function abrirDetalhe(r, ajustarLocal = false) {
     marcarSelecionado();
     if (ajustarLocal)
         mostrarAbaDetalhe('ficha');
-    void carregarEnderecoDe(r).then(() => {
+    void carregarEnderecoDe(r).then(carregado => {
         const editarEndereco = document.querySelector('#endCorpo [data-end="editar"]');
-        if (ajustarLocal && registroAberto() === r && $('det').open && editarEndereco) {
+        if (carregado && ajustarLocal && registroAberto() === r && $('det').open && editarEndereco) {
             editarEndereco.click();
             $('endSec').scrollIntoView({ block: 'start' });
         }

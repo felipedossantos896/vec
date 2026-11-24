@@ -21,6 +21,7 @@ const CAMPOS_ENDERECO = [
     ['cidade', 'Cidade', 'address-level2'], ['uf', 'UF', 'address-level1']
 ];
 let enderecoAtual = null;
+let revisaoEndereco = 0;
 let editorPonto = null;
 let pinoEndereco = null;
 let pontoRascunho = null;
@@ -68,7 +69,7 @@ function renderEndereco() {
     $('endCorpo').innerHTML = e
         ? `<address class="end-linhas">${regrasEndereco.linhas(e).map(l => `<span>${esc(l)}</span>`).join('')}</address>
       <p class="field-hint">Autorizado em ${soData(e.consentimentoEm)} por ${esc(e.consentimentoPor)}. Atualizado em ${soData(e.atualizadoEm)} por ${esc(e.atualizadoPor)}.</p>
-      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button></div>`
+      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button><button type="button" class="btn-link" data-end="recarregar" hidden>Recarregar endereço</button></div>`
         : `<p class="nota-fraca">Sem endereço cadastrado.</p>
       <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Cadastrar endereço</button></div>`;
 }
@@ -131,11 +132,12 @@ async function chamarEndereco(r, payload, botao) {
     }
     if (botao)
         botao.disabled = true;
+    const revisao = revisaoEndereco;
     try {
         const res = await api({ ...payload, linha: r.linha, token: s.token });
         if (lerSessao()?.token !== s.token)
             return null;
-        if (registroAberto() !== r || !$('det').open || !document.getElementById('endCorpo'))
+        if (revisao !== revisaoEndereco || registroAberto() !== r || !$('det').open || !document.getElementById('endCorpo'))
             return null;
         if (!res.ok && res.erro === 'sessao') {
             limparSessao();
@@ -155,7 +157,7 @@ async function chamarEndereco(r, payload, botao) {
         return res;
     }
     catch (err) {
-        if (document.getElementById('endMsg'))
+        if (revisao === revisaoEndereco && document.getElementById('endMsg'))
             $('endMsg').textContent = 'Não foi possível conectar. Verifique a internet.';
         return null;
     }
@@ -167,17 +169,19 @@ async function chamarEndereco(r, payload, botao) {
     }
 }
 async function carregarEnderecoDe(r) {
+    revisaoEndereco++;
     limparEditorPonto();
     enderecoAtual = null;
     const res = await chamarEndereco(r, { acao: 'endereco_ler' });
     if (!res)
-        return;
+        return false;
     if (!res.ok) {
         $('endCorpo').innerHTML = '<p class="nota-fraca">Endereço indisponível.</p>';
-        return;
+        return false;
     }
     enderecoAtual = res.endereco || null;
     renderEndereco();
+    return true;
 }
 // ── Busca pelo CEP (T005) ──
 // Preenche rua, bairro, cidade e UF; falha ou demora nunca impede o preenchimento manual.
@@ -288,7 +292,7 @@ $('detBody').addEventListener('click', async (e) => {
     else if (b.dataset.end === 'remover') {
         if (!confirm(`Remover o endereço de ${nomeCurto(r)}? Ele é apagado de vez.`))
             return;
-        const res = await chamarEndereco(r, { acao: 'endereco_excluir' }, b);
+        const res = await chamarEndereco(r, { acao: 'endereco_excluir', versaoEndereco: enderecoAtual?.versao }, b);
         if (!res?.ok)
             return;
         enderecoAtual = null;
@@ -301,4 +305,9 @@ function atualizarMapaDeEndereco() {
     if (estado.aba === 'acompanhar')
         void carregarMapa();
 }
-$('det').addEventListener('close', limparEditorPonto);
+$('det').addEventListener('close', () => {
+    if ($('det').open)
+        return;
+    revisaoEndereco++;
+    limparEditorPonto();
+});
