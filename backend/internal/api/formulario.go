@@ -161,6 +161,9 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 		return failReply(code)
 	}
 
+	if store.BatismoSemRequisitos(v) {
+		return failReply("batismo_requisitos")
+	}
 	if requestID == "" {
 		requestID, err = newRequestID()
 		if err != nil {

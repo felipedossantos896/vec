@@ -3,6 +3,7 @@
 // Editar e excluir um cadastro a partir do detalhe, e sinalizar possíveis duplicados.
 // O servidor confere a permissão: cada líder só altera o que enxerga.
 const ERROS_EDICAO = {
+    batismo_requisitos: 'Para marcar Batismo nas Águas, confirme Café com o Pastor e Nova Criatura.',
     nome_invalido: 'Informe o nome completo.',
     nascimento_invalido: 'Confira a data de nascimento.',
     telefone_invalido: 'Confira o WhatsApp: DDD e número, como (85) 99999-9999.',

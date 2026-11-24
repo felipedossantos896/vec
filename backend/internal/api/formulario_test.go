@@ -85,6 +85,20 @@ func TestFormularioBirthDateUsesFortalezaDayBoundary(t *testing.T) {
 	}
 }
 
+func TestFormularioBatismoRequerCafeENovaCriatura(t *testing.T) {
+	for _, campos := range []string{
+		`"cafePastor":"S","novaCriatura":"N"`,
+		`"cafePastor":"N","novaCriatura":"S"`,
+	} {
+		db := &apiTestDB{}
+		s := testAPIServer(db)
+		rep := enviarFormulario(s, []byte(`{"_requestId":"0123456789abcdef0123456789abcdef","consentimento":"S","nome":"Ana Silva","nascimento":"1990-01-01","batismo":"S",`+campos+`}`))
+		if rep.body["erro"] != "batismo_requisitos" || len(db.txCalls) != 0 {
+			t.Fatalf("resposta = %#v, transações = %d", rep.body, len(db.txCalls))
+		}
+	}
+}
+
 func TestFormularioAcceptsTodayAndPassesRequestID(t *testing.T) {
 	db := &apiTestDB{}
 	s := testAPIServer(db)

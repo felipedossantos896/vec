@@ -18,6 +18,27 @@ function jornadaResumo(r: Registro): string {
   }).join('')}</ul></div>`;
 }
 
+function trilhosDetalhe(r: Registro): string {
+  const marco = (k: string): string => pill(r[k]) + dataEtapa(r, k);
+  const requisitos = [
+    ...(r.cafePastor === 'S' ? [] : ['Café com o Pastor']),
+    ...(r.novaCriatura === 'S' ? [] : ['Nova Criatura'])
+  ];
+  const batismo = marco('batismo') + (r.batismo !== 'S' && requisitos.length
+    ? `<br><small>Falta confirmar: ${requisitos.join(' e ')}.</small>` : '');
+  return secao('Trilho do membro', [
+    ['Novo nascimento', marco('recebeuJesus')],
+    ['Café com o Pastor', marco('cafePastor')],
+    ['Estação DNA', marco('estacaoDNA')],
+    ['Serve em ministério', marco('serveMinisterio')],
+    ['Membro de célula', r.celula ? celulaChip(r.celula) : pill('')],
+    ['Nova Criatura', marco('novaCriatura')],
+    ['Acompanhamento Inicial', marco('acompInicial')],
+    ['Batismo nas Águas', batismo]
+  ]) + secao('Trilho do discipulador', [['Treinamento Expresso 01', marco('expresso01')]])
+    + secao('Trilho do líder de célula (opcional)', [['Treinamento Expresso 02', marco('expresso02')]]);
+}
+
 function abrirDetalhe(r: Registro) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   $('detNome').textContent = nomeCurto(r);
@@ -33,7 +54,7 @@ function abrirDetalhe(r: Registro) {
   const trilha = regrasLideranca.temTrilha(r); // o líder de área não tem jornada (Spec 013)
   const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
   const resumo =
-    (trilha ? jornadaResumo(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
+    (trilha ? trilhosDetalhe(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
     secao('Dados principais', [
       linhasContato(r)[0],
       ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : `<button type="button" class="btn-link${regrasLideranca.temTrilha(r) ? ' det-alerta' : ''}" data-acao="editar">Vincular</button>`],
@@ -54,7 +75,7 @@ function abrirDetalhe(r: Registro) {
       ['Serve em ministério', pill(r.serveMinisterio)],
       ...(r.serveMinisterio === 'S' ? ([['Ministério', txt(r.ministerioNome)]] as [string, string][]) : [])
     ]) +
-    (trilha ? secao('Etapas da jornada', JORNADA.map(([k, l]): [string, string] => [l, dataEtapa(r, k) + pill(r[k])])) : '') +
+    (trilha ? jornadaResumo(r) : '') +
     secao('Treinamentos', TREINOS.map(([k, l]): [string, string] => [l, pill(r[k])])) +
     secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]): [string, string] => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
     (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +

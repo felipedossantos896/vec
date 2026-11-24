@@ -4,6 +4,7 @@ const FORM_API_URL: string = '/api';
 type Pergunta = [string, string, string?];
 
 const MSG_ENVIO: Record<string, string> = {
+  batismo_requisitos: 'Para marcar Batismo nas Águas, confirme Café com o Pastor e Nova Criatura.',
   nome_invalido: 'Confira o nome completo.',
   nascimento_invalido: 'Confira a data de nascimento.',
   telefone_invalido: 'Confira o número de WhatsApp.',

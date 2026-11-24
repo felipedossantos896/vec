@@ -37,6 +37,7 @@ const regrasNovaPessoa = {
 
   mensagem(erro: string): string {
     return ({
+      batismo_requisitos: 'Para marcar Batismo nas Águas, confirme Café com o Pastor e Nova Criatura.',
       consentimento: 'Marque a autorização para cadastrar.',
       celula_invalida: 'Essa célula não está disponível para você. Escolha outra.',
       nome_invalido: 'Informe o nome completo.',

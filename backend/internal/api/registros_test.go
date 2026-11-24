@@ -32,10 +32,11 @@ type painelDB struct {
 	temRetrato   bool         // o retrato do mês já existe
 	gerente      bool         // o login pode gerenciar usuários
 	// Nova pessoa (Spec 010)
-	criado     bool    // já houve INSERT INTO respostas (ou o envio já existia)
-	candidatos [][]any // possíveis duplicados devolvidos pela busca
-	respostas  [][]any // linhas de ListRespostas
-	papel      string  // papel do cadastro consultado (Spec 013)
+	criado      bool    // já houve INSERT INTO respostas (ou o envio já existia)
+	candidatos  [][]any // possíveis duplicados devolvidos pela busca
+	respostas   [][]any // linhas de ListRespostas
+	papel       string  // papel do cadastro consultado (Spec 013)
+	alvoVisivel bool    // permite simular falha de regra com cadastro dentro do escopo
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -77,7 +78,7 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			out[i].Affected = d.afetadas
 		case strings.HasPrefix(st.SQL, "SELECT id FROM respostas WHERE id = ?"):
 			// cadastro visível no escopo quando o teste espera linhas afetadas
-			if d.afetadas > 0 {
+			if d.afetadas > 0 || d.alvoVisivel {
 				out[i].Rows = [][]any{{st.Args[0]}}
 			}
 		case strings.HasPrefix(st.SQL, "SELECT r.id, CASE"):
@@ -186,7 +187,7 @@ func dados(t *testing.T, m map[string]string) map[string]json.RawMessage {
 func TestRegistroSalvarLimitaAoEscopoEDerivaSetor(t *testing.T) {
 	s, db, token := painelServer(t, 1)
 	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
-		"nome": "Ana Silva", "nascimento": "1990-01-02", "celula": "betânia", "setor": "Fogo no Altar", "batismo": "S",
+		"nome": "Ana Silva", "nascimento": "1990-01-02", "celula": "betânia", "setor": "Fogo no Altar", "batismo": "S", "cafePastor": "S", "novaCriatura": "S",
 	})})
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
@@ -212,6 +213,33 @@ func TestRegistroSalvarForaDoEscopo(t *testing.T) {
 	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{"nome": "Ana Silva"})})
 	if rep.body["erro"] != "nao_encontrado" {
 		t.Fatalf("erro = %v, queria nao_encontrado", rep.body["erro"])
+	}
+}
+
+func TestRegistroSalvarDistingueBatismoHistoricoEAlvoForaDoEscopo(t *testing.T) {
+	for _, caso := range []struct {
+		nome     string
+		afetadas int64
+		visivel  bool
+		erro     string
+	}{
+		{"histórico", 1, true, ""},
+		{"novo batismo ou retirada de requisito", 0, true, "batismo_requisitos"},
+		{"fora do escopo", 0, false, "nao_encontrado"},
+	} {
+		t.Run(caso.nome, func(t *testing.T) {
+			s, db, token := painelServer(t, caso.afetadas)
+			db.alvoVisivel = caso.visivel
+			rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
+				"nome": "Ana Silva", "celula": "Hope", "batismo": "S", "novaCriatura": "S",
+			})})
+			if caso.erro == "" && rep.body["ok"] != true || caso.erro != "" && rep.body["erro"] != caso.erro {
+				t.Fatalf("resposta = %#v", rep.body)
+			}
+			if len(db.escritas) != 1 || !strings.Contains(db.escritas[0].SQL, "AND batismo = 'S' AND COALESCE(cafe_pastor, '') <> 'S'") {
+				t.Fatalf("guarda de batismo ausente: %#v", db.escritas)
+			}
+		})
 	}
 }
 
