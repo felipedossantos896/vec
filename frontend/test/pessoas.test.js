@@ -34,9 +34,9 @@ test('paginação da lista', () => {
 });
 
 test('consequências da exclusão', () => {
-  assert.deepEqual([...regras.consequencias('Zeca', 0, 0)], []);
-  assert.deepEqual([...regras.consequencias('Zeca', 1, 1)], ['1 anotação de acompanhamento deixa de aparecer.', 'Quem tinha Zeca como discipulador fica sem vínculo.']);
-  assert.deepEqual([...regras.consequencias('Zeca', 4, 3)], ['4 anotações de acompanhamento deixam de aparecer.', 'As 3 pessoas que tinham Zeca como discipulador ficam sem vínculo.']);
+  assert.deepEqual([...regras.consequencias('Zeca', 0)], []);
+  assert.deepEqual([...regras.consequencias('Zeca', 1)], ['Quem tinha Zeca como discipulador fica sem vínculo.']);
+  assert.deepEqual([...regras.consequencias('Zeca', 3)], ['As 3 pessoas que tinham Zeca como discipulador ficam sem vínculo.']);
 });
 
 test('visão do discipulador: próximo passo, contato e ordem', () => {

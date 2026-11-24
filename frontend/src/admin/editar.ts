@@ -187,7 +187,7 @@ xDlg.setAttribute('role', 'alertdialog');
 xDlg.setAttribute('aria-labelledby', 'xTitulo');
 xDlg.setAttribute('aria-describedby', 'xTexto');
 xDlg.innerHTML = `<div class="x-corpo"><span class="x-ic" aria-hidden="true">!</span><h3 id="xTitulo"></h3>
-  <p id="xTexto">Ele sai do painel, dos indicadores e do mapa. A foto, o endereço e a confirmação de anfitrião são apagados de vez.</p>
+  <p id="xTexto">O cadastro sai do painel, dos indicadores e do mapa. A foto, o endereço e a confirmação de anfitrião são apagados de vez. Se houver anotações vinculadas, elas ficam inacessíveis.</p>
   <ul class="x-lista" id="xLista"></ul><p class="msg" id="xMsg" role="alert"></p>
   <div class="x-acoes"><button type="button" class="b-sec" data-x="cancelar">Cancelar</button><button type="button" class="b-perigo" data-x="confirmar">Excluir cadastro</button></div></div>`;
 document.body.appendChild(xDlg);
@@ -197,7 +197,7 @@ function confirmarExclusao(r: Registro) {
   const nome = nomeCurto(r);
   $('xTitulo').textContent = `Excluir o cadastro de ${nome}?`;
   const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
-  $('xLista').innerHTML = regrasPessoas.consequencias(nome, 0, discipulos).map(t => `<li>${esc(t)}</li>`).join('');
+  $('xLista').innerHTML = regrasPessoas.consequencias(nome, discipulos).map(t => `<li>${esc(t)}</li>`).join('');
   $('xMsg').textContent = '';
   xDlg.showModal();
   xDlg.querySelector<HTMLButtonElement>('[data-x="cancelar"]')?.focus();

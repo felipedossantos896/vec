@@ -36,11 +36,9 @@ const regrasPessoas = {
   },
 
   // O que acontece ao excluir, para a confirmação
-  consequencias(nome: string, anotacoes: number, discipulos: number): string[] {
-    const c: string[] = [];
-    if (anotacoes) c.push(anotacoes === 1 ? '1 anotação de acompanhamento deixa de aparecer.' : `${anotacoes} anotações de acompanhamento deixam de aparecer.`);
-    if (discipulos) c.push(discipulos === 1 ? `Quem tinha ${nome} como discipulador fica sem vínculo.` : `As ${discipulos} pessoas que tinham ${nome} como discipulador ficam sem vínculo.`);
-    return c;
+  consequencias(nome: string, discipulos: number): string[] {
+    if (!discipulos) return [];
+    return [discipulos === 1 ? `Quem tinha ${nome} como discipulador fica sem vínculo.` : `As ${discipulos} pessoas que tinham ${nome} como discipulador ficam sem vínculo.`];
   },
 
   // Visão do discipulador (Spec 009): a primeira etapa que falta, na ordem da jornada
