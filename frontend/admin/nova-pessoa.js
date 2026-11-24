@@ -7,7 +7,7 @@ const novaDlg = document.createElement('dialog');
 novaDlg.className = 'ct-dlg np-dlg';
 novaDlg.setAttribute('aria-labelledby', 'npTitulo');
 novaDlg.innerHTML = `<div class="det-head"><div><p class="ct-kick">Nova pessoa</p><h3 id="npTitulo">Cadastrar membro</h3></div>
-  <button class="icon-btn" type="button" data-fechar aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button class="icon-btn" type="button" data-fechar aria-label="Fechar">${icone('fechar', { classe: 'ic-18' })}</button></div>
   <form class="det-body np-form" id="npForm" novalidate>
     <p class="np-intro" id="npIntro">Para quem já aceitou Jesus e é membro de uma célula. Depois de salvar, a ficha abre para seguir a trilha.</p>
     <div class="field" id="npF-nome"><label class="label" for="npNome">Nome completo</label><input class="input" id="npNome" autocomplete="off" autocapitalize="words" maxlength="200"><p class="msg" id="npE-nome"></p></div>

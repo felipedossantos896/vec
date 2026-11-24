@@ -118,7 +118,7 @@
 .chips .btn-link { min-height: 36px; }
 .filters select, .ui-filter-bar select { flex: 1 1 150px; }
 .search { position: relative; flex: 2 1 100%; }
-.search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search svg, .search .ic-slot { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
 .search .input { padding-left: 44px; }
 
 .list { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--cream); box-shadow: var(--shadow-card); overflow: hidden; }

@@ -19,7 +19,24 @@ export const ICONES = [
   ['ficha', 'identification-card', 'bold'],
   ['fechar', 'x', 'bold'],
   ['som', 'speaker-high', 'bold'],
-  ['semSom', 'speaker-slash', 'bold']
+  ['semSom', 'speaker-slash', 'bold'],
+  // Spec 015: os ícones antigos do painel e do formulário
+  ['discipulos', 'heart', 'bold'],
+  ['mapa', 'map-trifold', 'bold'],
+  ['pessoas', 'users', 'bold'],
+  ['indicadores', 'chart-bar', 'bold'],
+  ['ajustes', 'sliders-horizontal', 'bold'],
+  ['atualizar', 'arrow-clockwise', 'bold'],
+  ['sair', 'sign-out', 'bold'],
+  ['baixar', 'download-simple', 'bold'],
+  ['buscar', 'magnifying-glass', 'bold'],
+  ['mais', 'plus', 'bold'],
+  ['camera', 'camera', 'bold'],
+  ['feito', 'check', 'bold'],
+  ['emDia', 'check-circle', 'bold'],
+  ['seguir', 'arrow-right', 'bold'],
+  ['abrir', 'caret-right', 'bold'],
+  ['privado', 'lock-simple', 'bold']
 ];
 
 export function gerar(raiz) {
