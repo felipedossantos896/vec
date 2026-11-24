@@ -129,6 +129,11 @@ fica numa gaveta suspensa colada embaixo: toque, clique ou arraste a alça para 
 No computador, o painel escuro flutua à esquerda; no celular e em telas baixas, ele vai para a
 gaveta. As alturas vêm de `area-layout.ts`; as regras da gaveta, de `gaveta-regras.ts`.
 
+**Cartão do mapa** (Spec 017): no computador, passar o mouse num rosto abre o cartão e sair
+fecha (clique fixa); num grupo, cada rosto do leque abre o seu, acima do leque. O cartão mostra o
+rosto, o nome, "célula · papel", a faixa "Precisa de atenção" com o motivo (só quando precisa) e os
+botões "Entrar em contato" (WhatsApp, ou registrar o contato sem telefone) e "Ver perfil".
+
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
 (`usuarios.resposta_id`). Quem tem o login ligado a um cadastro enxerga, além do

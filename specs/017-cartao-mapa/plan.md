@@ -1,6 +1,6 @@
 # Plano técnico — Cartão do mapa: abre ao passar o mouse e visual novo
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.62.0)
 
 ## Regras puras (`mapa-regras.ts`, com teste em Node)
 - `subtituloCartao(p, celula)`: "célula · papel" (por exemplo, "Pi-Hairote · Membro", "Hope ·
