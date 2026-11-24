@@ -60,10 +60,10 @@ function renderEstrutura() {
       <span class="er-casa">${esc(casaDe(c) || 'sem anfitrião')}</span>
       <span class="er-n"><span class="sr-only">Pessoas: </span>${conta(r => r.celula === c.nome)}</span>
       <span class="er-st">${c.ativa ? '<span class="badge">Ativa</span>' : '<span class="badge off">Inativa</span>'}</span>
-      <span class="it-seta" aria-hidden="true">›</span></button>`;
+      <span class="it-seta" aria-hidden="true">${icone('abrir', { classe: 'ic-18' })}</span></button>`;
   $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><p class="ct-kick">Ajustes</p><h1>Células e setores</h1>
     <p>${plural(estrutura.setores.length, 'setor', 'setores')} · ${plural(estrutura.celulas.length, 'célula', 'células')}, ${ativas} ${ativas === 1 ? 'ativa' : 'ativas'} · ${plural(estado.regs.length, 'pessoa', 'pessoas')}</p></div>
-    <div class="est-acoes"><button class="b-sec" type="button" data-est="setor" data-id="0">+ Novo setor</button><button class="b-pri" type="button" data-est="celula" data-id="0">+ Nova célula</button></div></header>
+    <div class="est-acoes"><button class="b-sec" type="button" data-est="setor" data-id="0">${icone('mais', { classe: 'ic-16' })} Novo setor</button><button class="b-pri" type="button" data-est="celula" data-id="0">${icone('mais', { classe: 'ic-16' })} Nova célula</button></div></header>
     <div class="est-setores">${estrutura.setores.map(setor).join('')}</div>
     <div class="est-tab">${estrutura.celulas.length ? '<div class="est-thead" aria-hidden="true"><span>Célula</span><span>Setor</span><span>Encontro</span><span>Casa</span><span>Pessoas</span><span>Situação</span><span></span></div>' + ordem.map(linha).join('') : '<p class="empty">Nenhuma célula ainda.</p>'}</div>
     <p class="field-hint">Células inativas saem do formulário público e do mapa, mas as pessoas continuam vinculadas.</p>`;
@@ -73,7 +73,7 @@ function renderEstrutura() {
 const estDlg = document.createElement('dialog');
 estDlg.setAttribute('aria-labelledby', 'estTitulo');
 estDlg.innerHTML = `<div class="det-head"><div><h3 id="estTitulo"></h3><p id="estSub"></p></div>
-  <button class="icon-btn" type="button" data-fechar aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button class="icon-btn" type="button" data-fechar aria-label="Fechar">${icone('fechar', { classe: 'ic-18' })}</button></div>
   <form class="det-body" id="estForm" novalidate>
     <div class="field"><label class="label" for="estNome">Nome</label><input class="input" id="estNome" autocomplete="off" autocapitalize="words" maxlength="60"></div>
     <div class="field" id="estSetorWrap"><label class="label" for="estSetor">Setor</label><select class="input" id="estSetor"></select></div>

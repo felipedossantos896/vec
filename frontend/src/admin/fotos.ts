@@ -27,7 +27,7 @@ const avatarDe = (id: number, nome: string, classe = ''): string =>
 
 function renderFotoDetalhe(r: Registro) {
   $('detFoto').innerHTML = `${avatar(r, 'av-g')}<button type="button" class="foto-btn" id="fotoBtn" aria-haspopup="${r.fotoUrl ? 'menu' : 'false'}" aria-label="${r.fotoUrl ? 'Trocar ou remover a foto' : 'Adicionar foto'}">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    ${icone('camera', { classe: 'ic-14' })}</button>
     <span class="foto-menu" id="fotoMenu" role="menu" hidden><button type="button" role="menuitem" data-foto="trocar">Trocar foto</button><button type="button" role="menuitem" data-foto="remover">Remover foto</button></span>`;
   $('fotoMsg').textContent = '';
 }

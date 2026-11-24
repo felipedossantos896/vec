@@ -166,7 +166,7 @@ const contatoDlg = document.createElement('dialog');
 contatoDlg.className = 'ct-dlg';
 contatoDlg.setAttribute('aria-labelledby', 'cTitulo');
 contatoDlg.innerHTML = `<div class="det-head"><div><p class="ct-kick">Registrar contato</p><h3 id="cTitulo"></h3></div>
-  <button class="icon-btn" type="button" data-fechar aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button class="icon-btn" type="button" data-fechar aria-label="Fechar">${icone('fechar', { classe: 'ic-18' })}</button></div>
   <form class="det-body ct-form" id="cForm" novalidate>${formContato('c')}<p class="msg" id="cMsg" role="alert"></p>
   <button type="submit" class="btn-primary" id="cSalvar">Registrar contato</button></form>`;
 document.body.appendChild(contatoDlg);

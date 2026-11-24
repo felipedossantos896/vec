@@ -7,3 +7,15 @@ function icone(nome: string, opcoes: { rotulo?: string; classe?: string } = {}):
   const a11y = opcoes.rotulo ? `role="img" aria-label="${attr(opcoes.rotulo)}"` : 'aria-hidden="true"';
   return `<svg class="ic${opcoes.classe ? ' ' + attr(opcoes.classe) : ''}" viewBox="0 0 256 256" fill="currentColor" focusable="false" ${a11y}>${corpo}</svg>`;
 }
+
+// HTML fixo (Spec 015): <span class="ic-slot ic-18" data-ic="nome"></span> vira o <svg>, com as
+// mesmas classes de tamanho. O slot já reserva o tamanho no CSS, para nada pular.
+function preencherIcones(raiz: ParentNode = document) {
+  raiz.querySelectorAll<HTMLElement>('.ic-slot[data-ic]').forEach(s => {
+    const t = document.createElement('template');
+    t.innerHTML = icone(s.dataset.ic || '', { classe: [...s.classList].filter(c => c !== 'ic-slot').join(' ') });
+    const svg = t.content.firstElementChild;
+    if (svg) s.replaceWith(svg);
+  });
+}
+if (typeof document !== 'undefined') preencherIcones();

@@ -9,7 +9,7 @@ function secao(titulo: string, linhas: [string, string][]): string {
   return `<div class="det-sec"><h4>${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
 
-const ICONE_CHECK = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICONE_CHECK = icone('feito', { classe: 'ic-12' });
 
 // Jornada como lista de etapas marcadas, em duas colunas no espaço da ficha
 function jornadaResumo(r: Registro): string {

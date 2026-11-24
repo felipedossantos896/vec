@@ -144,7 +144,7 @@ function renderChips() {
   if (estado.setor) chips.push(['setor', estado.setor]);
   if (estado.celula) chips.push(['celula', estado.celula]);
   if (estado.situacao !== 'todos') chips.push(['situacao', rotuloSituacao(estado.situacao, SITUACOES[estado.situacao].label)]);
-  $('chipLista').innerHTML = chips.map(([k, t]) => `<button type="button" class="chip" data-tirar="${k}" aria-label="Tirar o filtro ${esc(t)}">${esc(t)}<span aria-hidden="true">×</span></button>`).join('');
+  $('chipLista').innerHTML = chips.map(([k, t]) => `<button type="button" class="chip" data-tirar="${k}" aria-label="Tirar o filtro ${esc(t)}">${esc(t)}<span aria-hidden="true">${icone('fechar', { classe: 'ic-14' })}</span></button>`).join('');
   $('btnClear').classList.toggle('hidden', chips.length < 2);
   $('chips').querySelector('.chips-lbl')!.classList.toggle('hidden', !chips.length);
   $('chips').classList.toggle('hidden', !chips.length && $('btnMeus').classList.contains('hidden'));
@@ -198,7 +198,7 @@ function renderLista() {
       <span class="it-dsc">${colunaDiscipulador(r)}</span>
       <span class="it-jornada">${regrasLideranca.temTrilha(r) ? `${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span>` : '<span class="nota-fraca">—<span class="sr-only"> sem jornada</span></span>'}</span>
       <span class="it-contato${precisaCuidado(r) ? ' alerta' : ''}"><span class="sr-only">Último contato: </span>${regrasPessoas.haQuanto(r._contato, new Date())}</span>
-      <span class="it-seta" aria-hidden="true">›</span>
+      <span class="it-seta" aria-hidden="true">${icone('abrir', { classe: 'ic-18' })}</span>
     </button>`).join('') +
     `<div class="lista-pe"><span>Mostrando ${mostra} de ${lista.length}</span>${resta ? `<button type="button" class="btn-link" data-mais>Carregar mais ${Math.min(resta, regrasPessoas.PAGINA)}</button>` : ''}</div>`;
 }
