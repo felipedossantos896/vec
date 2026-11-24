@@ -26,7 +26,7 @@ test('aplica componentes reutilizáveis sem remover contratos antigos', () => {
 
 test('rotula os três grupos de filtros', () => {
   for (const label of ['Filtros da área', 'Filtros de pessoas', 'Filtros de indicadores']) {
-    assert.match(html, new RegExp(`class="filters ui-filter-bar" role="group" aria-label="${label}"`));
+    assert.match(html, new RegExp(`class="filters ui-filter-bar[^"]*" role="group" aria-label="${label}"`));
   }
 });
 

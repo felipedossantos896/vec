@@ -121,7 +121,7 @@ function iniciarLeaflet(): boolean {
   }
   const animar = !matchMedia('(prefers-reduced-motion: reduce)').matches; // o Leaflet não respeita sozinho
   mapaLeaflet = L.map('mapaCanvas', { maxZoom: ZOOM_MAX, minZoom: 4, zoomAnimation: animar, fadeAnimation: animar, markerZoomAnimation: animar, zoomControl: false });
-  L.control.zoom({ position: 'topright' }).addTo(mapaLeaflet); // o painel da Área ocupa o canto esquerdo
+  L.control.zoom({ position: 'bottomright' }).addTo(mapaLeaflet); // acima da gaveta (Spec 016)
   L.tileLayer(TILES_OSM, { maxZoom: ZOOM_MAX, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
   mapaLeaflet.attributionControl.setPrefix(false);
   camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
@@ -149,9 +149,9 @@ function renderMapa() {
     // A vista vem antes dos marcadores: sem ela o Leaflet não cria o elemento e o
     // rótulo acessível não teria onde ficar. Com a ferramenta de anfitrião, as casas entram.
     const pontos = [...f.grupos.map(g => [g.lat, g.lng]), ...casas.map(c => [c.lat, c.lng])];
-    // Os painéis ficam por cima do mapa no computador: o enquadramento desconta o espaço deles.
-    const largo = matchMedia('(min-width: 721px)').matches;
-    const folga = largo ? { paddingTopLeft: [340, 40], paddingBottomRight: [estado.ferramenta ? 440 : 40, 40] } : { padding: [36, 36] };
+    // Filtros, painel, ferramenta e gaveta ficam por cima do mapa: o enquadramento desconta
+    // o espaço deles (Spec 016).
+    const folga = folgasMapa();
     if (pontos.length) mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_MAX, ...folga, animate: false });
     else mapaLeaflet.setView([-14.2, -51.9], 4);
     ultimoFiltro = f;
@@ -290,7 +290,9 @@ function abrirCartao(g: GrupoLeque, j: number) {
   if (!r) return;
   if (g.pos.length) abrirLeque(g, true);
   const p = g.pos[j] || { x: 0, y: 0 };
-  const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPadding: [24, 24], closeButton: false })
+  // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
+  const f = folgasMapa();
+  const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false })
     .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
   cartaoDe = { g, j, pop };
   (pop.getElement() as HTMLElement | undefined)?.querySelector<HTMLElement>('[data-mapa-pessoa]')?.focus({ preventScroll: true });
@@ -325,8 +327,8 @@ function ligarLeque() {
 }
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]')) return;
-  if (cartaoDe) { fecharCartao(); return; }
-  if (lequeAberto) { const el = lequeAberto.el; fecharLeque(); el.focus(); }
+  if (cartaoDe) { e.preventDefault(); fecharCartao(); return; }
+  if (lequeAberto) { e.preventDefault(); const el = lequeAberto.el; fecharLeque(); el.focus(); }
 });
 
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
@@ -341,6 +343,7 @@ $('mapaVazio').addEventListener('click', e => {
   if (!(e.target instanceof Element) || !e.target.closest('[data-ver-lista]')) return;
   const d = document.querySelector<HTMLDetailsElement>('details.area-lista');
   if (!d) return;
+  abrirGaveta(); // a lista fica na gaveta (Spec 016)
   d.open = true;
   d.scrollIntoView({ block: 'start' });
   d.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });

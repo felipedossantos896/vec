@@ -18,8 +18,6 @@ export const ICONES = [
   ['whatsapp', 'whatsapp-logo', 'bold'],
   ['ficha', 'identification-card', 'bold'],
   ['fechar', 'x', 'bold'],
-  ['som', 'speaker-high', 'bold'],
-  ['semSom', 'speaker-slash', 'bold'],
   // Spec 015: os ícones antigos do painel e do formulário
   ['discipulos', 'heart', 'bold'],
   ['mapa', 'map-trifold', 'bold'],
@@ -36,7 +34,10 @@ export const ICONES = [
   ['emDia', 'check-circle', 'bold'],
   ['seguir', 'arrow-right', 'bold'],
   ['abrir', 'caret-right', 'bold'],
-  ['privado', 'lock-simple', 'bold']
+  ['privado', 'lock-simple', 'bold'],
+  // Spec 016: gaveta da Área e Voltar ao mapa
+  ['voltar', 'arrow-left', 'bold'],
+  ['subir', 'caret-up', 'bold']
 ];
 
 export function gerar(raiz) {

@@ -98,7 +98,6 @@
         </button>
       </nav>
       <div class="sidebar-actions">
-        <button class="icon-btn" id="btnSons" type="button" aria-pressed="true" aria-label="Sons do painel"><span class="txt">Sons</span></button>
         <button class="icon-btn" id="btnRefresh" type="button" aria-label="Atualizar dados">
           <span class="ic-slot ic-18" data-ic="atualizar"></span>
           <span class="txt">Atualizar</span>
@@ -117,19 +116,19 @@
     <div id="discView" class="hidden"></div>
 
     <div id="acompanharView" class="area">
-      <header class="page-heading area-head">
-        <div><h1>Área</h1><p id="areaSub">As pessoas onde elas estão, por célula.</p></div>
-        <div class="filters ui-filter-bar" role="group" aria-label="Filtros da área">
+      <h1 class="sr-only">Área</h1>
+      <p class="sr-only" id="areaSub">As pessoas onde elas estão, por célula.</p>
+      <!-- Spec 016: o mapa ocupa a tela; filtros e painel flutuam; o resto fica na gaveta -->
+      <section class="area-palco" id="areaPalco" aria-label="Mapa da área">
+        <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com as pessoas da área, em áreas de cerca de 300 m"></div>
+        <div class="filters ui-filter-bar area-filtros" role="group" aria-label="Filtros da área">
           <select class="input" id="aSetor" aria-label="Filtrar por setor"></select>
           <select class="input" id="aCelula" aria-label="Filtrar por célula"></select>
         </div>
-      </header>
-      <section class="area-palco" aria-label="Mapa da área">
-        <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com as pessoas da área, em áreas de cerca de 300 m"></div>
         <aside class="area-painel" id="areaPainel" aria-label="Lentes e ferramentas do mapa"></aside>
-        <p class="area-priv">Posições aproximadas (áreas de ~300 m). Endereço só na ficha.</p>
+        <div id="mapaVazio"></div>
         <aside class="area-ferr-painel" id="areaFerrPainel" hidden aria-label="Ferramenta do mapa">
-          <button type="button" class="afp-voltar" data-ferr-sair>← Voltar ao mapa</button>
+          <button type="button" class="afp-voltar" data-ferr-sair><span class="ic-slot ic-16" data-ic="voltar"></span> Voltar ao mapa</button>
       <details class="anf-painel" id="anfPainel">
         <summary id="anfResumo">Escolher anfitrião</summary>
         <p class="field-hint" id="anfStatus" role="status"></p>
@@ -141,14 +140,23 @@
         <div id="multCorpo"></div>
       </details>
         </aside>
-
+        <section class="gaveta" id="gaveta" data-estado="recolhida" aria-label="Mais da Área">
+          <button type="button" class="gv-alca" id="gvAlca" aria-expanded="false" aria-controls="gvCorpo" aria-label="Mostrar mais da Área">
+            <span class="gv-puxador" aria-hidden="true"></span>
+            <span class="gv-linha"><span class="gv-resumo" id="gvResumo">Mais da Área</span><span class="ic-slot ic-18" data-ic="subir"></span></span>
+          </button>
+          <div class="gv-corpo" id="gvCorpo" inert>
+            <div id="gvSlotFerr"></div>
+            <div id="gvSlotPainel"></div>
+            <p class="field-hint" id="mapaStatus" role="status"></p>
+            <p class="msg" id="mapaAviso"></p>
+            <section class="fale" id="faleCom" aria-labelledby="faleTitulo"></section>
+            <div id="aConteudo"></div>
+            <details class="mapa-sec area-lista"><summary>Lista das áreas do mapa</summary><div id="mapaLista" class="mapa-lista"></div></details>
+            <p class="area-priv">Posições aproximadas (áreas de ~300 m). Endereço só na ficha.</p>
+          </div>
+        </section>
       </section>
-      <p class="field-hint" id="mapaStatus" role="status"></p>
-      <p class="msg" id="mapaAviso"></p>
-      <div id="mapaVazio"></div>
-      <section class="fale" id="faleCom" aria-labelledby="faleTitulo"></section>
-      <details class="mapa-sec area-lista"><summary>Lista das áreas do mapa</summary><div id="mapaLista" class="mapa-lista"></div></details>
-      <div id="aConteudo"></div>
     </div>
 
     <div id="cadastrosView" class="hidden">
@@ -362,6 +370,8 @@
 <script src="mapa.js" defer></script>
 <script src="area-regras.js" defer></script>
 <script src="area.js" defer></script>
+<script src="gaveta-regras.js" defer></script>
+<script src="area-layout.js" defer></script>
 <script src="anfitriao-regras.js" defer></script>
 <script src="anfitriao.js" defer></script>
 <script src="multiplicacao-regras.js" defer></script>
