@@ -24,6 +24,8 @@ Este diretório documenta propostas e decisões para a evolução incremental do
 - [ADR-0011 — Rostos no mapa e privacidade](./0011-rostos-no-mapa.md)
 - [ADR-0012 — Pacote de ícones do painel](./0012-pacote-de-icones.md)
 
+- [ADR-0013 — Camadas de representação e privacidade do mapa pastoral](./0013-camadas-mapa-pastoral.md) (Proposto)
+
 ## Contexto técnico observado
 - Go serve o formulário público e o painel.
 - TypeScript estrito e Tailwind CSS 3; compilação sem framework de runtime.
