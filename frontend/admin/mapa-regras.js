@@ -76,6 +76,21 @@ const regrasMapa = {
             out.push({ selo: 'casa', texto: `Anfitrião ${cel(d.casaCelula)}` });
         return out;
     },
+    // Subtítulo do cartão (Spec 017): "Pi-Hairote · Membro", "Hope · Líder da célula" ou
+    // "Líder do setor X"; os outros papéis viram selos pequenos.
+    subtituloCartao(p, celula) {
+        const papeis = regrasMapa.papeisDoCard(p);
+        if (p.papel === 'lider_area' || p.papel === 'lider_setor')
+            return { texto: papeis[0].texto, extras: papeis.slice(1) };
+        const lidera = p.destaque?.liderCelula || [];
+        const daPropria = !!celula && lidera.length === 1 && lidera[0] === celula;
+        const papel = daPropria ? 'Líder da célula' : 'Membro';
+        return { texto: celula ? `${celula} · ${papel}` : papel, extras: papeis.filter(x => !(daPropria && x.selo === 'celula')) };
+    },
+    // Botão principal do cartão: WhatsApp quando há telefone; sem telefone, registrar o contato
+    acaoContato(urlWhatsapp) {
+        return urlWhatsapp ? { tipo: 'whatsapp', rotulo: 'Entrar em contato' } : { tipo: 'registrar', rotulo: 'Registrar contato' };
+    },
     pessoas(n) {
         return `${n} ${n === 1 ? 'pessoa' : 'pessoas'}`;
     },

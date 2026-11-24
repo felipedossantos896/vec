@@ -62,6 +62,9 @@
   --selo-area: #b07a00;  /* Spec 014: estrela do líder de área (contraste 3:1 com o ícone branco) */
   --selo-setor: #6a3fd0; /* escudo do líder de setor */
   --selo-casa: var(--ok); /* casa da célula */
+  --atencao-bg: #fff3e2;  /* Spec 017: faixa "Precisa de atenção" do cartão */
+  --atencao-ink: #7a4a05; /* texto AA sobre o fundo âmbar */
+  --atencao-ic: #c27c0e;
 
   /* Medidas */
   --space-1: 4px;

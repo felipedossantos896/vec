@@ -61,18 +61,28 @@ function nomeComPapel(r) {
     const papeis = regrasMapa.papeisDoCard(pessoaNoMapa(r)).map(p => p.texto.charAt(0).toLowerCase() + p.texto.slice(1));
     return [nomeCurto(r), ...papeis].join(', ');
 }
-// Cartão (Spec 014): nome curto, célula (ou nada, para líder sem célula), papéis e os
-// botões-ícone de WhatsApp e Ficha. O "x" tem 44 px de toque.
+// Cor do anel do rosto: a da célula; neutra para líder de área ou de setor
+const corDoRosto = (r) => regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula);
+// Cartão (Spec 017, sobre a 014): rosto grande, nome curto, "célula · papel", outros papéis em
+// selos, a faixa "Precisa de atenção" com o motivo (só quando precisa) e os botões "Entrar em
+// contato" (WhatsApp, ou registrar o contato sem telefone) e "Ver perfil". O "x" tem 44 px.
 function cartaoPessoa(r) {
-    const papeis = regrasMapa.papeisDoCard(pessoaNoMapa(r));
+    const p = pessoaNoMapa(r);
+    const sub = regrasMapa.subtituloCartao(p, regrasLideranca.ehMembro(r) ? String(r.celula || '') : '');
     const url = regrasArea.whatsapp(r.telefone);
+    const acao = regrasMapa.acaoContato(url);
     const nome = nomeCurto(r);
-    const zap = url ? `<a class="b-ic b-ic-zap" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp de ${esc(nome)}" title="WhatsApp">${icone('whatsapp')}</a>` : '';
+    const precisa = regrasLideranca.temTrilha(r) && naLente('cuidado', r);
+    const contato = acao.tipo === 'whatsapp'
+        ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">${icone('whatsapp', { classe: 'ic-18' })}${acao.rotulo}</a>`
+        : `<button type="button" class="b-contato" data-contato="${r.linha}" aria-label="Registrar contato com ${esc(nome)}">${acao.rotulo}</button>`;
     return `<div class="cartao">
     <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fechar')}</button>
-    <div class="cartao-topo">${avatar(r, 'av-s')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b>${regrasLideranca.ehMembro(r) ? `<span>${celulaChip(r.celula)}</span>` : ''}</div></div>
-    ${papeis.length ? `<ul class="cartao-papeis">${papeis.map(p => `<li data-selo="${p.selo}"${p.selo === 'celula' ? ` data-cor="${corDaCelula(pessoaNoMapa(r).destaque.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(p.selo)}</span>${esc(p.texto)}</li>`).join('')}</ul>` : ''}
-    <div class="cartao-a">${zap}<button type="button" class="b-ic" data-mapa-pessoa="${r.linha}" aria-label="Abrir a ficha de ${esc(nome)}" title="Abrir ficha">${icone('ficha')}</button></div>
+    <div class="cartao-topo"><span class="cartao-rosto" data-cor="${corDoRosto(r)}">${avatar(r, 'av-c')}</span>
+      <div><b class="cartao-nome" title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b><span class="cartao-sub">${esc(sub.texto)}</span></div></div>
+    ${sub.extras.length ? `<ul class="cartao-papeis">${sub.extras.map(x => `<li data-selo="${x.selo}"${x.selo === 'celula' ? ` data-cor="${corDaCelula(p.destaque.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(x.selo)}</span>${esc(x.texto)}</li>`).join('')}</ul>` : ''}
+    ${precisa ? `<div class="cartao-atencao"><span class="ca-ic">${icone('aviso')}</span><p><b>Precisa de atenção<span class="sr-only">:</span></b> <span>${esc(regrasArea.motivo(pessoaArea(r)))}</span></p></div>` : ''}
+    <div class="cartao-a">${contato}<button type="button" class="b-perfil" data-mapa-pessoa="${r.linha}" aria-label="Ver o perfil de ${esc(nome)}">Ver perfil ${icone('seguir', { classe: 'ic-18' })}</button></div>
   </div>`;
 }
 let mapaPedindo = false; // evita pedir o mapa de novo enquanto um pedido está no ar
@@ -212,7 +222,7 @@ function desenharGrupos(f) {
         const cuidado = pessoas.some(r => naLente('cuidado', r));
         const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
         const grupo = grupoMult(pessoas[0]?.linha);
-        const corPino = (r) => grupo === 'B' ? '#15171c' : regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula);
+        const corPino = (r) => grupo === 'B' ? '#15171c' : corDoRosto(r);
         const alerta = (r) => naLente('cuidado', r) && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : '';
         const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
         // Leque (Spec 012): todos os rostos do grupo, escondidos até abrir, com as linhas até o centro
@@ -237,11 +247,20 @@ function desenharGrupos(f) {
             b.style.transitionDelay = `${Math.min(j, 12) * 14}ms`;
         });
         const gl = { m, el, pessoas, pos, t, fixo: false };
-        if (pos.length && temMouse()) {
-            el.addEventListener('mouseenter', () => { clearTimeout(tFecharLeque); if (lequeAberto?.m !== m)
-                abrirLeque(gl, false); });
-            el.addEventListener('mouseleave', () => { const la = lequeAberto; if (la && la.m === m && !la.fixo)
-                tFecharLeque = setTimeout(fecharLeque, 250); });
+        // Passar o mouse (Spec 017): sozinho, abre o cartão; em grupo, abre o leque, e cada rosto
+        // do leque abre o cartão daquela pessoa. Sair do rosto e do cartão fecha depois de 300 ms.
+        if (temMouse()) {
+            el.addEventListener('mouseenter', () => {
+                cancelarFechar();
+                if (pos.length) {
+                    if (lequeAberto?.m !== m)
+                        abrirLeque(gl, false);
+                }
+                else
+                    passarNoRosto(gl, 0);
+            });
+            el.addEventListener('mouseleave', agendarFechar);
+            el.querySelectorAll('.lq-rosto').forEach((b, j) => b.addEventListener('mouseenter', () => passarNoRosto(gl, j)));
         }
         // Enter ou Espaço no marcador (o Leaflet só abriria um popup ligado a ele)
         el.addEventListener('keydown', e => {
@@ -249,7 +268,7 @@ function desenharGrupos(f) {
                 return;
             e.preventDefault();
             if (!pos.length) {
-                abrirCartao(gl, 0);
+                abrirCartao(gl, 0, true, true);
                 return;
             }
             const la = lequeAberto;
@@ -266,11 +285,11 @@ function desenharGrupos(f) {
             const peloTeclado = !!o && (o.type.startsWith('key') || o.detail === 0);
             const rosto = alvo?.closest('.lq-rosto');
             if (rosto) {
-                abrirCartao(gl, Number(rosto.dataset.lq));
+                abrirCartao(gl, Number(rosto.dataset.lq), true, peloTeclado);
                 return;
             }
             if (!pos.length) {
-                abrirCartao(gl, 0);
+                abrirCartao(gl, 0, true, peloTeclado);
                 return;
             }
             const la = lequeAberto;
@@ -286,6 +305,7 @@ function desenharGrupos(f) {
 }
 let lequeAberto = null;
 let cartaoDe = null;
+let tFecharCartao;
 let tFecharLeque;
 const temMouse = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 function abrirLeque(g, fixo) {
@@ -311,36 +331,80 @@ function fecharLeque() {
     g.el.querySelector('.leque')?.setAttribute('aria-hidden', 'true');
     g.el.querySelectorAll('.lq-rosto').forEach(b => { b.tabIndex = -1; });
 }
-// Cartão pequeno ancorado no rosto (ou no marcador, para quem está sozinho na área)
-function abrirCartao(g, j) {
+// Passar e sair com o mouse (Spec 017): um cartão fixado (clique, toque ou teclado) não é
+// trocado nem fechado pelo mouse
+const FECHAR_AO_SAIR_MS = 300;
+function cancelarFechar() { clearTimeout(tFecharCartao); clearTimeout(tFecharLeque); }
+function agendarFechar() {
+    cancelarFechar();
+    tFecharCartao = setTimeout(() => {
+        if (cartaoDe && !cartaoDe.fixo)
+            fecharCartao({ som: false });
+        if (lequeAberto && !lequeAberto.fixo && !(cartaoDe && cartaoDe.fixo))
+            fecharLeque();
+    }, FECHAR_AO_SAIR_MS);
+}
+function passarNoRosto(g, j) {
+    cancelarFechar();
+    if (cartaoDe?.fixo || (cartaoDe && cartaoDe.g.m === g.m && cartaoDe.j === j))
+        return;
+    abrirCartao(g, j, false);
+}
+// Cartão ancorado no rosto (ou no marcador, para quem está sozinho na área). Fixo: aberto
+// por clique, toque ou teclado; o foco vai para o cartão só quando veio do teclado.
+function abrirCartao(g, j, fixo = true, focar = false) {
     const r = g.pessoas[j];
     if (!r)
         return;
+    cancelarFechar();
     if (g.pos.length)
-        abrirLeque(g, true);
-    const p = g.pos[j] || { x: 0, y: 0 };
+        abrirLeque(g, fixo);
+    const mesmo = cartaoDe && cartaoDe.g.m === g.m && cartaoDe.j === j;
+    if (mesmo && cartaoDe) { // já aberto pelo mouse: o clique só fixa
+        if (fixo && !cartaoDe.fixo) {
+            cartaoDe.fixo = true;
+            cartaoDe.pop.options.autoPan = true;
+            cartaoDe.pop.update();
+        } // agora cabe na tela
+        if (focar)
+            cartaoDe.pop.getElement()?.querySelector('.b-contato')?.focus({ preventScroll: true });
+        return;
+    }
+    // Num grupo, o cartão abre acima do leque inteiro, para não cobrir os outros rostos
+    // (Spec 017), e o rosto da pessoa fica destacado
+    const topoLeque = g.pos.length ? Math.min(...g.pos.map(q => q.y)) - 4 : 0;
+    g.el.querySelectorAll('.lq-rosto').forEach((b, k) => b.classList.toggle('ativo', k === j));
     // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
     const f = folgasMapa();
-    const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false })
+    const pop = L.popup({ offset: [0, topoLeque - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
         .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
-    cartaoDe = { g, j, pop };
-    pop.getElement()?.querySelector('[data-mapa-pessoa]')?.focus({ preventScroll: true });
+    cartaoDe = { g, j, pop, fixo };
+    const el = pop.getElement();
+    if (el && temMouse()) {
+        el.addEventListener('mouseenter', cancelarFechar);
+        el.addEventListener('mouseleave', agendarFechar);
+    }
+    if (focar)
+        el?.querySelector('.b-contato')?.focus({ preventScroll: true });
 }
-// Fechar pelo "x" ou pelo Esc (Spec 014): som curto, o cartão encolhe até o rosto em 180 ms
-// (sem animação com "reduzir movimento") e o foco volta ao rosto
+// Fechar (Spec 014): o cartão encolhe até o rosto em 180 ms (sem animação com "reduzir
+// movimento"). Pelo "x" ou Esc toca o som e o foco volta ao rosto; ao sair com o mouse, não.
 const SAIDA_CARTAO_MS = 180;
-function fecharCartao() {
+function fecharCartao(opcoes = {}) {
     const c = cartaoDe;
     if (!c)
         return;
+    const deProposito = opcoes.som !== false;
     const volta = c.g.el.querySelectorAll('.lq-rosto')[c.j] || c.g.el;
     const el = c.pop.getElement();
-    sons.fechar();
+    if (deProposito)
+        sons.fechar();
     const fim = () => {
         if (cartaoDe?.pop !== c.pop)
             return; // outro cartão abriu no meio
         mapaLeaflet.closePopup(c.pop);
-        volta.focus({ preventScroll: true });
+        if (deProposito)
+            volta.focus({ preventScroll: true });
     };
     if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) {
         fim();
@@ -356,7 +420,7 @@ document.addEventListener('click', e => {
 // Fecha o leque ao tocar no mapa, arrastar ou dar zoom; Esc fecha o cartão e depois o leque
 function ligarLeque() {
     mapaLeaflet.on('click dragstart zoomstart', () => { mapaLeaflet.closePopup(); fecharLeque(); });
-    mapaLeaflet.on('popupclose', () => { cartaoDe = null; });
+    mapaLeaflet.on('popupclose', () => { cartaoDe?.g.el.querySelectorAll('.lq-rosto.ativo').forEach(b => b.classList.remove('ativo')); cartaoDe = null; });
 }
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]'))
