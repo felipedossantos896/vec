@@ -16,7 +16,7 @@ let camadaFerr = null; // casas e linhas da ferramenta aberta (Spec 009)
 const regDe = (id) => estado.regs.find(r => r.linha === id);
 function nomesMapa(ids) {
     const regs = ids.map(regDe).filter((r) => Boolean(r)).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-    return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</button> <span class="nota-fraca">${celulaChip(r.celula)}</span></li>`).join('')}</ul>`;
+    return `<ul class="mapa-nomes">${regs.map(r => `<li><button type="button" class="btn-link" data-mapa-pessoa="${r.linha}" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</button> <span class="nota-fraca">${celulaOuPapel(r)}</span></li>`).join('')}</ul>`;
 }
 // Casas do ranking aberto (até 4), na posição aproximada da área de quem recebe.
 function casasNoMapa() {
@@ -37,10 +37,43 @@ function grupoMult(linha) {
     const i = multAtual.grupos.findIndex(g => g.linhas.includes(linha));
     return i < 0 ? '' : i === 0 ? 'A' : 'B';
 }
-// Popup: rosto, nome, célula, o motivo de cuidado e as ações.
-function pessoasPopup(rs) {
-    return `<ul class="pop-pessoas">${rs.map(r => `<li>${avatar(r, 'av-s')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</b><span>${celulaChip(r.celula)}${naLente('cuidado', r) ? ` · <em>${esc(regrasArea.motivo(pessoaArea(r)))}</em>` : ''}</span></div>
-    <div class="pop-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>`;
+// Papel e destaques da pessoa no mapa (Spec 014): líder de célula e casa vêm do servidor
+const pessoaNoMapa = (r) => ({
+    papel: r.papel, setor: r.setor,
+    destaque: dadosMapa?.destaques?.[String(r.linha)]
+});
+// Selos no canto do rosto: liderança em cima, casa da célula embaixo
+function selosHtml(r) {
+    const s = regrasMapa.selos(pessoaNoMapa(r));
+    return ['cima', 'baixo'].map(k => {
+        const selo = s[k];
+        return selo ? `<span class="selo selo-${k}" data-selo="${selo}">${icone(selo, { rotulo: regrasMapa.NOME_SELO[selo] })}</span>` : '';
+    }).join('');
+}
+// Rosto do pino: anel na cor da célula (neutro para líder de área ou setor), anel grosso na
+// casa da célula e os selos
+function rostoPin(r, cor) {
+    const casa = regrasMapa.selos(pessoaNoMapa(r)).baixo === 'casa';
+    return `<span class="rp${casa ? ' rp-casa' : ''}" data-cor="${cor}">${avatar(r, 'av-pin')}${selosHtml(r)}</span>`;
+}
+// "Ana Souza, líder de setor" para os rótulos acessíveis
+function nomeComPapel(r) {
+    const papeis = regrasMapa.papeisDoCard(pessoaNoMapa(r)).map(p => p.texto.charAt(0).toLowerCase() + p.texto.slice(1));
+    return [nomeCurto(r), ...papeis].join(', ');
+}
+// Cartão (Spec 014): nome curto, célula (ou nada, para líder sem célula), papéis e os
+// botões-ícone de WhatsApp e Ficha. O "x" tem 44 px de toque.
+function cartaoPessoa(r) {
+    const papeis = regrasMapa.papeisDoCard(pessoaNoMapa(r));
+    const url = regrasArea.whatsapp(r.telefone);
+    const nome = nomeCurto(r);
+    const zap = url ? `<a class="b-ic b-ic-zap" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp de ${esc(nome)}" title="WhatsApp">${icone('whatsapp')}</a>` : '';
+    return `<div class="cartao">
+    <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fechar')}</button>
+    <div class="cartao-topo">${avatar(r, 'av-s')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b>${regrasLideranca.ehMembro(r) ? `<span>${celulaChip(r.celula)}</span>` : ''}</div></div>
+    ${papeis.length ? `<ul class="cartao-papeis">${papeis.map(p => `<li data-selo="${p.selo}"${p.selo === 'celula' ? ` data-cor="${corDaCelula(pessoaNoMapa(r).destaque.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(p.selo)}</span>${esc(p.texto)}</li>`).join('')}</ul>` : ''}
+    <div class="cartao-a">${zap}<button type="button" class="b-ic" data-mapa-pessoa="${r.linha}" aria-label="Abrir a ficha de ${esc(nome)}" title="Abrir ficha">${icone('ficha')}</button></div>
+  </div>`;
 }
 let mapaPedindo = false; // evita pedir o mapa de novo enquanto um pedido está no ar
 async function carregarMapa() {
@@ -60,7 +93,7 @@ async function carregarMapa() {
             $('mapaStatus').textContent = 'Não foi possível carregar o mapa. Atualize o painel e tente de novo.';
             return;
         }
-        dadosMapa = { grupos: res.grupos, soCidade: res.soCidade, naoLocalizados: res.naoLocalizados, pendentes: res.pendentes };
+        dadosMapa = { grupos: res.grupos, soCidade: res.soCidade, naoLocalizados: res.naoLocalizados, pendentes: res.pendentes, destaques: res.destaques || {} };
         mapaCarregadoEm = Date.now();
         renderMapa();
     }
@@ -114,9 +147,11 @@ function renderMapa() {
         renderPainelMultiplicacao();
         return;
     }
-    const f = regrasMapa.filtrar(dadosMapa, new Set(baseIndicadores().map(r => r.linha)));
-    $('mapaStatus').textContent = regrasMapa.resumo(f);
-    $('mapaVazio').innerHTML = !f.grupos.length && baseIndicadores().length ? regrasEstados.html(regrasEstados.mapaVazio()) : '';
+    // Membros e líderes (Spec 014); as contas das células e os indicadores seguem só com membros
+    const base = baseMapa();
+    const f = regrasMapa.filtrar(dadosMapa, new Set(base.map(r => r.linha)));
+    $('mapaStatus').textContent = regrasMapa.resumo(f, id => { const r = regDe(id); return !!r && regrasLideranca.ehLider(r); });
+    $('mapaVazio').innerHTML = !f.grupos.length && base.length ? regrasEstados.html(regrasEstados.mapaVazio()) : '';
     if (iniciarLeaflet()) {
         camadaGrupos.clearLayers();
         camadaFerr.clearLayers();
@@ -159,6 +194,8 @@ function renderMapa() {
     renderPainelAnfitriao();
     renderPainelMultiplicacao();
 }
+// Quem aparece no mapa: todos do filtro, inclusive líderes de área e de setor (Spec 014)
+const baseMapa = () => metricasIndicadores.filtrar(estado.regs, estado.setor, estado.celula);
 // Marcadores das áreas: rostos empilhados com o tamanho do zoom atual (Spec 012)
 let ultimoFiltro = null;
 function desenharGrupos(f) {
@@ -173,15 +210,15 @@ function desenharGrupos(f) {
             .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
         const acesas = pessoas.filter(r => naLente(estado.lente, r));
         const cuidado = pessoas.some(r => naLente('cuidado', r));
-        const rotulo = `Área ${i + 1}: ${pessoas.map(r => r.nome).join(', ') || regrasMapa.pessoas(g.linhas.length)}`;
+        const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
         const grupo = grupoMult(pessoas[0]?.linha);
-        const corPino = (r) => grupo === 'B' ? '#15171c' : corDaCelula(r.celula);
+        const corPino = (r) => grupo === 'B' ? '#15171c' : regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula);
         const alerta = (r) => naLente('cuidado', r) && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : '';
-        const rostosHtml = pessoas.slice(0, 3).map(r => `<span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>`).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
+        const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
         // Leque (Spec 012): todos os rostos do grupo, escondidos até abrir, com as linhas até o centro
         const pos = pessoas.length > 1 ? regrasMapa.leque(pessoas.length, t) : [];
         const leque = pos.length ? `<span class="leque" aria-hidden="true"><svg class="lq-linhas" width="1" height="1" aria-hidden="true">${pos.map(p => `<line x1="0" y1="0" x2="${p.x}" y2="${p.y}"/>`).join('')}</svg>` +
-            pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeCurto(r))}${naLente('cuidado', r) ? ', precisa de cuidado' : ''}"><span class="rp" data-cor="${corPino(r)}">${avatar(r, 'av-pin')}</span>${alerta(r)}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
+            pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeComPapel(r))}${naLente('cuidado', r) ? ', precisa de cuidado' : ''}">${rostoPin(r, corPino(r))}${alerta(r)}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
         const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
             `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}${leque}`;
         const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
@@ -282,11 +319,38 @@ function abrirCartao(g, j) {
     if (g.pos.length)
         abrirLeque(g, true);
     const p = g.pos[j] || { x: 0, y: 0 };
-    const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPadding: [24, 24] })
-        .setLatLng(g.m.getLatLng()).setContent(pessoasPopup([r])).openOn(mapaLeaflet);
-    cartaoDe = { g, j };
-    pop.getElement()?.querySelector('button, a')?.focus({ preventScroll: true });
+    const pop = L.popup({ offset: [p.x, p.y - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPadding: [24, 24], closeButton: false })
+        .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
+    cartaoDe = { g, j, pop };
+    pop.getElement()?.querySelector('[data-mapa-pessoa]')?.focus({ preventScroll: true });
 }
+// Fechar pelo "x" ou pelo Esc (Spec 014): som curto, o cartão encolhe até o rosto em 180 ms
+// (sem animação com "reduzir movimento") e o foco volta ao rosto
+const SAIDA_CARTAO_MS = 180;
+function fecharCartao() {
+    const c = cartaoDe;
+    if (!c)
+        return;
+    const volta = c.g.el.querySelectorAll('.lq-rosto')[c.j] || c.g.el;
+    const el = c.pop.getElement();
+    sons.fechar();
+    const fim = () => {
+        if (cartaoDe?.pop !== c.pop)
+            return; // outro cartão abriu no meio
+        mapaLeaflet.closePopup(c.pop);
+        volta.focus({ preventScroll: true });
+    };
+    if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        fim();
+        return;
+    }
+    el.classList.add('cartao-saindo');
+    setTimeout(fim, SAIDA_CARTAO_MS);
+}
+document.addEventListener('click', e => {
+    if (e.target instanceof Element && e.target.closest('[data-cartao-fechar]'))
+        fecharCartao();
+});
 // Fecha o leque ao tocar no mapa, arrastar ou dar zoom; Esc fecha o cartão e depois o leque
 function ligarLeque() {
     mapaLeaflet.on('click dragstart zoomstart', () => { mapaLeaflet.closePopup(); fecharLeque(); });
@@ -296,9 +360,7 @@ document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]'))
         return;
     if (cartaoDe) {
-        const { g, j } = cartaoDe;
-        mapaLeaflet.closePopup();
-        (g.el.querySelectorAll('.lq-rosto')[j] || g.el).focus();
+        fecharCartao();
         return;
     }
     if (lequeAberto) {

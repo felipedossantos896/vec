@@ -49,9 +49,10 @@ Sem migration. As fontes já existem:
     0,06), criado só após um gesto da pessoa;
   - guarda "Sons do painel" no `localStorage` com try/catch, ligado por padrão;
   - sem áudio, não faz nada.
-- **Ajustes:** interruptor "Sons do painel (neste aparelho)".
-- **Arquivos JS novos** (`icones.js`, `sons.js`, regras): entram no `ci.yml` (duas listas),
-  no `frontend/embed.go` e no `index.html`, antes de `mapa.js`.
+- **Barra lateral:** botão "Sons" (`#btnSons`, `aria-pressed`), ao lado de Atualizar e Sair, para
+  todos os perfis (Ajustes só aparece para a gerência).
+- **Arquivos JS novos** (`icones.js`, `sons.js`): entram no `ci.yml` (duas listas), no
+  `frontend/embed.go` (com a licença) e no `index.html`, antes de `admin.js`.
 
 ## Testes
 - **Node:** `icones` (SVG válido, rótulo acessível), selos e papéis do card, e resumo.

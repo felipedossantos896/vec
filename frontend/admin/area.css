@@ -41,12 +41,6 @@
 .mapa-grupo:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 4px; border-radius: 12px; }
 
 /* Popup da área no mapa */
-.pop-pessoas { display: grid; gap: 10px; min-width: 240px; }
-.pop-pessoas li { display: grid; grid-template-columns: 28px 1fr; gap: 6px 10px; align-items: center; }
-.pop-pessoas b { display: block; font: 700 var(--t15) var(--display); }
-.pop-pessoas span { font-size: var(--t12); color: var(--muted); }
-.pop-pessoas em { font-style: normal; color: var(--coral-ink); font-weight: 600; }
-.pop-a { grid-column: 2; display: flex; gap: 6px; }
 
 /* Fale com eles esta semana */
 .fale { margin: 0 0 24px; }
@@ -59,10 +53,9 @@
 .fale-t span { font-size: var(--t12); color: var(--muted); }
 .av-m { --av: 48px; }
 .fale-m { font-size: var(--t13); font-weight: 600; color: var(--coral-ink); }
-.fale-a, .pop-a { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.fale-a { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
 .b-zap, .b-sec { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--line-strong); background: var(--white); color: var(--ink); font-weight: 600; font-size: var(--t13); white-space: nowrap; text-decoration: none; }
 .b-zap { color: var(--whatsapp); border-color: #b9e2cb; }
-.pop-a .b-zap, .pop-a .b-sec { min-height: 32px; }
 .area-ferr { display: grid; gap: 12px; margin-bottom: 16px; }
 .area-lista { margin-bottom: 20px; }
 
@@ -120,3 +113,40 @@
 .lq-rosto:hover { z-index: 2; }
 .cartao-pop .leaflet-popup-content { margin: 12px 14px; }
 @media (prefers-reduced-motion: reduce) { .lq-rosto, .lq-linhas, .lq-nome { transition: none; } }
+
+/* ── Spec 014: selos de liderança e casa da célula, cartão enxuto ── */
+.rp { position: relative; }
+.ic { display: block; width: 1em; height: 1em; flex: none; }
+.selo { position: absolute; left: -4px; display: grid; place-items: center; width: max(16px, calc(var(--rosto, 40px) * 0.42)); height: max(16px, calc(var(--rosto, 40px) * 0.42)); border-radius: 50%; border: 2px solid #fff; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-size: max(10px, calc(var(--rosto, 40px) * 0.25)); z-index: 1; }
+.selo-cima { top: -4px; }
+.selo-baixo { bottom: -2px; }
+[data-selo="area"] { --selo: var(--selo-area); }
+[data-selo="setor"] { --selo: var(--selo-setor); }
+[data-selo="celula"] { --selo: var(--cel, var(--grafite)); }
+[data-selo="casa"] { --selo: var(--selo-casa); }
+.selo { background: var(--selo); }
+/* Casa da célula: anel grosso na cor da célula, marcando onde ela se reúne */
+.rp-casa .av.av-pin { border-width: calc(3px + var(--rosto, 40px) * 0.06); box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(0, 0, 0, 0.3); }
+
+.cartao-pop .leaflet-popup-content { margin: 0; min-width: 232px; }
+.cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { transform-origin: 50% calc(100% + 12px); animation: cartao-entra 160ms ease-out; }
+.cartao-pop.cartao-saindo .leaflet-popup-content-wrapper, .cartao-pop.cartao-saindo .leaflet-popup-tip-container { animation: cartao-sai 180ms ease-in forwards; }
+@keyframes cartao-entra { from { opacity: 0; transform: translateY(6px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes cartao-sai { to { opacity: 0; transform: translateY(10px) scale(0.55); } }
+.cartao { position: relative; display: grid; gap: 10px; padding: 14px; }
+.cartao-x { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
+.cartao-x:hover { background: var(--sunken); color: var(--ink); }
+.cartao-x:focus-visible, .b-ic:focus-visible { outline: var(--focus); outline-offset: 2px; }
+.cartao-topo { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding-right: 38px; min-height: 36px; }
+.cartao-topo b { display: block; font: 700 var(--t15) var(--display); }
+.cartao-topo span { font-size: var(--t12); color: var(--muted); }
+.cartao-papeis { display: grid; gap: 4px; }
+.cartao-papeis li { display: flex; align-items: center; gap: 8px; font-size: var(--t13); font-weight: 600; color: var(--ink); }
+.cp-ic { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--selo); color: #fff; font-size: 13px; }
+.cartao-a { display: flex; gap: 8px; justify-content: flex-end; }
+.b-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: var(--white); color: var(--ink); font-size: 22px; cursor: pointer; text-decoration: none; }
+.b-ic:hover { background: var(--sunken); }
+.b-ic-zap { color: var(--whatsapp); border-color: #b9e2cb; }
+@media (prefers-reduced-motion: reduce) {
+  .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation: none; }
+}

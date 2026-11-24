@@ -83,7 +83,9 @@ fácil de fechar, e adotar um pacote de ícones para reutilizar no resto do pain
 7. **Movimento e som:**
    - com "reduzir movimento" ligado no aparelho, o card fecha sem animação;
    - o som toca só quando a pessoa fecha o card, com volume baixo;
-   - em Ajustes, a opção **Sons do painel** (ligada por padrão) vale para aquele aparelho;
+   - o botão **Sons** (ligado por padrão), na barra lateral ao lado de Atualizar e Sair, vale
+     para aquele aparelho. Fica na barra, e não em Ajustes, porque Ajustes só aparece para a
+     gerência e o som vale para todos;
    - se o navegador não tiver áudio, o card fecha normalmente, sem som.
 8. **CSP:** nada de `style` ou `onclick` inline. Os ícones são SVG embutidos, sem fonte
    nem script de outro domínio.
@@ -101,8 +103,7 @@ fácil de fechar, e adotar um pacote de ícones para reutilizar no resto do pain
    papéis, o ícone da Ficha e o do WhatsApp (se houver telefone), e não mostra "Contato
    feito".
 6. **Dado** o "x", **então** a área de toque tem pelo menos 44 × 44 px, a animação roda e o
-   som toca. Com "reduzir movimento", não há animação; com "Sons do painel" desligado, não
-   há som.
+   som toca. Com "reduzir movimento", não há animação; com "Sons" desligado, não há som.
 7. **Dado** um líder de setor logado, **então** ele não vê o líder de área no mapa se não o
    vê em Pessoas.
 8. **Dado** 390 e 1440 px, **então** sem rolagem lateral e zero violação de CSP.
@@ -123,5 +124,6 @@ fácil de fechar, e adotar um pacote de ícones para reutilizar no resto do pain
 ## Pontos confirmados (2026-11-24)
 5. Cores e ícones dos selos da tabela acima.
 6. O resumo do mapa separa membros e líderes.
-7. A opção "Sons do painel" em Ajustes, ligada por padrão.
+7. A opção "Sons do painel", ligada por padrão (na implementação, botão "Sons" na barra
+   lateral, visível para todos os perfis).
 8. O motivo de cuidado sai do card (a lente de cuidado continua no mapa).
