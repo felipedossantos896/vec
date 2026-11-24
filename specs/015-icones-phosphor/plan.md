@@ -1,6 +1,6 @@
 # Plano técnico — Ícones do painel e do formulário com o Phosphor
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.60.0)
 
 ## Ícones
 - `scripts/icones/gerar.mjs` ganha os ícones da tabela da spec, todos em *bold*:
