@@ -101,6 +101,21 @@ atenção e o próximo passo.
 - Sem migration e sem mudança no servidor.
 - Testes com dados fictícios.
 
+## Correção após a entrega (T004, 2026-11-24)
+O responsável apontou que o cartão da v1.62.0 não se parecia com o modelo (fontes e informações
+diferentes). O cartão passou a seguir o modelo de perto, sempre com a foto ou o avatar da pessoa:
+- **Fonte:** sem serifa neutra do sistema (SF no Apple, Segoe no Windows, Roboto no Android), em
+  vez da fonte de títulos do painel.
+- **Rosto:** 52 px, sem anel.
+- **Faixa:** o ícone e "Precisa de atenção" na mesma linha, e o motivo embaixo.
+- **Botões:** mesma largura; "Entrar em contato" em verde-escuro, sem ícone; "Ver perfil →"
+  com borda clara.
+- **"x":** traço fino.
+
+O mapa do Leaflet se move com `transform`, então o cartão fica abaixo do painel e dos filtros,
+que flutuam por cima. Por isso o cartão aberto pelo mouse desliza para o lado até sair de baixo
+deles, com a ponta ainda no rosto.
+
 ## Decisões do responsável (2026-11-24)
 1. Passar o mouse abre e sair fecha (com uma pequena espera); clicar fixa; no celular, pelo
    toque.

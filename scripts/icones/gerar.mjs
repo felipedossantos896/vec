@@ -39,7 +39,9 @@ export const ICONES = [
   ['voltar', 'arrow-left', 'bold'],
   ['subir', 'caret-up', 'bold'],
   // Spec 017: faixa "Precisa de atenção" do cartão
-  ['aviso', 'warning-circle', 'fill']
+  ['aviso', 'warning-circle', 'fill'],
+  // Spec 017 (T004): "x" fino do cartão, como no modelo
+  ['fecharFino', 'x', 'regular']
 ];
 
 export function gerar(raiz) {

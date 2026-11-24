@@ -3,6 +3,7 @@
   "tasks": [
     { "id": "T001", "issue": 196, "depends_on": [] },
     { "id": "T002", "issue": 197, "depends_on": ["T001"] },
-    { "id": "T003", "issue": 198, "depends_on": ["T002"] }
+    { "id": "T003", "issue": 198, "depends_on": ["T002"] },
+    { "id": "T004", "issue": 202, "depends_on": ["T003"] }
   ]
 }

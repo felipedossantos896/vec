@@ -29,7 +29,7 @@ body.na-area .wrap { max-width: none; padding: 0; }
 /* Fundo do OpenStreetMap com a cor da identidade (decisão 1 da Spec 009) */
 .area-canvas .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
 
-.area-painel { position: absolute; left: 16px; top: 16px; z-index: 610; width: 300px; max-height: calc(100% - 32px - var(--gv-h, 64px)); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--shadow-float); }
+.area-painel { position: absolute; left: 16px; top: 16px; z-index: 610; width: 300px; max-height: calc(100% - 32px - var(--gv-h, 64px)); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: 0 14px 34px rgba(13, 15, 19, 0.26); }
 .ap-stats { display: flex; gap: 22px; align-items: flex-end; }
 .ap-stats div { display: flex; flex-direction: column; }
 .ap-stats b { font: 800 var(--t44)/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
@@ -155,35 +155,36 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .rp-casa .av.av-pin { border-width: calc(3px + var(--rosto, 40px) * 0.06); box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(0, 0, 0, 0.3); }
 
 .cartao-pop .leaflet-popup-content { margin: 0; width: min(340px, calc(100vw - 48px)) !important; }
-.cartao-pop .leaflet-popup-content-wrapper { border-radius: 22px; box-shadow: 0 18px 48px rgba(21, 23, 28, 0.22), 0 2px 6px rgba(21, 23, 28, 0.08); }
+.cartao-pop .leaflet-popup-content-wrapper { transition: translate 0.12s ease-out; border-radius: 22px; box-shadow: 0 5px 0 rgba(21, 23, 28, 0.07), 0 16px 36px rgba(21, 23, 28, 0.16); }
 .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { transform-origin: 50% calc(100% + 12px); animation: cartao-entra 160ms ease-out; }
 .cartao-pop.cartao-saindo .leaflet-popup-content-wrapper, .cartao-pop.cartao-saindo .leaflet-popup-tip-container { animation: cartao-sai 180ms ease-in forwards; }
 @keyframes cartao-entra { from { opacity: 0; transform: translateY(6px) scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes cartao-sai { to { opacity: 0; transform: translateY(10px) scale(0.55); } }
-/* Cartão (Spec 017): rosto grande, nome, "célula · papel", faixa de atenção e dois botões */
-.cartao { position: relative; display: grid; gap: 14px; padding: 18px; }
-.cartao-x { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #8a8f9c; font-size: 22px; cursor: pointer; }
-.cartao-x:hover { background: var(--sunken); color: var(--ink); }
+/* Cartão (Spec 017, T004): fiel ao modelo "02 — Acompanhamento pastoral". Medidas tiradas do
+   modelo na proporção de um cartão de 340 px; fonte sem serifa neutra do sistema. */
+.cartao { position: relative; display: grid; gap: 14px; padding: 17px; font-family: var(--ui-sistema); color: var(--cartao-ink); }
+.cartao-x { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: #9aa1ad; font-size: 24px; cursor: pointer; }
+.cartao-x:hover { background: var(--sunken); color: var(--cartao-ink); }
 .cartao-x:focus-visible, .b-contato:focus-visible, .b-perfil:focus-visible { outline: var(--focus); outline-offset: 2px; }
-.cartao-topo { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; padding-right: 34px; }
-.cartao-rosto { display: grid; width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 0 0 3px var(--white), 0 0 0 5px var(--cel, var(--line-strong)); }
-.av.av-c { --av: 64px; }
-.cartao-nome { display: block; font: 800 var(--t21)/1.15 var(--display); letter-spacing: -0.01em; color: var(--ink); overflow-wrap: anywhere; }
-.cartao-sub { display: block; margin-top: 3px; font-size: var(--t15); color: var(--muted); }
+.cartao-topo { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 13px; align-items: center; padding-right: 30px; }
+.cartao-rosto { display: grid; width: 52px; height: 52px; border-radius: 50%; }
+.av.av-c { --av: 52px; }
+.cartao-nome { display: block; font: 700 22px/1.15 var(--ui-sistema); letter-spacing: -0.015em; color: var(--cartao-ink); overflow-wrap: anywhere; }
+.cartao-sub { display: block; margin-top: 4px; font: 400 15px/1.3 var(--ui-sistema); color: var(--cartao-sub); }
 .cartao-papeis { display: flex; flex-wrap: wrap; gap: 6px; }
-.cartao-papeis li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--sunken); font-size: var(--t12); font-weight: 600; color: var(--ink); }
+.cartao-papeis li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 99px; background: var(--sunken); font-size: 12px; font-weight: 600; }
 .cp-ic { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--selo); color: #fff; font-size: 12px; }
-.cartao-atencao { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--atencao-bg); color: var(--atencao-ink); }
-.ca-ic { display: block; color: var(--atencao-ic); font-size: 28px; line-height: 0; }
-.cartao-atencao p { font-size: var(--t15); line-height: 1.35; }
-.cartao-atencao b { display: block; font: 800 var(--t17)/1.25 var(--display); }
-.cartao-a { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; }
-.b-contato, .b-perfil { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; border-radius: 14px; font: 700 var(--t15) var(--sans); white-space: nowrap; text-decoration: none; cursor: pointer; }
-.b-contato, .leaflet-container a.b-contato { background: var(--whatsapp); border: 1.5px solid var(--whatsapp); color: #fff; }
-.leaflet-container a.b-perfil { color: var(--ink); }
-.b-contato:hover { filter: brightness(0.94); }
-.b-perfil { background: var(--white); border: 1.5px solid var(--line-strong); color: var(--ink); }
-.b-perfil:hover { background: var(--sunken); }
+.cartao-atencao { padding: 11px 14px 13px 11px; border-radius: 10px; background: var(--atencao-bg); color: var(--atencao-ink); }
+.cartao .ca-titulo { margin: 0; display: flex; align-items: center; gap: 9px; font: 700 15px/1.25 var(--ui-sistema); }
+.ca-ic { display: block; flex: none; color: var(--atencao-ic); font-size: 19px; line-height: 0; }
+.cartao .ca-motivo { margin: 6px 0 0 3px; font: 400 14.5px/1.35 var(--ui-sistema); }
+.cartao-a { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.b-contato, .b-perfil { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 10px; border-radius: 10px; font: 700 15.5px/1 var(--ui-sistema); white-space: nowrap; text-decoration: none; cursor: pointer; }
+.b-contato, .leaflet-container a.b-contato { background: var(--cartao-verde); border: 2px solid var(--cartao-verde); color: #fff; }
+.leaflet-container a.b-perfil { color: var(--cartao-ink); }
+.b-contato:hover { filter: brightness(0.92); }
+.b-perfil { background: var(--white); border: 2px solid #e3e6e1; color: var(--cartao-ink); }
+.b-perfil:hover { background: #f6f7f4; }
 @media (max-width: 380px) { .cartao-a { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
   .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation: none; }

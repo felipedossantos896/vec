@@ -62,9 +62,14 @@
   --selo-area: #b07a00;  /* Spec 014: estrela do líder de área (contraste 3:1 com o ícone branco) */
   --selo-setor: #6a3fd0; /* escudo do líder de setor */
   --selo-casa: var(--ok); /* casa da célula */
-  --atencao-bg: #fff3e2;  /* Spec 017: faixa "Precisa de atenção" do cartão */
-  --atencao-ink: #7a4a05; /* texto AA sobre o fundo âmbar */
-  --atencao-ic: #c27c0e;
+  --atencao-bg: #fff4e6;  /* Spec 017: faixa "Precisa de atenção" do cartão (tons do modelo) */
+  --atencao-ink: #8f611a; /* texto sobre o fundo âmbar: contraste 4,9:1 (AA) */
+  --atencao-ic: #c4883a;
+  --cartao-ink: #1f2a22;  /* cartão do mapa: texto, subtítulo e botão principal do modelo */
+  --cartao-sub: #66756a;
+  --cartao-verde: #237a4c;
+  /* Fonte sem serifa neutra do sistema (SF no Apple, Segoe no Windows, Roboto no Android) */
+  --ui-sistema: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Medidas */
   --space-1: 4px;
