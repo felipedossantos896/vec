@@ -3,10 +3,14 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"vec/backend/internal/auth"
+	"vec/backend/internal/backup"
+	"vec/backend/internal/store"
 	"vec/backend/internal/turso"
 )
 
@@ -32,10 +36,11 @@ type painelDB struct {
 	temRetrato   bool         // o retrato do mês já existe
 	gerente      bool         // o login pode gerenciar usuários
 	// Nova pessoa (Spec 010)
-	criado     bool    // já houve INSERT INTO respostas (ou o envio já existia)
-	candidatos [][]any // possíveis duplicados devolvidos pela busca
-	respostas  [][]any // linhas de ListRespostas
-	papel      string  // papel do cadastro consultado (Spec 013)
+	criado      bool    // já houve INSERT INTO respostas (ou o envio já existia)
+	candidatos  [][]any // possíveis duplicados devolvidos pela busca
+	respostas   [][]any // linhas de ListRespostas
+	papel       string  // papel do cadastro consultado (Spec 013)
+	alvoVisivel bool    // permite simular falha de regra com cadastro dentro do escopo
 }
 
 func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -77,7 +82,7 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 			out[i].Affected = d.afetadas
 		case strings.HasPrefix(st.SQL, "SELECT id FROM respostas WHERE id = ?"):
 			// cadastro visível no escopo quando o teste espera linhas afetadas
-			if d.afetadas > 0 {
+			if d.afetadas > 0 || d.alvoVisivel {
 				out[i].Rows = [][]any{{st.Args[0]}}
 			}
 		case strings.HasPrefix(st.SQL, "SELECT r.id, CASE"):
@@ -186,7 +191,7 @@ func dados(t *testing.T, m map[string]string) map[string]json.RawMessage {
 func TestRegistroSalvarLimitaAoEscopoEDerivaSetor(t *testing.T) {
 	s, db, token := painelServer(t, 1)
 	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
-		"nome": "Ana Silva", "nascimento": "1990-01-02", "celula": "betânia", "setor": "Fogo no Altar", "batismo": "S",
+		"nome": "Ana Silva", "nascimento": "1990-01-02", "celula": "betânia", "setor": "Fogo no Altar", "batismo": "S", "cafePastor": "S", "novaCriatura": "S",
 	})})
 	if rep.body["ok"] != true {
 		t.Fatalf("resposta = %#v", rep.body)
@@ -212,6 +217,97 @@ func TestRegistroSalvarForaDoEscopo(t *testing.T) {
 	rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{"nome": "Ana Silva"})})
 	if rep.body["erro"] != "nao_encontrado" {
 		t.Fatalf("erro = %v, queria nao_encontrado", rep.body["erro"])
+	}
+}
+
+func TestRegistroSalvarDistingueBatismoHistoricoEAlvoForaDoEscopo(t *testing.T) {
+	for _, caso := range []struct {
+		nome     string
+		afetadas int64
+		visivel  bool
+		erro     string
+	}{
+		{"histórico", 1, true, ""},
+		{"novo batismo ou retirada de requisito", 0, true, "batismo_cafe_pastor"},
+		{"fora do escopo", 0, false, "nao_encontrado"},
+	} {
+		t.Run(caso.nome, func(t *testing.T) {
+			s, db, token := painelServer(t, caso.afetadas)
+			db.alvoVisivel = caso.visivel
+			rep := s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
+				"nome": "Ana Silva", "celula": "Hope", "batismo": "S", "novaCriatura": "S",
+			})})
+			if caso.erro == "" && rep.body["ok"] != true || caso.erro != "" && rep.body["erro"] != caso.erro {
+				t.Fatalf("resposta = %#v", rep.body)
+			}
+			if len(db.escritas) != 1 || !strings.Contains(db.escritas[0].SQL, "AND batismo = 'S' AND COALESCE(cafe_pastor, '') <> 'S'") {
+				t.Fatalf("guarda de batismo ausente: %#v", db.escritas)
+			}
+		})
+	}
+}
+
+func TestGuardaBatismoNaEdicaoSQLite(t *testing.T) {
+	sqlite, err := exec.LookPath("sqlite3")
+	if err != nil {
+		t.Skip("sqlite3 não disponível")
+	}
+	cols := []string{"id INTEGER PRIMARY KEY", "excluido_em", "discipulador_id", "atualizado_em", "atualizado_por"}
+	for _, c := range store.Campos {
+		cols = append(cols, c.Coluna+" TEXT")
+	}
+	for _, tt := range []struct{ antes, cafe, curso, quer string }{
+		{"'S','N','S'", "N", "S", "1|S|N|S"},
+		{"'S','S','N'", "S", "N", "1|S|S|N"},
+		{"'S','S','S'", "N", "S", "0|S|S|S"},
+		{"'S','S','S'", "S", "N", "0|S|S|S"},
+		{"'N','N','S'", "N", "S", "0|N|N|S"},
+		{"'N','S','S'", "S", "S", "1|S|S|S"},
+	} {
+		s, db, token := painelServer(t, 1)
+		s.registroSalvar(context.Background(), adminReq{Token: token, Linha: 7, Dados: dados(t, map[string]string{
+			"nome": "Ana Silva", "celula": "Hope", "batismo": "S", "cafePastor": tt.cafe, "novaCriatura": tt.curso,
+		})})
+		if len(db.escritas) != 1 {
+			t.Fatalf("escritas = %d", len(db.escritas))
+		}
+		var q strings.Builder
+		q.WriteString("BEGIN;")
+		for n, st := range db.tx {
+			partes := strings.Split(st.SQL, "?")
+			for i, arg := range st.Args {
+				lit, err := backup.Literal(arg)
+				if err != nil {
+					t.Fatal(err)
+				}
+				q.WriteString(partes[i] + lit)
+			}
+			q.WriteString(partes[len(partes)-1] + ";")
+			if n == 0 {
+				q.WriteString("SELECT changes(),batismo,cafe_pastor,nova_criatura FROM respostas WHERE id=7;")
+			}
+		}
+		q.WriteString("COMMIT;")
+		if strings.HasPrefix(tt.quer, "0|") {
+			q.WriteString("SELECT discipulador FROM respostas WHERE id=8; SELECT group_concat(etapa) FROM jornada_eventos;")
+		}
+		cmd := exec.Command(sqlite, "-batch", "-bail", ":memory:")
+		cmd.Stdin = strings.NewReader("CREATE TABLE respostas (" + strings.Join(cols, ",") + ");" +
+			"CREATE TABLE jornada_eventos (resposta_id, etapa, em, origem, por, UNIQUE(resposta_id, etapa));" +
+			"INSERT INTO respostas (id, celula, nome, atualizado_em, atualizado_por, batismo, cafe_pastor, nova_criatura) VALUES (7,'Hope','Nome existente','" + s.Now().UTC().Format(time.RFC3339) + "','lider'," + tt.antes + ");" +
+			"INSERT INTO respostas (id, discipulador_id, discipulador) VALUES (8,7,'Nome existente');" +
+			"INSERT INTO jornada_eventos VALUES (7,'estacaoDNA','ontem','painel','lider');" + q.String())
+		out, err := cmd.CombinedOutput()
+		esperado := tt.quer
+		if tt.cafe != "S" || tt.curso != "S" {
+			esperado += "\n7"
+		}
+		if strings.HasPrefix(tt.quer, "0|") {
+			esperado += "\nNome existente\nestacaoDNA"
+		}
+		if err != nil || strings.TrimSpace(string(out)) != esperado {
+			t.Fatalf("antes %s, edição %s/%s = %s (%v), queria %s", tt.antes, tt.cafe, tt.curso, out, err, esperado)
+		}
 	}
 }
 

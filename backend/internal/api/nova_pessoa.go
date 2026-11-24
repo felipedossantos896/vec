@@ -90,6 +90,9 @@ func (s *Server) criarCadastro(ctx context.Context, a *session, requestID string
 	if code != "" {
 		return falha(code)
 	}
+	if store.BatismoSemRequisitos(v) {
+		return falha(erroBatismo(v))
+	}
 	if papel == "lider_setor" && v["setor"] == "" {
 		return falha("setor_obrigatorio")
 	}

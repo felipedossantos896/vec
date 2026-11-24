@@ -161,6 +161,18 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 		return failReply(code)
 	}
 
+	if store.BatismoSemRequisitos(v) {
+		if requestID != "" {
+			enviado, err := s.Store.EnvioRegistrado(ctx, requestID)
+			if err != nil {
+				return s.internal("formulario", err)
+			}
+			if enviado {
+				return okReply(nil)
+			}
+		}
+		return failReply(erroBatismo(v))
+	}
 	if requestID == "" {
 		requestID, err = newRequestID()
 		if err != nil {
@@ -178,6 +190,17 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 		return s.internal("formulario", err)
 	}
 	return okReply(nil)
+}
+
+func erroBatismo(v map[string]string) string {
+	switch {
+	case v["cafePastor"] == "S":
+		return "batismo_nova_criatura"
+	case v["novaCriatura"] == "S":
+		return "batismo_cafe_pastor"
+	default:
+		return "batismo_requisitos"
+	}
 }
 
 // telefoneBR deixa só os dígitos de um telefone brasileiro com DDD (10 ou 11 dígitos),

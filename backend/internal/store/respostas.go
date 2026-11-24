@@ -231,8 +231,14 @@ func (s *Store) ListRespostas(ctx context.Context, sc Scope) ([]Resposta, error)
 	return out, nil
 }
 
-// UpdateResposta regrava os campos de um cadastro que esteja dentro do escopo, o vínculo
-// com o discipulador (0 = nenhum) e anota quem editou. Devolve false se o cadastro não existe, foi excluído ou está fora do escopo.
+var ErrBatismoRequisitos = errors.New("batismo nas águas exige Café com o Pastor e Nova Criatura")
+
+func BatismoSemRequisitos(v map[string]string) bool {
+	return v["batismo"] == "S" && (v["cafePastor"] != "S" || v["novaCriatura"] != "S")
+}
+
+// UpdateResposta regrava um cadastro visível e seu vínculo com o discipulador (0 = nenhum).
+// Devolve false se o cadastro não existe, foi excluído ou está fora do escopo.
 func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[string]string, discipulador int64, por string, now time.Time) (bool, error) {
 	cond, escopoArgs, ok := escopoSQL(sc)
 	if !ok {
@@ -246,21 +252,40 @@ func (s *Store) UpdateResposta(ctx context.Context, sc Scope, id int64, v map[st
 	}
 	args = append(args, idOuNulo(discipulador), iso(now), por, id)
 	args = append(args, escopoArgs...)
+	alvo := ` WHERE id = ? AND excluido_em IS NULL AND ` + cond
+	guardaBatismo := ""
+	if BatismoSemRequisitos(v) {
+		// Só mantém um batismo histórico se a edição não retirar requisitos já cumpridos.
+		guardaBatismo = ` AND batismo = 'S'`
+		if v["cafePastor"] != "S" {
+			guardaBatismo += ` AND COALESCE(cafe_pastor, '') <> 'S'`
+		}
+		if v["novaCriatura"] != "S" {
+			guardaBatismo += ` AND COALESCE(nova_criatura, '') <> 'S'`
+		}
+	}
 	stmts := []turso.Stmt{
 		{
 			SQL: `UPDATE respostas SET ` + strings.Join(sets, `, `) + `, discipulador_id = ?, atualizado_em = ?, atualizado_por = ?` +
-				` WHERE id = ? AND excluido_em IS NULL AND ` + cond,
+				alvo + guardaBatismo,
 			Args: args,
 		},
 		// Se a pessoa mudou de nome, os discípulos dela passam a mostrar o nome novo.
 		{
-			SQL:  `UPDATE respostas SET discipulador = (SELECT nome FROM respostas WHERE id = ?) WHERE discipulador_id = ?`,
+			SQL:  `UPDATE respostas SET discipulador = (SELECT nome FROM respostas WHERE id = ?) WHERE discipulador_id = ? AND changes() > 0`,
 			Args: []any{id, id},
 		},
 	}
-	res, err := s.DB.Tx(ctx, append(stmts, jornadaDaEdicao(id, v, por, now)...)...)
+	stmts = append(stmts, jornadaDaEdicao(id, v, por, now)...)
+	if guardaBatismo != "" {
+		stmts = append(stmts, turso.Stmt{SQL: `SELECT id FROM respostas` + alvo, Args: append([]any{id}, escopoArgs...)})
+	}
+	res, err := s.DB.Tx(ctx, stmts...)
 	if err != nil {
 		return false, err
+	}
+	if res[0].Affected == 0 && guardaBatismo != "" && len(res[len(res)-1].Rows) > 0 {
+		return false, ErrBatismoRequisitos
 	}
 	return res[0].Affected > 0, nil
 }
@@ -304,6 +329,12 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 		return false, err
 	}
 	return res[0].Affected > 0, nil
+}
+
+// EnvioRegistrado preserva a confirmação idempotente, inclusive para cadastros excluídos.
+func (s *Store) EnvioRegistrado(ctx context.Context, requestID string) (bool, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT 1 FROM respostas WHERE request_id = ?`, Args: []any{requestID}})
+	return err == nil && len(res[0].Rows) > 0, err
 }
 
 // IDDoEnvio devolve o cadastro gravado com este id de envio (0 = nenhum ou excluído).

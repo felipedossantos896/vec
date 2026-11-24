@@ -54,17 +54,23 @@ func jornadaFaltante() []turso.Stmt {
 func jornadaDaEdicao(id int64, v map[string]string, por string, now time.Time) []turso.Stmt {
 	gravou := `EXISTS (SELECT 1 FROM respostas WHERE id = ? AND atualizado_em = ? AND atualizado_por = ?)`
 	quando := iso(now)
+	args := []any{id, quando, por}
+	if BatismoSemRequisitos(v) {
+		// Um salvamento anterior no mesmo segundo não deve autorizar eventos de uma edição recusada.
+		gravou = `EXISTS (SELECT 1 FROM respostas WHERE id = ? AND atualizado_em = ? AND atualizado_por = ? AND batismo = 'S' AND cafe_pastor = ? AND nova_criatura = ?)`
+		args = append(args, v["cafePastor"], v["novaCriatura"])
+	}
 	out := make([]turso.Stmt, 0, len(Jornada))
 	for _, k := range Jornada {
 		if v[k] == "S" {
 			out = append(out, turso.Stmt{
 				SQL:  `INSERT OR IGNORE INTO jornada_eventos (resposta_id, etapa, em, origem, por) SELECT ?, ?, ?, 'painel', ? WHERE ` + gravou,
-				Args: []any{id, k, quando, por, id, quando, por},
+				Args: append([]any{id, k, quando, por}, args...),
 			})
 		} else {
 			out = append(out, turso.Stmt{
 				SQL:  `DELETE FROM jornada_eventos WHERE resposta_id = ? AND etapa = ? AND ` + gravou,
-				Args: []any{id, k, id, quando, por},
+				Args: append([]any{id, k}, args...),
 			})
 		}
 	}
