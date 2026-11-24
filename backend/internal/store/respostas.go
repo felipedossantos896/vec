@@ -331,6 +331,12 @@ func (s *Store) DeleteResposta(ctx context.Context, sc Scope, id int64, por stri
 	return res[0].Affected > 0, nil
 }
 
+// EnvioRegistrado preserva a confirmação idempotente, inclusive para cadastros excluídos.
+func (s *Store) EnvioRegistrado(ctx context.Context, requestID string) (bool, error) {
+	res, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT 1 FROM respostas WHERE request_id = ?`, Args: []any{requestID}})
+	return err == nil && len(res[0].Rows) > 0, err
+}
+
 // IDDoEnvio devolve o cadastro gravado com este id de envio (0 = nenhum ou excluído).
 func (s *Store) IDDoEnvio(ctx context.Context, requestID string) (int64, error) {
 	res, err := s.DB.Do(ctx, turso.Stmt{SQL: `SELECT id FROM respostas WHERE request_id = ? AND excluido_em IS NULL`, Args: []any{requestID}})

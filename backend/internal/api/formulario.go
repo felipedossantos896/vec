@@ -162,6 +162,15 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 	}
 
 	if store.BatismoSemRequisitos(v) {
+		if requestID != "" {
+			enviado, err := s.Store.EnvioRegistrado(ctx, requestID)
+			if err != nil {
+				return s.internal("formulario", err)
+			}
+			if enviado {
+				return okReply(nil)
+			}
+		}
 		return failReply(erroBatismo(v))
 	}
 	if requestID == "" {
@@ -183,8 +192,6 @@ func (s *Server) formulario(ctx context.Context, body []byte, ip string) reply {
 	return okReply(nil)
 }
 
-// telefoneBR deixa só os dígitos de um telefone brasileiro com DDD (10 ou 11 dígitos),
-// sem o código do país. Vazio é aceito: o campo é opcional.
 func erroBatismo(v map[string]string) string {
 	switch {
 	case v["cafePastor"] == "S":
@@ -196,6 +203,8 @@ func erroBatismo(v map[string]string) string {
 	}
 }
 
+// telefoneBR deixa só os dígitos de um telefone brasileiro com DDD (10 ou 11 dígitos),
+// sem o código do país. Vazio é aceito: o campo é opcional.
 func telefoneBR(s string) (string, bool) {
 	var b strings.Builder
 	for _, r := range s {

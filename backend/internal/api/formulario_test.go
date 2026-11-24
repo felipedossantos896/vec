@@ -14,8 +14,9 @@ import (
 )
 
 type apiTestDB struct {
-	doCalls [][]turso.Stmt
-	txCalls [][]turso.Stmt
+	doCalls         [][]turso.Stmt
+	txCalls         [][]turso.Stmt
+	envioRegistrado bool
 }
 
 func (d *apiTestDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, error) {
@@ -23,6 +24,9 @@ func (d *apiTestDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result,
 	results := make([]*turso.Result, len(stmts))
 	for i := range results {
 		results[i] = &turso.Result{}
+		if d.envioRegistrado && strings.HasPrefix(stmts[i].SQL, "SELECT 1 FROM respostas WHERE request_id") {
+			results[i].Rows = [][]any{{int64(1)}}
+		}
 	}
 	return results, nil
 }
@@ -97,6 +101,16 @@ func TestFormularioBatismoRequerCafeENovaCriatura(t *testing.T) {
 		if rep.body["erro"] != codigo || len(db.txCalls) != 0 {
 			t.Fatalf("resposta = %#v, transações = %d", rep.body, len(db.txCalls))
 		}
+	}
+}
+
+func TestFormularioReenvioDeBatismoHistoricoConfirmaEnvio(t *testing.T) {
+	db := &apiTestDB{envioRegistrado: true}
+	s := testAPIServer(db)
+	const id = "0123456789abcdef0123456789abcdef"
+	rep := enviarFormulario(s, []byte(`{"_requestId":"`+id+`","consentimento":"S","nome":"Ana Silva","nascimento":"1990-01-01","batismo":"S"}`))
+	if rep.body["ok"] != true || len(db.txCalls) != 0 {
+		t.Fatalf("resposta = %#v, transações = %d", rep.body, len(db.txCalls))
 	}
 }
 

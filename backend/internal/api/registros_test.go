@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"vec/backend/internal/auth"
 	"vec/backend/internal/backup"
@@ -270,24 +271,42 @@ func TestGuardaBatismoNaEdicaoSQLite(t *testing.T) {
 		if len(db.escritas) != 1 {
 			t.Fatalf("escritas = %d", len(db.escritas))
 		}
-		st := db.escritas[0]
-		partes := strings.Split(st.SQL, "?")
 		var q strings.Builder
-		for i, arg := range st.Args {
-			lit, err := backup.Literal(arg)
-			if err != nil {
-				t.Fatal(err)
+		q.WriteString("BEGIN;")
+		for n, st := range db.tx {
+			partes := strings.Split(st.SQL, "?")
+			for i, arg := range st.Args {
+				lit, err := backup.Literal(arg)
+				if err != nil {
+					t.Fatal(err)
+				}
+				q.WriteString(partes[i] + lit)
 			}
-			q.WriteString(partes[i] + lit)
+			q.WriteString(partes[len(partes)-1] + ";")
+			if n == 0 {
+				q.WriteString("SELECT changes(),batismo,cafe_pastor,nova_criatura FROM respostas WHERE id=7;")
+			}
 		}
-		q.WriteString(partes[len(partes)-1])
+		q.WriteString("COMMIT;")
+		if strings.HasPrefix(tt.quer, "0|") {
+			q.WriteString("SELECT discipulador FROM respostas WHERE id=8; SELECT group_concat(etapa) FROM jornada_eventos;")
+		}
 		cmd := exec.Command(sqlite, "-batch", "-bail", ":memory:")
 		cmd.Stdin = strings.NewReader("CREATE TABLE respostas (" + strings.Join(cols, ",") + ");" +
-			"INSERT INTO respostas (id, celula, batismo, cafe_pastor, nova_criatura) VALUES (7,'Hope'," + tt.antes + ");" +
-			q.String() + "; SELECT changes(),batismo,cafe_pastor,nova_criatura FROM respostas;")
+			"CREATE TABLE jornada_eventos (resposta_id, etapa, em, origem, por, UNIQUE(resposta_id, etapa));" +
+			"INSERT INTO respostas (id, celula, nome, atualizado_em, atualizado_por, batismo, cafe_pastor, nova_criatura) VALUES (7,'Hope','Nome existente','" + s.Now().UTC().Format(time.RFC3339) + "','lider'," + tt.antes + ");" +
+			"INSERT INTO respostas (id, discipulador_id, discipulador) VALUES (8,7,'Nome existente');" +
+			"INSERT INTO jornada_eventos VALUES (7,'estacaoDNA','ontem','painel','lider');" + q.String())
 		out, err := cmd.CombinedOutput()
-		if err != nil || strings.TrimSpace(string(out)) != tt.quer {
-			t.Fatalf("antes %s, edição %s/%s = %s (%v), queria %s", tt.antes, tt.cafe, tt.curso, out, err, tt.quer)
+		esperado := tt.quer
+		if tt.cafe != "S" || tt.curso != "S" {
+			esperado += "\n7"
+		}
+		if strings.HasPrefix(tt.quer, "0|") {
+			esperado += "\nNome existente\nestacaoDNA"
+		}
+		if err != nil || strings.TrimSpace(string(out)) != esperado {
+			t.Fatalf("antes %s, edição %s/%s = %s (%v), queria %s", tt.antes, tt.cafe, tt.curso, out, err, esperado)
 		}
 	}
 }
