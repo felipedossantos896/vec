@@ -1,6 +1,6 @@
 # Plano técnico — Liderança e casa da célula no mapa, card enxuto e ícones
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.59.0)
 
 ## Dados
 Sem migration. As fontes já existem:

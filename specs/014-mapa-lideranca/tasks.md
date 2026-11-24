@@ -9,5 +9,5 @@ Issues #176 a #179; dependências em [`graph.json`](graph.json).
 - [x] **T003 (#178) — Painel**: pacote de ícones Phosphor, selos e anel da casa no mapa e no leque,
   card enxuto com botões-ícone, "x" de 44 px com animação e som, botão "Sons" na barra
   lateral; regras puras com teste. *Dep.: T002.*
-- [ ] **T004 (#179) — Validação e release**: cenários 1 a 8 no `vec-dev` e conferência em
+- [x] **T004 (#179) — Validação e release**: cenários 1 a 8 no `vec-dev` e conferência em
   produção; `release-validation.md`. *Dep.: T003.*

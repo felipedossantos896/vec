@@ -212,6 +212,7 @@ teste contra um banco de produção.
 - [x] Nome curto dos membros nas listas, com o completo na ficha (Spec 011).
 - [x] Rostos maiores no mapa e grupos que se abrem em leque (Spec 012).
 - [x] Líderes de área e de setor como discipuladores, sem célula fixa (Spec 013).
+- [x] Liderança e casa da célula no mapa, cartão enxuto e pacote de ícones (Spec 014).
 - Conferir deploy real, alertas, recuperação de backup e limites da plataforma;
   a documentação de deploy informa que ainda não houve deploy real validado.
 

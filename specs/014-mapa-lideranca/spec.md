@@ -1,6 +1,6 @@
 # Spec 014 — Liderança e casa da célula no mapa, card enxuto e pacote de ícones
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.59.0, 2026-11-24) · [validação](release-validation.md)
 - Data: 2026-11-24
 - ADRs: [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (rostos no mapa),
   [0009](../../docs/architecture/adr/0009-identidade-visual.md) (identidade visual) e a

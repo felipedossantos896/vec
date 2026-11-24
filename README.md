@@ -106,10 +106,17 @@ curto e o completo abaixo; busca, CSV e edição usam o nome completo. O cadastr
 
 **Liderança sem célula** (Spec 013): o cadastro tem um papel: membro de célula, líder de setor
 ou líder de área. Líderes de área e de setor não têm célula fixa: aparecem em Pessoas com a
-etiqueta e o filtro Liderança, ficam fora das contagens de célula, do mapa e dos indicadores, e
+etiqueta e o filtro Liderança, ficam fora das contagens de célula e dos indicadores, e
 podem ser escolhidos como discipuladores (grupo Liderança no topo da lista). Só o líder de setor
 tem jornada e entra em "precisam de cuidado". O cadastro do líder nasce em Ajustes, junto do login,
 ou em Nova pessoa ("Quem é"), sempre por quem vê a área toda; o papel acompanha o perfil do login.
+
+**Liderança no mapa** (Spec 014): líderes de área e de setor aparecem no mapa, e cada rosto ganha um
+selo: estrela (líder de área), escudo (líder de setor), coroa (líder de célula, pelo login de célula
+ligado ao cadastro) e casa (Casa da célula, definida em Estrutura, com anel grosso). O cartão do rosto
+mostra o nome curto, a célula, os papéis e os ícones de WhatsApp e Ficha; o "x" tem 44 px e fecha com
+animação e um som curto (botão "Sons" na barra lateral, por aparelho). Os ícones vêm do Phosphor
+(ADR-0012), gerados por `scripts/icones/gerar.mjs` só com os usados.
 
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa
