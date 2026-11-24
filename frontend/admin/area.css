@@ -1,14 +1,35 @@
 /* Área: o mapa com os rostos como tela inicial (Spec 009, ADR-0010 e 0011) */
-.area-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.area-head .filters { margin: 0; display: flex; flex-wrap: nowrap; gap: 8px; }
-.area-head .filters select.input { flex: 0 0 auto; width: 210px; }
-@media (max-width: 720px) { .area-head .filters { width: 100%; } .area-head .filters select.input { flex: 1 1 0; width: auto; min-width: 0; } }
-.area-palco { position: relative; margin: 8px 0 22px; }
-.area-canvas { height: min(68vh, 640px); min-height: 440px; margin: 0; border-radius: var(--r-lg); }
+/* Spec 016: o palco ocupa a tela livre (--topo e --abas medidos em area-layout.ts) */
+body.na-area .wrap { max-width: none; padding: 0; }
+.na-area #loading:not(.hidden) { padding: 24px 16px; }
+.area-palco { position: relative; height: calc(100vh - var(--topo, 0px) - var(--abas, 0px)); height: calc(100dvh - var(--topo, 0px) - var(--abas, 0px)); min-height: 220px; overflow: hidden; }
+.area-canvas { position: absolute; inset: 0; height: auto; min-height: 0; margin: 0; border-radius: 0; }
+/* Zoom e atribuição do OpenStreetMap sempre acima da gaveta */
+.area-canvas .leaflet-bottom { bottom: calc(var(--gv-h, 64px) + 4px); transition: bottom 0.22s ease; }
+/* Camadas (Spec 016): rostos (600) < painel, filtros e ferramenta < cartão (700) < gaveta */
+.area-canvas .leaflet-map-pane { z-index: auto; }
+.area-palco .area-filtros { position: absolute; top: 14px; right: 16px; left: 332px; z-index: 620; display: flex; flex-wrap: nowrap; justify-content: flex-end; gap: 8px; margin: 0; pointer-events: none; }
+.area-palco .area-filtros select.input { pointer-events: auto; flex: 0 1 220px; width: 220px; min-width: 0; min-height: 44px; box-shadow: 0 4px 14px rgba(21, 23, 28, 0.14); }
+#mapaVazio:not(:empty) { position: absolute; top: 50%; left: 50%; z-index: 640; width: min(360px, calc(100% - 32px)); transform: translate(-50%, -50%); }
+
+/* Gaveta suspensa: recolhida mostra a alça e o resumo; aberta vai a 85% do mapa */
+.gaveta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 750; display: flex; flex-direction: column; height: var(--gv-aberta, 64px); transform: translateY(calc(var(--gv-aberta, 64px) - var(--gv-h, 64px))); transition: transform 0.22s ease; background: var(--page); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 28px rgba(21, 23, 28, 0.18); }
+.gaveta.arrastando, .area-palco:has(.gaveta.arrastando) .leaflet-bottom { transition: none; }
+.gv-alca { flex: none; display: grid; justify-items: center; gap: 6px; width: 100%; min-height: 64px; padding: 8px 18px 10px; touch-action: none; cursor: grab; color: var(--ink); border-radius: 18px 18px 0 0; }
+.gaveta.arrastando .gv-alca { cursor: grabbing; }
+.gv-puxador { width: 44px; height: 5px; border-radius: 99px; background: var(--line-strong); }
+.gv-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; max-width: 1180px; }
+.gv-resumo { font: 700 var(--t15) var(--display); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gv-linha .ic { color: var(--muted); transition: transform 0.22s ease; }
+.gaveta[data-estado="aberta"] .gv-linha .ic { transform: rotate(180deg); }
+.gv-alca:focus-visible { outline: var(--focus); outline-offset: -3px; }
+.gv-corpo { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 4px 24px 28px; }
+.gv-corpo > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
+.gv-corpo #mapaStatus { margin-top: 0; }
 /* Fundo do OpenStreetMap com a cor da identidade (decisão 1 da Spec 009) */
 .area-canvas .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
 
-.area-painel { position: absolute; left: 16px; top: 16px; z-index: 500; width: 300px; max-height: calc(100% - 32px); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--shadow-float); }
+.area-painel { position: absolute; left: 16px; top: 16px; z-index: 610; width: 300px; max-height: calc(100% - 32px - var(--gv-h, 64px)); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--shadow-float); }
 .ap-stats { display: flex; gap: 22px; align-items: flex-end; }
 .ap-stats div { display: flex; flex-direction: column; }
 .ap-stats b { font: 800 var(--t44)/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
@@ -24,7 +45,7 @@
 .ap-leg b { color: #9aa0ad; font-weight: 600; }
 .ap-ferr { display: grid; gap: 6px; }
 .ap-ferr button { display: flex; justify-content: space-between; align-items: center; min-height: 42px; padding: 0 12px; border-radius: 10px; border: 1.5px solid #3a3e48; color: #fff; font-weight: 600; font-size: var(--t13); text-align: left; }
-.area-priv { position: absolute; right: 16px; bottom: 26px; z-index: 500; font-size: var(--t12); color: #4f5159; background: rgba(255, 255, 255, 0.9); padding: 6px 10px; border-radius: 8px; }
+.area-priv { margin-top: 12px; font-size: var(--t12); color: var(--muted); }
 
 /* Rostos no mapa */
 .rostos-pin { display: flex; justify-content: center; }
@@ -60,20 +81,21 @@
 .area-lista { margin-bottom: 20px; }
 
 @media (max-width: 900px) { .fale-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 720px) {
-  .area-canvas { height: 420px; min-height: 0; border-radius: 14px; }
-  .area-painel { position: static; width: auto; max-height: none; margin-top: 10px; border-radius: 14px; }
+@media (max-width: 720px), (max-height: 500px) {
+  .area-palco .area-filtros { top: 10px; left: 10px; right: 10px; }
+  .area-palco .area-filtros select.input { flex: 1 1 0; width: auto; }
+  .gv-corpo { padding: 4px 14px calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .area-painel { position: static; width: auto; max-height: none; margin: 0 0 14px; border-radius: 14px; }
   .ap-stats b { font-size: var(--t28); }
   .ap-lentes { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
   .ap-lentes li { flex: none; }
   .lente { gap: 10px; }
-  .area-priv { position: static; display: block; margin-top: 8px; background: none; padding: 0; }
   .fale-lista { grid-template-columns: 1fr; }
   .fale-a .b-zap, .fale-a .b-sec { min-height: 44px; }
 }
 
 /* Ferramentas no mapa (Spec 009, T005) */
-.area-ferr-painel { position: absolute; right: 16px; top: 16px; bottom: 16px; z-index: 600; width: 390px; overflow: auto; background: var(--white); border-radius: 18px; box-shadow: var(--shadow-float); padding: 12px 18px 18px; }
+.area-ferr-painel { position: absolute; right: 16px; top: 16px; bottom: calc(var(--gv-h, 64px) + 12px); z-index: 630; width: 390px; overflow: auto; background: var(--white); border-radius: 18px; box-shadow: var(--shadow-float); padding: 12px 18px 18px; }
 .area-ferr-painel[hidden] { display: none; }
 .afp-voltar { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 10px; background: var(--grafite); color: #fff; font-weight: 600; font-size: var(--t13); margin-bottom: 6px; }
 .afp-voltar:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 2px; }
@@ -81,7 +103,8 @@
 .area-ferr-painel .anf-painel[hidden] { display: none; }
 .area-ferr-painel .anf-painel > summary { list-style: none; cursor: default; font: 800 var(--t21)/1.15 var(--display); padding: 6px 0 2px; }
 .area-ferr-painel .anf-painel > summary::-webkit-details-marker { display: none; }
-.area-palco.modo-ferr .leaflet-top.leaflet-right { right: 412px; }
+.area-palco.modo-ferr .leaflet-bottom.leaflet-right { right: 412px; }
+.area-palco.modo-ferr .area-filtros { right: 422px; left: 332px; }
 /* O Leaflet posiciona o marcador com transform: o giro fica num elemento de dentro. */
 .casa-n { background: none; border: 0; }
 .casa-pin { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 12px 12px 12px 2px; background: var(--grafite); border: 2px solid #fff; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3); transform: rotate(-45deg); }
@@ -89,9 +112,10 @@
 .casa-n.top .casa-pin { background: var(--coral); }
 .casa-n:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 3px; }
 .rp-grupo { position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; border-radius: 6px; background: var(--grafite); color: #fff; font: 800 11px/20px var(--display); text-align: center; border: 2px solid #fff; }
-@media (max-width: 720px) {
-  .area-ferr-painel { position: static; width: auto; margin-top: 10px; border-radius: 14px; border: 1px solid var(--line); box-shadow: none; }
-  .area-palco.modo-ferr .leaflet-top.leaflet-right { right: 0; }
+@media (max-width: 720px), (max-height: 500px) {
+  .area-ferr-painel { position: static; width: auto; margin: 0 0 14px; border-radius: 14px; border: 1px solid var(--line); box-shadow: none; }
+  .area-palco.modo-ferr .leaflet-bottom.leaflet-right { right: 0; }
+  .area-palco.modo-ferr .area-filtros { right: 10px; left: 10px; }
 }
 
 /* ── Leque (Spec 012): os rostos do grupo se abrem em volta do centro da área ── */
@@ -112,7 +136,7 @@
 .lq-rosto:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 3px; }
 .lq-rosto:hover { z-index: 2; }
 .cartao-pop .leaflet-popup-content { margin: 12px 14px; }
-@media (prefers-reduced-motion: reduce) { .lq-rosto, .lq-linhas, .lq-nome { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .lq-rosto, .lq-linhas, .lq-nome, .gaveta, .gv-linha .ic, .area-canvas .leaflet-bottom { transition: none; } }
 
 /* ── Spec 014: selos de liderança e casa da célula, cartão enxuto ── */
 .rp { position: relative; }

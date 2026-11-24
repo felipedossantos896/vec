@@ -65,8 +65,11 @@ function mostrarAba(aba) {
         renderEstrutura();
     if (aba === 'usuarios' && !estado.usuariosCarregados)
         carregarUsuarios();
-    if (aba === 'acompanhar')
-        abrirMapa(); // a Área tem o mapa no topo (Spec 009)
+    document.body.classList.toggle('na-area', aba === 'acompanhar'); // mapa em tela cheia (Spec 016)
+    if (aba === 'acompanhar') {
+        aoMudarTamanho();
+        abrirMapa();
+    } // a Área tem o mapa no topo (Spec 009)
     if (aba === 'discipulos')
         renderDiscipulos();
     if (aba === 'indicadores' && retratos === null)

@@ -31,7 +31,8 @@ gaveta suspensa, colada na parte de baixo, no computador e no celular.
    - o zoom (+ −) desce para o canto de baixo à direita, acima da gaveta.
 3. **Painel escuro:**
    - no computador, continua flutuando à esquerda, por cima do mapa, sem invadir a gaveta;
-   - no celular, entra na gaveta, no topo do conteúdo.
+   - no celular, entra na gaveta, no topo do conteúdo. O mesmo vale para telas baixas (até
+     500 px de altura, como o celular deitado), em que o painel cobriria quase todo o mapa.
 4. **Gaveta suspensa:**
    - **recolhida:** só a alça e uma linha de resumo (por exemplo, "Fale com eles · 3
      precisam de cuidado"), colada embaixo, por cima do mapa. Um pedaço da borda aparece, para

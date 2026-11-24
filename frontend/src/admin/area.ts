@@ -52,6 +52,7 @@ function renderArea() {
   const base = baseIndicadores();
   renderPainelArea(base);
   renderFaleCom(base);
+  $('gvResumo').textContent = regrasGaveta.resumo(base.filter(r => naLente('cuidado', r)).length, base.length);
 }
 
 $('areaPainel').addEventListener('click', e => {
@@ -75,6 +76,8 @@ function abrirFerramenta(id: string) {
   ['anfPainel', 'multPainel'].forEach(k => { const d = $<HTMLDetailsElement>(k); d.open = k === id; d.hidden = !!aberta && k !== id; });
   $('areaFerrPainel').hidden = !aberta;
   document.querySelector('.area-palco')?.classList.toggle('modo-ferr', aberta);
+  // No celular a ferramenta fica no topo da gaveta (Spec 016): abre a gaveta e mostra
+  if (aberta && matchMedia(CELULAR).matches) { abrirGaveta(); $('gvCorpo').scrollTop = 0; }
   renderMapa();
   if (aberta) $<HTMLDetailsElement>(id).querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
   else $('areaPainel').querySelector<HTMLElement>('[data-ferr]')?.focus();

@@ -7,7 +7,7 @@ vm.runInNewContext(fs.readFileSync('frontend/admin/icones.js', 'utf8') + '\n;glo
 const { icone } = contexto;
 
 test('pacote de ícones (ADR-0012): os ícones da Spec 014, decorativos ou com nome', () => {
-  for (const n of ['area', 'setor', 'celula', 'casa', 'whatsapp', 'ficha', 'fechar', 'som', 'semSom']) {
+  for (const n of ['area', 'setor', 'celula', 'casa', 'whatsapp', 'ficha', 'fechar', 'voltar', 'subir']) {
     const svg = icone(n);
     assert.match(svg, /^<svg class="ic" viewBox="0 0 256 256" fill="currentColor" focusable="false" aria-hidden="true">(<path d="[^"<>]+"\/>)+<\/svg>$/, n);
   }
@@ -37,6 +37,7 @@ test('nenhum ícone desenhado à mão no painel e no formulário (Spec 015)', ()
     assert.equal(svgs.length, desenhos[arq] || 0, `${arq}: <svg> fora do pacote de ícones`);
     assert.doesNotMatch(s, /aria-hidden="true">\s*[→›×+✓]\s*</, `${arq}: caractere usado como ícone`);
     assert.doesNotMatch(s, />\+ [A-ZÁÉÍÓÚ]/, `${arq}: "+" de texto no botão`);
+    assert.doesNotMatch(s, />\s*← |\s→\s*</, `${arq}: seta de texto no botão`);
   }
   for (const html of ['frontend/index.html', 'frontend/admin/index.html']) {
     const s = fs.readFileSync(html, 'utf8');

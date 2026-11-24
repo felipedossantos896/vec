@@ -22,7 +22,8 @@
 - Na aba Área, `body.na-area` tira o padding do `.wrap` e a rolagem da página.
 
 ## Painel escuro no celular
-- Abaixo de 721 px, `area-layout.ts` move o `#areaPainel` para o topo de `.gv-corpo`.
+- Abaixo de 721 px de largura ou com até 500 px de altura, `area-layout.ts` move o
+  `#areaPainel` para o topo de `.gv-corpo`.
 - Acima disso, ele volta para o palco.
 - É o mesmo elemento: os ouvintes e o estado das lentes continuam.
 
@@ -45,6 +46,9 @@
 - **Enquadramento:** o `fitBounds` passa a usar os recuos reais (`folgasMapa()`): a barra de
   filtros, o painel escuro no computador, a gaveta recolhida e o painel de ferramenta.
 - **Zoom:** `L.control.zoom({ position: 'bottomright' })`, acima da gaveta (margem pelo CSS).
+- **Camadas:** `.leaflet-map-pane` com `z-index: auto`, para a ordem ser rostos (600), depois
+  painel, filtros e ferramenta, depois o cartão (700) e por fim a gaveta. O cartão desvia
+  dessas partes (`autoPanPadding` com `folgasMapa()`) e fecha quando a gaveta abre.
 - **Tamanho:** `invalidateSize()` quando o palco muda de tamanho (`ResizeObserver`).
 - **Ferramenta no celular:** `abrirFerramenta` abre a gaveta e rola até a ferramenta, que no
   celular passa para dentro da gaveta.

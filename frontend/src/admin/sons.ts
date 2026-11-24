@@ -1,22 +1,13 @@
-// ══════ SONS DO PAINEL (Spec 014) ══════
-// Som curto gerado pelo navegador (Web Audio), sem arquivo de áudio. A preferência vale
-// para o aparelho (localStorage) e vem ligada. Sem áudio no navegador, não faz nada.
+// ══════ SONS DO PAINEL (Spec 014, Spec 016) ══════
+// Som curto gerado pelo navegador (Web Audio), sem arquivo de áudio. Toca sempre (a Spec 016
+// tirou o botão de ligar e desligar). Sem áudio no navegador, não faz nada.
 
 const sons = {
-  CHAVE: 'vec.sons',
   ctx: null as AudioContext | null,
-
-  ligados(): boolean {
-    try { return localStorage.getItem(sons.CHAVE) !== '0'; } catch { return true; }
-  },
-  definir(ligar: boolean) {
-    try { localStorage.setItem(sons.CHAVE, ligar ? '1' : '0'); } catch { /* sem armazenamento: vale só agora */ }
-  },
 
   // "Fechar": um toque suave que desce de ~660 para ~330 Hz em 0,14 s, com volume baixo.
   // Só depois de um gesto da pessoa (o navegador exige).
   fechar() {
-    if (!sons.ligados()) return;
     try {
       const Ctx = (globalThis as any).AudioContext || (globalThis as any).webkitAudioContext;
       if (!Ctx) return;
@@ -37,18 +28,3 @@ const sons = {
     } catch { /* sem áudio: fecha em silêncio */ }
   }
 };
-
-// Botão "Sons" na barra lateral, com o estado do aparelho
-function renderBotaoSons() {
-  const b = document.getElementById('btnSons');
-  if (!b) return;
-  const on = sons.ligados();
-  b.setAttribute('aria-pressed', String(on));
-  b.setAttribute('aria-label', on ? 'Sons do painel: ligados' : 'Sons do painel: desligados');
-  b.title = on ? 'Desligar os sons neste aparelho' : 'Ligar os sons neste aparelho';
-  b.innerHTML = icone(on ? 'som' : 'semSom') + '<span class="txt">Sons</span>';
-}
-if (typeof document !== 'undefined') {
-  renderBotaoSons();
-  document.getElementById('btnSons')?.addEventListener('click', () => { sons.definir(!sons.ligados()); renderBotaoSons(); });
-}
