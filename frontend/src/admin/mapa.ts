@@ -9,6 +9,8 @@ declare const L: any; // Leaflet, carregado por <script> antes deste arquivo
 const TILES_OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATRIBUICAO_OSM = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Reportar erro no mapa</a>';
 const ZOOM_MAX = 16; // além disso não há o que ver: as posições são aproximadas
+const ZOOM_ENQUADRAMENTO = 14;
+const ZOOM_TILES = 17; // detectRetina reduz em um o teto efetivo da camada no Leaflet 1.9.4
 const RECARREGAR_APOS_MS = 60_000;
 
 let dadosMapa: DadosMapa | null = null;
@@ -133,7 +135,8 @@ function iniciarLeaflet(): boolean {
   const animar = !matchMedia('(prefers-reduced-motion: reduce)').matches; // o Leaflet não respeita sozinho
   mapaLeaflet = L.map('mapaCanvas', { maxZoom: ZOOM_MAX, minZoom: 4, zoomAnimation: animar, fadeAnimation: animar, markerZoomAnimation: animar, zoomControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(mapaLeaflet); // acima da gaveta (Spec 016)
-  L.tileLayer(TILES_OSM, { maxZoom: ZOOM_MAX, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
+  L.control.scale({ position: 'bottomleft', imperial: false }).addTo(mapaLeaflet);
+  L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
   mapaLeaflet.attributionControl.setPrefix(false);
   camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
   // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
@@ -163,7 +166,7 @@ function renderMapa() {
     // Filtros, painel, ferramenta e gaveta ficam por cima do mapa: o enquadramento desconta
     // o espaço deles (Spec 016).
     const folga = folgasMapa();
-    if (pontos.length) mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_MAX, ...folga, animate: false });
+    if (pontos.length) mapaLeaflet.fitBounds(L.latLngBounds(pontos), { maxZoom: ZOOM_ENQUADRAMENTO, ...folga, animate: false });
     else mapaLeaflet.setView([-14.2, -51.9], 4);
     ultimoFiltro = f;
     desenharGrupos(f);
