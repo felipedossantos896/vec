@@ -115,13 +115,19 @@ ou em Nova pessoa ("Quem é"), sempre por quem vê a área toda; o papel acompan
 selo: estrela (líder de área), escudo (líder de setor), coroa (líder de célula, pelo login de célula
 ligado ao cadastro) e casa (Casa da célula, definida em Estrutura, com anel grosso). O cartão do rosto
 mostra o nome curto, a célula, os papéis e os ícones de WhatsApp e Ficha; o "x" tem 44 px e fecha com
-animação e um som curto (botão "Sons" na barra lateral, por aparelho). Os ícones vêm do Phosphor
+animação e um som curto (sempre ligado, desde a Spec 016). Os ícones vêm do Phosphor
 (ADR-0012), gerados por `scripts/icones/gerar.mjs` só com os usados.
 
 **Ícones** (Spec 015): o painel e o formulário usam só o Phosphor em negrito (ADR-0012); a marca
 "Área VEC" continua desenhada à mão. No HTML fixo, `<span class="ic-slot ic-18" data-ic="nome">`
 reserva o espaço e é trocado pelo ícone ao carregar; no TS, `icone('nome', { classe: 'ic-18' })`.
 Um teste impede ícone desenhado à mão ou caractere usado como ícone.
+
+**Mapa em tela cheia** (Spec 016): na Área, o mapa ocupa todo o espaço livre da tela, com os
+filtros flutuando no alto e o zoom embaixo. O resto ("Fale com eles", os blocos da Área e a lista)
+fica numa gaveta suspensa colada embaixo: toque, clique ou arraste a alça para abrir; Esc recolhe.
+No computador, o painel escuro flutua à esquerda; no celular e em telas baixas, ele vai para a
+gaveta. As alturas vêm de `area-layout.ts`; as regras da gaveta, de `gaveta-regras.ts`.
 
 **Discipulado:** cada cadastro pode apontar para o cadastro do seu discipulador
 (`respostas.discipulador_id`) e cada login para o cadastro da própria pessoa

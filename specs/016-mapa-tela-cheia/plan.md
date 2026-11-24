@@ -1,6 +1,6 @@
 # Plano técnico — Mapa em tela cheia com gaveta suspensa
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.61.0)
 
 ## Estrutura (`admin/index.html`)
 - O `h1` da Área vira `sr-only`. A frase `#areaSub` passa para o resumo da gaveta.
