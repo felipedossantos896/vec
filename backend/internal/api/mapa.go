@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"sort"
+	"strconv"
 
 	"vec/backend/internal/store"
 )
@@ -77,6 +78,13 @@ func agruparMapa(pontos []store.PontoMapa) (grupos []grupoMapa, soCidade, naoLoc
 // arred corta para 4 casas (~11 m): o centro da grade não precisa de mais.
 func arred(v float64) float64 { return math.Round(v*1e4) / 1e4 }
 
+func nonNilNomes(v []string) []string {
+	if v == nil {
+		return []string{}
+	}
+	return v
+}
+
 func nonNilIDs(v []int64) []int64 {
 	if v == nil {
 		return []int64{}
@@ -97,6 +105,13 @@ func (s *Server) mapa(ctx context.Context, req adminReq) reply {
 		return s.internal("mapa", err)
 	}
 	grupos, soCidade, naoLocalizados, pendentes := agruparMapa(pontos)
+	destaques := map[string]any{} // Spec 014: só de quem está no escopo, como os pontos
+	for _, p := range pontos {
+		if len(p.LiderCelula) > 0 || len(p.CasaCelula) > 0 {
+			destaques[strconv.FormatInt(p.Linha, 10)] = map[string]any{
+				"liderCelula": nonNilNomes(p.LiderCelula), "casaCelula": nonNilNomes(p.CasaCelula)}
+		}
+	}
 	if grupos == nil {
 		grupos = []grupoMapa{}
 	}
@@ -106,5 +121,6 @@ func (s *Server) mapa(ctx context.Context, req adminReq) reply {
 		"naoLocalizados": nonNilIDs(naoLocalizados),
 		"pendentes":      nonNilIDs(pendentes),
 		"passoMetros":    330,
+		"destaques":      destaques,
 	})
 }
