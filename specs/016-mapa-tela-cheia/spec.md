@@ -1,6 +1,6 @@
 # Spec 016 — Mapa em tela cheia com gaveta suspensa
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.61.0, 2026-11-24) · [validação](release-validation.md)
 - Data: 2026-11-24
 - ADRs: [0010](../../docs/architecture/adr/0010-navegacao-centrada-no-mapa.md) (navegação
   centrada no mapa) e [0009](../../docs/architecture/adr/0009-identidade-visual.md). Sem ADR
