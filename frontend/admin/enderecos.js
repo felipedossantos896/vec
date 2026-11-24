@@ -131,7 +131,11 @@ async function chamarEndereco(r, payload, botao) {
         botao.disabled = true;
     try {
         const res = await api({ ...payload, linha: r.linha, token: s.token });
-        if (lerSessao()?.token !== s.token || registroAberto() !== r || !$('det').open || !document.getElementById('endCorpo'))
+        if (lerSessao()?.token !== s.token)
+            return null;
+        if (res.ok && (payload.acao === 'endereco_salvar' || payload.acao === 'endereco_excluir'))
+            atualizarMapaDeEndereco();
+        if (registroAberto() !== r || !$('det').open || !document.getElementById('endCorpo'))
             return null;
         if (!res.ok && res.erro === 'sessao') {
             limparSessao();
@@ -246,7 +250,6 @@ $('detBody').addEventListener('submit', async (e) => {
         return;
     enderecoAtual = res.endereco || null;
     renderEndereco();
-    atualizarMapaDeEndereco();
     $('endMsg').textContent = '';
     $('endCorpo').querySelector('[data-end="editar"]')?.focus();
 });
@@ -272,7 +275,6 @@ $('detBody').addEventListener('click', async (e) => {
             return;
         enderecoAtual = null;
         renderEndereco();
-        atualizarMapaDeEndereco();
         $('endCorpo').querySelector('[data-end="editar"]')?.focus();
     }
 });

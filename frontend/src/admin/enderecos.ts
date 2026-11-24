@@ -129,13 +129,15 @@ function mostrarErrosEndereco(erros: Record<string, string>): boolean {
 }
 
 // Chama o servidor; só atualiza a tela se a ficha ainda é desta pessoa.
-async function chamarEndereco(r: Registro, payload: object, botao?: HTMLButtonElement): Promise<EnderecoResult | null> {
+async function chamarEndereco(r: Registro, payload: { acao: string; [chave: string]: unknown }, botao?: HTMLButtonElement): Promise<EnderecoResult | null> {
   const s = lerSessao();
   if (!s) { $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
   if (botao) botao.disabled = true;
   try {
     const res = await api<EnderecoResult>({ ...payload, linha: r.linha, token: s.token });
-    if (lerSessao()?.token !== s.token || registroAberto() !== r || !$<HTMLDialogElement>('det').open || !document.getElementById('endCorpo')) return null;
+    if (lerSessao()?.token !== s.token) return null;
+    if (res.ok && (payload.acao === 'endereco_salvar' || payload.acao === 'endereco_excluir')) atualizarMapaDeEndereco();
+    if (registroAberto() !== r || !$<HTMLDialogElement>('det').open || !document.getElementById('endCorpo')) return null;
     if (!res.ok && res.erro === 'sessao') { limparSessao(); $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
     if (!res.ok) $('endMsg').textContent = ERROS_ENDERECO[res.erro || ''] || 'Não foi possível concluir. Atualize o painel e tente de novo.';
     return res;
@@ -218,7 +220,6 @@ $('detBody').addEventListener('submit', async e => {
   if (!res?.ok) return;
   enderecoAtual = res.endereco || null;
   renderEndereco();
-  atualizarMapaDeEndereco();
   $('endMsg').textContent = '';
   $('endCorpo').querySelector<HTMLButtonElement>('[data-end="editar"]')?.focus();
 });
@@ -237,7 +238,6 @@ $('detBody').addEventListener('click', async e => {
     if (!res?.ok) return;
     enderecoAtual = null;
     renderEndereco();
-    atualizarMapaDeEndereco();
     $('endCorpo').querySelector<HTMLButtonElement>('[data-end="editar"]')?.focus();
   }
 });
