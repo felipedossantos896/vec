@@ -115,6 +115,9 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 			existe = ` AND EXISTS (SELECT 1 FROM enderecos WHERE resposta_id = respostas.id)`
 		}
 		params = append(params, *e.VersaoEsperada)
+		if e.Ponto == nil && !e.RevogarPonto {
+			guarda += ` AND (COALESCE(enderecos.geo_precisao, '') <> 'manual' OR ` + mesmaConsultaGeo + `)`
+		}
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `INSERT INTO enderecos (resposta_id, ` + enderecoCols + `, lat, lng, geo_fonte, geo_precisao, geo_em)

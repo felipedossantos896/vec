@@ -15,6 +15,7 @@ const ERROS_ENDERECO: Record<string, string> = {
   consentimento_ponto: 'Confirme a autorização específica para mostrar a posição exata.',
   ponto_invalido: 'Escolha um ponto válido no mapa.',
   endereco_desatualizado: 'O endereço mudou em outra sessão. Recarregue o endereço antes de editar.',
+  ponto_reconfirmar: 'O endereço mudou. Confirme o alfinete para este endereço ou escolha voltar à aproximação.',
   nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
   dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
@@ -215,6 +216,14 @@ $('detBody').addEventListener('submit', async e => {
   if (!mostrarErrosEndereco(regrasEndereco.validar(form, consentimento))) return;
   const revogarPonto = document.querySelector<HTMLInputElement>('#end_revogar_ponto')?.checked || false;
   const autorizado = $<HTMLInputElement>('end_ponto_consentimento').checked;
+  const atual = enderecoAtual;
+  const mudou = atual?.ponto?.exato && CAMPOS_ENDERECO.some(([k]) =>
+    (k === 'cep' ? regrasEndereco.soDigitosCep(form[k]) : form[k].trim()) !== atual[k]);
+  if (mudou && !pontoRascunho && !revogarPonto) {
+    $('endMsg').textContent = ERROS_ENDERECO.ponto_reconfirmar;
+    $('endMapa').focus();
+    return;
+  }
   if (pontoRascunho && !revogarPonto && !autorizado) {
     $('endMsg').textContent = ERROS_ENDERECO.consentimento_ponto;
     $('end_ponto_consentimento').focus();

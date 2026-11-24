@@ -172,11 +172,15 @@ func (s *Server) enderecoSalvar(ctx context.Context, req adminReq) reply {
 		return s.internal("endereco_salvar", err)
 	}
 	if !ok {
-		_, _, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
+		atual, _, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
 		if err != nil {
 			return s.internal("endereco_salvar", err)
 		}
 		if visivel {
+			if atual.Ponto != nil && atual.Ponto.Exato && e.Ponto == nil && !e.RevogarPonto &&
+				e.VersaoEsperada != nil && *e.VersaoEsperada == atual.AtualizadoEm {
+				return failReply("ponto_reconfirmar")
+			}
 			return failReply("endereco_desatualizado")
 		}
 		return failReply("nao_encontrado")

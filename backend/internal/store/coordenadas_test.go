@@ -56,6 +56,8 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
 	e.Ponto, e.RevogarPonto = nil, true
 	versao = now.Add(time.Second).Format(time.RFC3339Nano)
+	edicaoAntiga.VersaoEsperada = &versao
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(5*time.Second))
 	var script strings.Builder
 	script.WriteString(`CREATE TABLE respostas (id INTEGER PRIMARY KEY, excluido_em TEXT, celula TEXT);
@@ -79,7 +81,7 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	cmd := exec.Command(bin, "-batch", "-bail", ":memory:")
 	cmd.Stdin = strings.NewReader(script.String())
 	out, err := cmd.CombinedOutput()
-	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
+	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
 	if err != nil || strings.TrimSpace(string(out)) != esperado {
 		t.Fatalf("SQLite: %v\n%s", err, out)
 	}
