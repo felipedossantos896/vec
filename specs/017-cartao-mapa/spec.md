@@ -1,6 +1,6 @@
 # Spec 017 — Cartão do mapa: abre ao passar o mouse e visual novo
 
-- Status: **Aprovada** (2026-11-24)
+- Status: **Entregue** (v1.62.0, 2026-11-24) · [validação](release-validation.md)
 - Data: 2026-11-24
 - ADRs: [0011](../../docs/architecture/adr/0011-rostos-no-mapa.md) (rostos no mapa) e
   [0009](../../docs/architecture/adr/0009-identidade-visual.md). Sem ADR nova.
