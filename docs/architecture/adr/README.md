@@ -23,6 +23,7 @@ Este diretório documenta propostas e decisões para a evolução incremental do
 - [ADR-0010 — Navegação centrada no mapa](./0010-navegacao-centrada-no-mapa.md)
 - [ADR-0011 — Rostos no mapa e privacidade](./0011-rostos-no-mapa.md)
 - [ADR-0012 — Pacote de ícones do painel](./0012-pacote-de-icones.md)
+- [ADR-0013 — Alfinete residencial confirmado](./0013-alfinete-confirmado.md)
 
 ## Contexto técnico observado
 - Go serve o formulário público e o painel.

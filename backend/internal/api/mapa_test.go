@@ -12,6 +12,18 @@ import (
 
 func f(v float64) *float64 { return &v }
 
+func TestMapaSeparaConfirmadosEReunePontosIguais(t *testing.T) {
+	lat, lng := -3.731234, -38.521234
+	grupos, _, _, _ := agruparMapa([]store.PontoMapa{
+		{Linha: 1, Lat: &lat, Lng: &lng, Precisao: store.GeoRua},
+		{Linha: 2, Lat: &lat, Lng: &lng, Precisao: store.GeoManual},
+		{Linha: 3, Lat: &lat, Lng: &lng, Precisao: store.GeoManual},
+	})
+	if len(grupos) != 2 || !grupos[0].Exato || len(grupos[0].Linhas) != 2 || grupos[0].Lat != lat || grupos[0].Lng != lng || grupos[1].Exato || grupos[1].Lat == lat {
+		t.Fatalf("agrupamento inesperado: %#v", grupos)
+	}
+}
+
 func TestAgruparMapaNaGradeSemCoordenadaExata(t *testing.T) {
 	pontos := []store.PontoMapa{
 		{Linha: 2, Lat: f(-3.731234), Lng: f(-38.521234), Precisao: store.GeoRua},

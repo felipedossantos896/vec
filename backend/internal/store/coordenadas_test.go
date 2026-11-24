@@ -2,10 +2,12 @@ package store
 
 import (
 	"context"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
 
+	"vec/backend/internal/backup"
 	"vec/backend/internal/turso"
 )
 
@@ -16,7 +18,7 @@ func TestSalvarEnderecoInvalidaCoordenadaSoQuandoMudaAConsulta(t *testing.T) {
 	}
 	sql := db.doCalls[0][0].SQL
 	for _, col := range []string{"lat", "lng", "geo_fonte", "geo_precisao", "geo_em"} {
-		if !strings.Contains(sql, col+" = CASE WHEN "+mesmaConsultaGeo+" THEN "+col+" END") {
+		if !strings.Contains(sql, col+" = COALESCE(excluded."+col+", CASE WHEN "+mesmaConsultaGeo+" THEN "+col+" END)") {
 			t.Errorf("%s não é invalidada quando a consulta muda: %s", col, sql)
 		}
 	}
@@ -25,10 +27,54 @@ func TestSalvarEnderecoInvalidaCoordenadaSoQuandoMudaAConsulta(t *testing.T) {
 			t.Errorf("mudança de %s não invalida a coordenada", campo)
 		}
 	}
-	for _, campo := range []string{"numero", "complemento"} {
-		if strings.Contains(mesmaConsultaGeo, campo) {
-			t.Errorf("%s não vai ao Nominatim e não deve invalidar a coordenada", campo)
+}
+
+func TestPontoManualNoSQLite(t *testing.T) {
+	bin, err := exec.LookPath("sqlite3")
+	if err != nil {
+		t.Skip("sqlite3 não disponível")
+	}
+	now := time.Date(2026, 11, 21, 12, 0, 0, 0, time.UTC)
+	ctx := context.Background()
+	db := &recordingDB{}
+	st := &Store{DB: db}
+	e := enderecoTeste
+	lat, lng := -3.731234, -38.521234
+	e.Ponto = &PontoEndereco{Lat: lat, Lng: lng, Exato: true}
+	e.AtualizadoEm = now.Format(time.RFC3339Nano)
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, enderecoTeste, "lider", now)
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(time.Second))
+	st.GravarCoordenada(ctx, 7, enderecoTeste, nil, nil, "nominatim", GeoNaoEncontrado, now.Add(2*time.Second))
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(3*time.Second)) // versão obsoleta
+	st.SalvarEndereco(ctx, Scope{Celulas: []string{"Outra"}}, 7, e, "lider", now.Add(4*time.Second))
+	e.Ponto, e.RevogarPonto = nil, true
+	e.AtualizadoEm = now.Add(time.Second).Format(time.RFC3339Nano)
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(5*time.Second))
+	var script strings.Builder
+	script.WriteString(`CREATE TABLE respostas (id INTEGER PRIMARY KEY, excluido_em TEXT, celula TEXT);
+	CREATE TABLE enderecos (resposta_id INTEGER PRIMARY KEY, cep TEXT, logradouro TEXT, numero TEXT, complemento TEXT, bairro TEXT, cidade TEXT, uf TEXT, consentimento_em TEXT, consentimento_por TEXT, atualizado_em TEXT, atualizado_por TEXT, lat REAL, lng REAL, geo_fonte TEXT, geo_precisao TEXT, geo_em TEXT);
+	INSERT INTO respostas VALUES (7,NULL,'Hope');`)
+	for _, call := range db.doCalls {
+		stmt := call[0]
+		partes := strings.Split(stmt.SQL, "?")
+		if len(partes) != len(stmt.Args)+1 {
+			t.Fatalf("parâmetros do SQL: %d vs %d", len(partes)-1, len(stmt.Args))
 		}
+		for i, arg := range stmt.Args {
+			lit, err := backup.Literal(arg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			script.WriteString(partes[i] + lit)
+		}
+		script.WriteString(partes[len(partes)-1] + "; SELECT changes(),COALESCE(geo_precisao,'-'),COALESCE(lat,0) FROM enderecos;")
+	}
+	cmd := exec.Command(bin, "-batch", "-bail", ":memory:")
+	cmd.Stdin = strings.NewReader(script.String())
+	out, err := cmd.CombinedOutput()
+	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
+	if err != nil || strings.TrimSpace(string(out)) != esperado {
+		t.Fatalf("SQLite: %v\n%s", err, out)
 	}
 }
 

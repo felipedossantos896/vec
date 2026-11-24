@@ -79,17 +79,31 @@ function cartaoPessoa(r) {
       <div><b class="cartao-nome" title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b><span class="cartao-sub">${esc(sub.texto)}</span></div></div>
     ${sub.extras.length ? `<ul class="cartao-papeis">${sub.extras.map(x => `<li data-selo="${x.selo}"${x.selo === 'celula' ? ` data-cor="${corDaCelula(p.destaque.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(x.selo)}</span>${esc(x.texto)}</li>`).join('')}</ul>` : ''}
     <div class="cartao-a">${contato}<button type="button" class="b-perfil" data-mapa-pessoa="${r.linha}" aria-label="Ver o perfil de ${esc(nome)}">Ver perfil ${icone('seguir', { classe: 'ic-18' })}</button></div>
+    <button type="button" class="btn-link" data-mapa-pessoa="${r.linha}" data-mapa-ajustar>Ajustar localização</button>
   </div>`;
 }
 let mapaPedindo = false; // evita pedir o mapa de novo enquanto um pedido está no ar
+let revisaoMapa = 0;
+function invalidarDadosMapa() {
+    revisaoMapa++;
+    dadosMapa = null;
+    ultimoFiltro = null;
+    fecharCartao({ som: false });
+    fecharLeque();
+    camadaGrupos?.clearLayers();
+    camadaFerr?.clearLayers();
+}
 async function carregarMapa() {
     const s = lerSessao();
     if (!s || mapaPedindo)
         return;
     mapaPedindo = true;
+    const revisao = revisaoMapa;
     $('mapaStatus').textContent = 'Carregando mapa…';
     try {
         const res = await api({ acao: 'mapa', token: s.token });
+        if (revisao !== revisaoMapa || lerSessao()?.token !== s.token)
+            return;
         if (!res.ok) {
             if (res.erro === 'sessao') {
                 limparSessao();
@@ -108,6 +122,8 @@ async function carregarMapa() {
     }
     finally {
         mapaPedindo = false;
+        if (revisao !== revisaoMapa && lerSessao() && estado.aba === 'acompanhar')
+            void carregarMapa();
     }
 }
 // Chamado ao abrir a aba: recarrega se os dados estiverem velhos.
@@ -215,7 +231,7 @@ function desenharGrupos(f) {
         const pessoas = g.linhas.map(regDe).filter((r) => Boolean(r))
             .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
         const acesas = pessoas.filter(r => naLente(estado.lente, r));
-        const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
+        const rotulo = `${g.exato ? 'Ponto confirmado' : 'Área aproximada'} ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
         const grupo = grupoMult(pessoas[0]?.linha);
         const corPino = (r) => grupo === 'B' ? '#15171c' : corDoRosto(r);
         const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
@@ -224,10 +240,10 @@ function desenharGrupos(f) {
         const leque = pos.length ? `<span class="leque" aria-hidden="true"><svg class="lq-linhas" width="1" height="1" aria-hidden="true">${pos.map(p => `<line x1="0" y1="0" x2="${p.x}" y2="${p.y}"/>`).join('')}</svg>` +
             pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeComPapel(r))}">${rostoPin(r, corPino(r))}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
         const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-            `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${leque}`;
+            `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${g.exato ? '<span class="rp-alfinete" aria-hidden="true"></span>' : ''}${leque}`;
         const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
         const m = L.marker([g.lat, g.lng], {
-            icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
+            icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, g.exato ? t + 30 : Math.round(t / 2) + 3] }),
             keyboard: true, title: rotulo
         });
         m.addTo(camadaGrupos);
@@ -361,7 +377,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
             cartaoDe.pop.update();
         } // agora cabe na tela
         if (focar)
-            cartaoDe.pop.getElement()?.querySelector('.b-contato')?.focus({ preventScroll: true });
+            cartaoDe.pop.getElement()?.querySelector('.b-contato, .b-perfil')?.focus({ preventScroll: true });
         return;
     }
     // Num grupo, o cartão abre acima do leque inteiro, para não cobrir os outros rostos
@@ -370,7 +386,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
     g.el.querySelectorAll('.lq-rosto').forEach((b, k) => b.classList.toggle('ativo', k === j));
     // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
     const f = folgasMapa();
-    const pop = L.popup({ offset: [0, topoLeque - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
+    const pop = L.popup({ offset: [0, topoLeque + 3 - g.m.options.icon.options.iconAnchor[1]], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
         .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
     cartaoDe = { g, j, pop, fixo };
     const el = pop.getElement();
@@ -381,7 +397,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
         el.addEventListener('mouseleave', agendarFechar);
     }
     if (focar)
-        el?.querySelector('.b-contato')?.focus({ preventScroll: true });
+        el?.querySelector('.b-contato, .b-perfil')?.focus({ preventScroll: true });
 }
 // O mapa do Leaflet se move com transform, então o cartão fica sempre abaixo do painel, dos
 // filtros e da ferramenta, que flutuam por cima (Spec 016). O cartão aberto pelo mouse não
@@ -469,8 +485,11 @@ document.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
     const b = e.target instanceof Element ? e.target.closest('[data-mapa-pessoa]') : null;
     const r = b ? regDe(Number(b.dataset.mapaPessoa)) : undefined;
-    if (r)
-        abrirDetalhe(r);
+    if (r) {
+        const ajustar = b?.hasAttribute('data-mapa-ajustar');
+        fecharCartao({ som: false });
+        abrirDetalhe(r, ajustar);
+    }
 });
 // "Ver quem não tem endereço": abre a lista abaixo do mapa
 $('mapaVazio').addEventListener('click', e => {

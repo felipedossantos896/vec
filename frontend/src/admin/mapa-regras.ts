@@ -1,9 +1,8 @@
 // ══════ MAPA: REGRAS PURAS ══════
 // Recorte dos dados do mapa pelo filtro atual, sem tocar no DOM nem no Leaflet,
-// para poder ser testado em Node. O servidor já entrega só o escopo do usuário e
-// só o centro de cada área de ~300 m (nunca a coordenada de alguém).
+// para poder ser testado em Node. Os pontos confirmados têm a marca exato.
 
-type GrupoMapa = { lat: number; lng: number; linhas: number[]; peloBairro: number };
+type GrupoMapa = { lat: number; lng: number; linhas: number[]; peloBairro: number; exato?: boolean };
 type DestaqueMapa = { liderCelula: string[]; casaCelula: string[] };
 type DadosMapa = { grupos: GrupoMapa[]; soCidade: number[]; naoLocalizados: number[]; pendentes: number[]; destaques?: Record<string, DestaqueMapa> };
 type PessoaNoMapa = { papel?: string; setor?: string; destaque?: DestaqueMapa };

@@ -29,7 +29,17 @@ type Endereco struct {
 	ConsentimentoPor string
 	AtualizadoEm     string
 	AtualizadoPor    string
+	Ponto            *PontoEndereco
+	RevogarPonto     bool
 }
+
+type PontoEndereco struct {
+	Lat   float64 `json:"lat"`
+	Lng   float64 `json:"lng"`
+	Exato bool    `json:"exato"`
+}
+
+const GeoManual = "manual"
 
 const enderecoCols = `cep, logradouro, numero, complemento, bairro, cidade, uf,
 	consentimento_em, consentimento_por, atualizado_em, atualizado_por`
@@ -46,7 +56,7 @@ func (s *Store) Endereco(ctx context.Context, sc Scope, respostaID int64) (e End
 	dono := `SELECT id FROM respostas WHERE id = ? AND excluido_em IS NULL AND ` + cond
 	res, err := s.DB.Do(ctx,
 		turso.Stmt{SQL: dono, Args: alvo},
-		turso.Stmt{SQL: `SELECT ` + enderecoCols + ` FROM enderecos WHERE resposta_id IN (` + dono + `)`, Args: alvo},
+		turso.Stmt{SQL: `SELECT ` + enderecoCols + `, lat, lng, geo_precisao FROM enderecos WHERE resposta_id IN (` + dono + `)`, Args: alvo},
 	)
 	if err != nil || len(res[0].Rows) == 0 {
 		return Endereco{}, false, false, err
@@ -55,18 +65,28 @@ func (s *Store) Endereco(ctx context.Context, sc Scope, respostaID int64) (e End
 		return Endereco{}, false, true, nil
 	}
 	r := res[1].Rows[0]
+	var ponto *PontoEndereco
+	if len(r) >= 14 {
+		lat, temLat := r[11].(float64)
+		lng, temLng := r[12].(float64)
+		if temLat && temLng {
+			ponto = &PontoEndereco{Lat: lat, Lng: lng, Exato: turso.Str(r, 13) == GeoManual}
+		}
+	}
 	return Endereco{
 		CEP: turso.Str(r, 0), Logradouro: turso.Str(r, 1), Numero: turso.Str(r, 2),
 		Complemento: turso.Str(r, 3), Bairro: turso.Str(r, 4), Cidade: turso.Str(r, 5), UF: turso.Str(r, 6),
 		ConsentimentoEm: turso.Str(r, 7), ConsentimentoPor: turso.Str(r, 8),
 		AtualizadoEm: turso.Str(r, 9), AtualizadoPor: turso.Str(r, 10),
+		Ponto: ponto,
 	}, true, true, nil
 }
 
 // mesmaConsultaGeo é verdadeira quando mudam só número, complemento ou
 // consentimento: a coordenada (em nível de rua) continua valendo. Na atualização do
 // upsert, os nomes sem prefixo são os valores antigos da linha.
-const mesmaConsultaGeo = `(cep = excluded.cep AND logradouro = excluded.logradouro AND bairro = excluded.bairro AND cidade = excluded.cidade AND uf = excluded.uf)`
+const mesmaConsultaGeo = `(cep = excluded.cep AND logradouro = excluded.logradouro AND bairro = excluded.bairro AND cidade = excluded.cidade AND uf = excluded.uf
+	AND (COALESCE(geo_precisao, '') <> 'manual' OR (numero = excluded.numero AND complemento = excluded.complemento)))`
 
 // SalvarEndereco grava ou troca o endereço de um cadastro do escopo, registrando o
 // consentimento informado agora por quem salva. Devolve false se o cadastro não
@@ -76,22 +96,42 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 	if !ok {
 		return false, nil
 	}
-	quando := iso(now)
+	quando := now.UTC().Format(time.RFC3339Nano)
+	var lat, lng, fonte, precisao, em any
+	guarda, existe := "", ""
+	preservar := mesmaConsultaGeo
+	if e.RevogarPonto {
+		preservar = `0 = 1`
+	}
+	if e.Ponto != nil {
+		lat, lng, fonte, precisao, em = e.Ponto.Lat, e.Ponto.Lng, GeoManual, GeoManual, quando
+	}
+	if e.Ponto != nil || e.RevogarPonto {
+		guarda = ` WHERE enderecos.atualizado_em = ?`
+	}
+	params := append([]any{e.CEP, e.Logradouro, e.Numero, e.Complemento, e.Bairro, e.Cidade, e.UF,
+		quando, por, quando, por, lat, lng, fonte, precisao, em, respostaID}, args...)
+	if guarda != "" && e.AtualizadoEm != "" {
+		existe = ` AND EXISTS (SELECT 1 FROM enderecos WHERE resposta_id = respostas.id)`
+	}
+	if guarda != "" {
+		params = append(params, e.AtualizadoEm)
+	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `INSERT INTO enderecos (resposta_id, ` + enderecoCols + `)
-		      SELECT id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM respostas WHERE id = ? AND excluido_em IS NULL AND ` + cond + `
+		SQL: `INSERT INTO enderecos (resposta_id, ` + enderecoCols + `, lat, lng, geo_fonte, geo_precisao, geo_em)
+		      SELECT id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM respostas WHERE id = ? AND excluido_em IS NULL AND ` + cond + existe + `
 		      ON CONFLICT(resposta_id) DO UPDATE SET
-		      lat = CASE WHEN ` + mesmaConsultaGeo + ` THEN lat END, lng = CASE WHEN ` + mesmaConsultaGeo + ` THEN lng END,
-		      geo_fonte = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_fonte END,
-		      geo_precisao = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_precisao END,
-		      geo_em = CASE WHEN ` + mesmaConsultaGeo + ` THEN geo_em END,
+		      lat = COALESCE(excluded.lat, CASE WHEN ` + preservar + ` THEN lat END),
+		      lng = COALESCE(excluded.lng, CASE WHEN ` + preservar + ` THEN lng END),
+		      geo_fonte = COALESCE(excluded.geo_fonte, CASE WHEN ` + preservar + ` THEN geo_fonte END),
+		      geo_precisao = COALESCE(excluded.geo_precisao, CASE WHEN ` + preservar + ` THEN geo_precisao END),
+		      geo_em = COALESCE(excluded.geo_em, CASE WHEN ` + preservar + ` THEN geo_em END),
 		      cep = excluded.cep, logradouro = excluded.logradouro,
 		      numero = excluded.numero, complemento = excluded.complemento, bairro = excluded.bairro,
 		      cidade = excluded.cidade, uf = excluded.uf,
 		      consentimento_em = excluded.consentimento_em, consentimento_por = excluded.consentimento_por,
-		      atualizado_em = excluded.atualizado_em, atualizado_por = excluded.atualizado_por`,
-		Args: append([]any{e.CEP, e.Logradouro, e.Numero, e.Complemento, e.Bairro, e.Cidade, e.UF,
-			quando, por, quando, por, respostaID}, args...),
+		      atualizado_em = excluded.atualizado_em, atualizado_por = excluded.atualizado_por` + guarda,
+		Args: params,
 	})
 	if err != nil {
 		return false, err
@@ -143,7 +183,8 @@ type PendenteGeo struct {
 func (s *Store) GravarCoordenada(ctx context.Context, respostaID int64, consultado Endereco, lat, lng *float64, fonte, precisao string, now time.Time) (bool, error) {
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `UPDATE enderecos SET lat = ?, lng = ?, geo_fonte = ?, geo_precisao = ?, geo_em = ?
-		      WHERE resposta_id = ? AND cep = ? AND logradouro = ? AND bairro = ? AND cidade = ? AND uf = ?`,
+		      WHERE resposta_id = ? AND cep = ? AND logradouro = ? AND bairro = ? AND cidade = ? AND uf = ?
+		        AND COALESCE(geo_precisao, '') <> 'manual'`,
 		Args: []any{numOuNulo(lat), numOuNulo(lng), fonte, precisao, iso(now), respostaID,
 			consultado.CEP, consultado.Logradouro, consultado.Bairro, consultado.Cidade, consultado.UF},
 	})

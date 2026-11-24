@@ -10,6 +10,8 @@ mapa. Hoje o mapa mostra áreas de ~300 m com contagens, e os nomes só ao tocar
 posição juntos tornam a pessoa mais identificável.
 
 ## Decisão proposta
+
+O [ADR-0013](./0013-alfinete-confirmado.md) complementa esta regra para pontos confirmados manualmente com autorização específica.
 - **Mesmo escopo de hoje:** só quem já vê a pessoa na lista vê o rosto no mapa; o
   servidor continua mandando só o centro da área de ~300 m, nunca a coordenada.
 - **Pessoas na mesma área** aparecem empilhadas (rostos sobrepostos com o número); o

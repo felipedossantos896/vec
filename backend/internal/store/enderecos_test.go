@@ -109,7 +109,7 @@ func TestSalvarEnderecoRegistraConsentimentoDeQuemSalva(t *testing.T) {
 	}
 	args := db.doCalls[0][0].Args
 	want := []any{"60000000", "Rua Exemplo", "10", "Casa B", "Centro", "Fortaleza", "CE",
-		"2026-11-20T16:00:00Z", "lider", "2026-11-20T16:00:00Z", "lider", int64(7)}
+		"2026-11-20T16:00:00Z", "lider", "2026-11-20T16:00:00Z", "lider", nil, nil, nil, nil, nil, int64(7)}
 	for i, w := range want {
 		if args[i] != w {
 			t.Fatalf("arg %d = %#v, queria %#v (todos: %#v)", i, args[i], w, args)
