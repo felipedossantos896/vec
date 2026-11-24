@@ -14,3 +14,7 @@
 - Branch de revisão: `docs/spec-018-t001-revisao`.
 - Evidência: grafo, Spec e ADR conferidos. Preview e testes de aplicação ficam pendentes.
 - Próximo passo: registrar as decisões aprovadas e atualizar a Spec, a ADR e o grafo conforme necessário. A T002 / #205 aguarda a conclusão da T001.
+
+## Decisão registrada em 24/11/2026
+
+Escopo inicial aprovado durante a revisão da T001. O preview nas duas dimensões ainda precisa ser validado. Atualizar o plano e o grafo de entrega para refletir o adiamento de P2 antes de concluir a T001. A T002 aguarda essa conclusão.

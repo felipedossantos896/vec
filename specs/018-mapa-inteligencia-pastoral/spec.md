@@ -49,3 +49,7 @@ Evoluir a Área para central visual de acompanhamento pastoral, com mapa legíve
 
 ## Questões para aprovação
 Preview claro versus painel escuro atual; menu compacto opcional; apresentação das etapas; limiar/estratégia de supressão do P2; necessidade real de novo provedor. Nenhuma decisão pendente autoriza implementação dessa parte.
+
+## Decisão de escopo — T001
+
+Escopo da primeira entrega aprovado em 24/11/2026. Validar preview com superfícies claras de alto contraste e menu grafite em 390×844 e 1440×900. Adiar o menu compacto. Exibir as seis etapas sob demanda, com estados independentes, quando a fonte existente sustentar a apresentação. Manter Leaflet/OSM. Adiar P2 nesta entrega. A aprovação final da Spec permanece pendente da validação do preview.

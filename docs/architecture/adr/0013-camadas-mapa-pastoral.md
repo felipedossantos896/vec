@@ -22,4 +22,8 @@ Mapa único sem modos (menor complexidade, menor flexibilidade); migração para
 Mais estados de UI e testes de coerência; menos poluição visual. P2 pode ser inviável em células pequenas; nesse caso não mostrar agregação. Não criar novas fontes de dados nem alterar permissões.
 
 ## Validação
-Testes de escopo, precisão, grupos pequenos, ataques de diferença entre filtros, ausência de dados pessoais em requisições externas, fallback de tiles e lista, performance e acessibilidade. 
+Testes de escopo, precisão, grupos pequenos, ataques de diferença entre filtros, ausência de dados pessoais em requisições externas, fallback de tiles e lista, performance e acessibilidade.
+
+## Recorte da primeira entrega
+
+Escopo inicial aprovado em 24/11/2026 com Leaflet/OSM e centros aproximados existentes. P2 adiado. Territórios e calor exigem revisão específica de privacidade antes de serem replanejados, incluindo limiar de supressão e proteção contra inferência entre filtros. O status final deste ADR acompanha a conclusão da T001.
