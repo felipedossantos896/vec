@@ -30,8 +30,8 @@ test('rotula os três grupos de filtros', () => {
   }
 });
 
-test('indicadores da Spec 009: cinco números com tendência e os painéis do preview', () => {
-  for (const metrica of ['Pessoas na área', 'Novos cadastros', 'Jornada completa', 'Com discipulador', 'Precisam de cuidado']) {
+test('indicadores mantêm quatro números e os painéis da Área', () => {
+  for (const metrica of ['Pessoas na área', 'Novos cadastros', 'Jornada completa', 'Com discipulador']) {
     assert.match(charts, new RegExp(metrica));
   }
   for (const painel of ['Cadastros por mês', 'Faixa etária', 'Treinamentos', 'Onde agir']) {
@@ -41,9 +41,9 @@ test('indicadores da Spec 009: cinco números com tendência e os painéis do pr
   assert.match(charts, /class="chart-scroll" role="region" aria-label=/);
 });
 
-test('Onde agir reutiliza os filtros de Pessoas e a lente da Área', () => {
+test('Onde agir reutiliza os filtros de Pessoas sem expor métricas de cuidado', () => {
   assert.match(charts, /id="indAgir"/);
   assert.match(charts, /data-sit="semDiscipulador"/);
   assert.match(charts, /data-sit="batizar"/);
-  assert.match(charts, /data-lente="cuidado"/);
+  assert.doesNotMatch(charts, /Precisam de cuidado|precisam_cuidado|data-lente="cuidado"/);
 });

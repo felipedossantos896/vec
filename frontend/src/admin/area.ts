@@ -1,27 +1,11 @@
 // ══════ ÁREA (Spec 009, ADR-0010) ══════
-// Tela inicial: o mapa com os rostos no topo (mapa.ts desenha), o painel de lentes e
-// ferramentas e "Fale com eles esta semana". O resto do antigo Acompanhar segue abaixo.
-
-// Quem entra em cada lente. "Precisam de cuidado" é a mesma soma dos cards de cuidado.
 function naLente(lente: string, r: Registro): boolean {
-  if (lente === 'cuidado') return algum(CUIDAR)(r);
   if (lente === 'semDisc') return SITUACOES.semDiscipulador.f(r);
   if (lente === 'servir') return algum(POTENCIAL)(r);
   return true;
 }
 
-function pessoaArea(r: Registro): PessoaArea {
-  const dias = r._contato ? Math.floor((Date.now() - r._contato.getTime()) / 864e5) : null;
-  return { nome: nomeCurto(r), diasSemContato: dias, semDiscipulador: SITUACOES.semDiscipulador.f(r), naoBatizado: r.recebeuJesus === 'S' && r.batismo !== 'S', semCelula: !r.celula };
-}
-
-function botaoWhats(r: Registro, classe = 'b-zap'): string {
-  const url = regrasArea.whatsapp(r.telefone as string | undefined);
-  return url ? `<a class="${classe}" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp de ${esc(r.nome)}">WhatsApp</a>` : '';
-}
-
 function renderPainelArea(base: Registro[]) {
-  const nCuidado = base.filter(r => naLente('cuidado', r)).length;
   const celulas = [...new Set(base.map(r => r.celula).filter(Boolean))] as string[];
   const lentes = regrasArea.LENTES.map(([k, rotulo]) => {
     const n = k === 'todos' ? base.length : base.filter(r => naLente(k, r)).length;
@@ -29,30 +13,18 @@ function renderPainelArea(base: Registro[]) {
   }).join('');
   const legenda = celulas.sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c =>
     `<li>${celulaChip(c)}<b>${base.filter(r => r.celula === c).length}</b></li>`).join('');
-  $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div><div><b>${nCuidado}</b><span>precisam de cuidado</span></div></div>
+  $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div></div>
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
     <p class="ap-kick">Ferramentas</p><div class="ap-ferr"><button type="button" data-ferr="anfPainel">Escolher anfitrião ${icone('seguir', { classe: 'ic-16' })}</button><button type="button" data-ferr="multPainel">Planejar multiplicação ${icone('seguir', { classe: 'ic-16' })}</button>${celulasNova().length ? `<button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button>` : ''}</div>`;
   $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Toque num rosto para ver a pessoa e agir.`;
 }
 
-function renderFaleCom(base: Registro[]) {
-  const precisam = base.filter(r => naLente('cuidado', r));
-  const top = regrasArea.urgentes(precisam.map(r => ({ ...pessoaArea(r), r })), 6);
-  $('faleCom').innerHTML = `<header class="fale-h"><h2 id="faleTitulo">Fale com eles esta semana</h2><p>${top.length ? `Os ${top.length === 1 ? 'mais urgente' : `${top.length} mais urgentes`}, na ordem — marcados com ! no mapa.` : 'Ninguém precisando de cuidado agora.'}</p></header>` +
-    (!top.length && base.length ? regrasEstados.html(regrasEstados.cuidadoEmDia(estado.celula ? `da ${estado.celula}` : estado.setor ? `do setor ${estado.setor}` : 'do seu escopo')) : '') +
-    (top.length ? `<ul class="fale-lista">${top.map(({ r, ...p }) => `<li class="fale-c" data-cor="${corDaCelula(r.celula as string)}">
-      <div class="fale-t">${avatar(r, 'av-m')}<div><b title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</b><span>${celulaOuPapel(r)}</span></div></div>
-      <p class="fale-m">${esc(regrasArea.motivo(p))}</p>
-      <div class="fale-a">${botaoWhats(r)}<button type="button" class="b-pri" data-contato="${r.linha}">Contato feito</button><button type="button" class="b-sec" data-mapa-pessoa="${r.linha}">Ficha</button></div></li>`).join('')}</ul>` : '');
-}
-
 function renderArea() {
   if (estado.aba !== 'acompanhar') return;
   const base = baseIndicadores();
   renderPainelArea(base);
-  renderFaleCom(base);
-  $('gvResumo').textContent = regrasGaveta.resumo(base.filter(r => naLente('cuidado', r)).length, base.length);
+  $('gvResumo').textContent = `${plural(base.length, 'pessoa', 'pessoas')} no recorte`;
 }
 
 $('areaPainel').addEventListener('click', e => {
@@ -87,12 +59,3 @@ $('areaFerrPainel').addEventListener('click', e => {
 });
 // O resumo do painel não fecha a ferramenta: quem sai é o "Voltar ao mapa".
 ['anfPainel', 'multPainel'].forEach(k => $(k).querySelector('summary')?.addEventListener('click', e => { if (estado.ferramenta === k) e.preventDefault(); }));
-
-// "Ver todas as pessoas" do estado "tudo em dia"
-$('faleCom').addEventListener('click', e => {
-  if (!(e.target instanceof Element) || !e.target.closest('[data-ir="cadastros"]')) return;
-  Object.assign(estado, { situacao: 'todos', busca: '' });
-  $<HTMLInputElement>('fBusca').value = '';
-  mostrarAba('cadastros');
-  renderTudo();
-});

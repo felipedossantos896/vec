@@ -73,8 +73,6 @@ function derivar(x: Registro): Registro {
   x._nasc = parseData(x.nascimento);
   x._idade = idade(x._nasc);
   x._jornada = metricasIndicadores.etapasConcluidas(x);
-  x._contato = parseData(x.ultimoContato);
-  x._lembrete = parseData(x.proximoContato);
   x._busca = norm([x.nome, x.discipulador, x.ministerioNome, x.celula].join(' '));
   return x;
 }
@@ -160,7 +158,6 @@ $('chipLista').addEventListener('click', e => {
 
 // Paginação: volta à primeira página quando os filtros mudam
 let limiteLista = regrasPessoas.PAGINA, chaveLista = '';
-const precisaCuidado = (r: Registro): boolean => SITUACOES.semContato.f(r); // o líder de área fica fora (Spec 013)
 
 // Coluna Discipulador: rosto e nome, ou a etiqueta de quem ainda não tem
 function colunaDiscipulador(r: Registro): string {
@@ -178,9 +175,8 @@ function renderLista() {
   const filtrando = estado.busca || estado.setor || estado.celula || estado.situacao !== 'todos';
   const chave = [estado.busca, estado.setor, estado.celula, estado.situacao].join('|');
   if (chave !== chaveLista) { chaveLista = chave; limiteLista = regrasPessoas.PAGINA; }
-  const cuidado = estado.regs.filter(precisaCuidado).length;
   $('countTxt').innerHTML = filtrando ? `Mostrando <b>${lista.length}</b> de ${total}`
-    : `<b>${total}</b> no seu escopo${cuidado ? ` · <button type="button" class="btn-link cuidado-link" data-cuidado>${cuidado} ${cuidado === 1 ? 'precisa' : 'precisam'} de cuidado</button>` : ''}`;
+    : `<b>${total}</b> no seu escopo`;
   renderChips();
 
   if (!lista.length) {
@@ -190,19 +186,18 @@ function renderLista() {
 
   const { mostra, resta } = regrasPessoas.visiveis(lista.length, limiteLista);
   const aberto = $<HTMLDialogElement>('det').open ? $('det').dataset.linha : '';
-  const head = '<div class="thead" aria-hidden="true"><span>Pessoa</span><span>Célula</span><span>Discipulador</span><span>Jornada</span><span>Contato</span></div>';
+  const head = '<div class="thead" aria-hidden="true"><span>Pessoa</span><span>Célula</span><span>Discipulador</span><span>Jornada</span></div>';
   $('list').innerHTML = head + lista.slice(0, mostra).map(r => `
     <button type="button" class="item${String(r.linha) === aberto ? ' sel' : ''}" data-i="${estado.regs.indexOf(r)}" data-linha="${r.linha}"${String(r.linha) === aberto ? ' aria-current="true"' : ''}>
       <span class="it-name">${avatar(r)}<span class="it-nt"><span class="it-n" title="${esc(regrasNomes.completo(r.nome))}">${esc(nomeCurto(r))}</span>${r._idade != null ? `<small>${r._idade} anos</small>` : ''}<span class="it-cel-m">${celulaOuPapel(r)}</span></span></span>
       <span class="it-cell">${celulaOuPapel(r)}</span>
       <span class="it-dsc">${colunaDiscipulador(r)}</span>
       <span class="it-jornada">${regrasLideranca.temTrilha(r) ? `${pips(r)}<span class="jlabel">${r._jornada}/${JORNADA.length}<span class="sr-only"> etapas da jornada</span></span>` : '<span class="nota-fraca">—<span class="sr-only"> sem jornada</span></span>'}</span>
-      <span class="it-contato${precisaCuidado(r) ? ' alerta' : ''}"><span class="sr-only">Último contato: </span>${regrasPessoas.haQuanto(r._contato, new Date())}</span>
       <span class="it-seta" aria-hidden="true">${icone('abrir', { classe: 'ic-18' })}</span>
     </button>`).join('') +
     `<div class="lista-pe"><span>Mostrando ${mostra} de ${lista.length}</span>${resta ? `<button type="button" class="btn-link" data-mais>Carregar mais ${Math.min(resta, regrasPessoas.PAGINA)}</button>` : ''}</div>`;
 }
-// Abre a ficha, mostra mais linhas ou filtra quem precisa de cuidado
+// Abre a ficha ou mostra mais linhas
 $('list').addEventListener('click', e => {
   const alvo = e.target instanceof Element ? e.target : null;
   const limpar = alvo?.closest<HTMLElement>('[data-limpar]')?.dataset.limpar;
@@ -218,11 +213,6 @@ $('list').addEventListener('click', e => {
   const b = alvo?.closest<HTMLButtonElement>('.item');
   const registro = b ? estado.regs[Number(b.dataset.i)] : undefined;
   if (registro) abrirDetalhe(registro);
-});
-$('countTxt').addEventListener('click', e => {
-  if (!(e.target instanceof Element) || !e.target.closest('[data-cuidado]')) return;
-  estado.situacao = 'semContato';
-  renderTudo();
 });
 // Linha da pessoa aberta na ficha fica marcada
 function marcarSelecionado() {

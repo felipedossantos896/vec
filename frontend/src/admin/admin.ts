@@ -40,7 +40,6 @@ type Registro = {
   _idade: number | null;
   _jornada: number;
   _busca: string;
-  _contato: Date | null; // data da anotação mais recente
   _dup: number; // quantos cadastros têm o mesmo nome e nascimento (1 = só este)
   recebeuJesus?: string;
   cafePastor?: string;
@@ -70,7 +69,6 @@ type Registro = {
   consentimentoEm?: string;
   ultimoContato?: string;
   proximoContato?: string; // AAAA-MM-DD do lembrete do contato mais recente (Spec 009)
-  _lembrete?: Date | null;
   fotoUrl?: string; // endereço assinado da foto de perfil ("" = sem foto)
   jornadaDatas?: Record<string, string>; // etapa -> quando foi marcada como concluída
 };
@@ -88,7 +86,7 @@ type UsuarioPainel = {
 };
 type EstadoPainel = {
   nomeUsuario: string; // nome de quem entrou, para a saudação
-  lente: string; // lente do mapa da Área (Spec 009): todos, cuidado, semDisc, servir
+  lente: string; // todos, semDisc, servir
   ferramenta: string; // ferramenta aberta no mapa: '', 'anfPainel' ou 'multPainel' (Spec 009)
   regs: Registro[];
   busca: string;
@@ -120,7 +118,6 @@ const CELULAS = ['Hope', 'Ramos da Videira', 'Ashrei', 'Betânia', 'Vencedores e
 // A que setor cada célula pertence
 const SETOR_DA_CELULA: Record<string, string> = { 'Hope': SETORES[0], 'Ramos da Videira': SETORES[0], 'Ashrei': SETORES[0], 'Betânia': SETORES[1], 'Despertar': SETORES[1], 'Pi-Hairote': SETORES[1], 'Vencedores em Cristo': SETORES[1] };
 
-const DIAS_SEM_CONTATO = 60; // sem anotação há mais tempo que isso, a pessoa entra em Próximos passos
 
 const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> = {
   todos:          { label: 'Todas as situações', f: () => true },
@@ -141,27 +138,26 @@ const SITUACOES: Record<string, { label: string; f: (r: Registro) => boolean }> 
   semVinculo:     { label: 'Discipulador ainda não vinculado', f: r => !!r.discipulador && !r.discipuladorId },
   podeDiscipular: { label: 'Fizeram o Expresso 01 e ainda não discipulam', f: r => r.expresso01 === 'S' && !discipula(r) },
   discipulosDe:   { label: 'Discípulos de…', f: r => !!estado.discipuladorDe && r.discipuladorId === estado.discipuladorDe },
-  semContato:     { label: `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`, f: r => regrasContato.semContato(r._contato, r._lembrete || null, new Date()) }, // o lembrete adia (Spec 009)
   meusDiscipulos: { label: 'Meus discípulos', f: r => !!estado.meuCadastro && r.discipuladorId === estado.meuCadastro },
 };
 // Uma situação por etapa da jornada, usada pelo mapa da aba Indicadores (o batismo já tem a sua)
 JORNADA.forEach(([k, etapa]) => { if (k !== 'batismo') SITUACOES['sem_' + k] = { label: 'Ainda sem ' + etapa, f: r => r[k] !== 'S' }; });
 
 // Liderança sem célula (Spec 013): filtro próprio; sem célula só vale para membros; o líder
-// de área fica fora da trilha (jornada, cuidado e discipulador)
+// de área fica fora da trilha (jornada e discipulador)
 SITUACOES.lideranca = { label: 'Liderança (área e setor)', f: r => regrasLideranca.ehLider(r) };
 {
   const semCelula = SITUACOES.semCelula.f;
   SITUACOES.semCelula.f = r => regrasLideranca.ehMembro(r) && semCelula(r);
-  ['naoBatizados', 'naoRecebeu', 'naoFrequenta', 'semDiscipulador', 'jornadaIncompleta', 'batizar', 'quaseLa', 'semContato', 'podeDiscipular', ...JORNADA.map(([k]) => 'sem_' + k)]
+  ['naoBatizados', 'naoRecebeu', 'naoFrequenta', 'semDiscipulador', 'jornadaIncompleta', 'batizar', 'quaseLa', 'podeDiscipular', ...JORNADA.map(([k]) => 'sem_' + k)]
     .filter(k => SITUACOES[k]).forEach(k => { const f = SITUACOES[k].f; SITUACOES[k].f = r => regrasLideranca.temTrilha(r) && f(r); });
 }
 
 // Grupos do filtro de situação; uma situação fora da lista cai em "Outras"
 const GRUPOS_SITUACAO: [string, string[]][] = [
-  ['Cuidado', ['semContato', 'semDiscipulador', 'naoFrequenta', 'semCelula', 'naoRecebeu']],
+  ['Situação cadastral', ['naoFrequenta', 'semCelula', 'naoRecebeu']],
   ['Jornada', ['jornadaIncompleta', 'naoBatizados', 'batizar', 'quaseLa', ...JORNADA.filter(([k]) => k !== 'batismo').map(([k]) => 'sem_' + k)]],
-  ['Discipulado', ['meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
+  ['Discipulado', ['semDiscipulador', 'meusDiscipulos', 'discipulosDe', 'semVinculo', 'querDiscipulado', 'podeDiscipular']],
   ['Interesses e serviço', ['querLiderar', 'querCuidar', 'querAnfitriao', 'servem']],
   ['Cadastro', ['lideranca', 'duplicados']]
 ];
@@ -182,7 +178,7 @@ function $<T extends HTMLElement = HTMLElement>(id: string): T {
 const estado: EstadoPainel = {
   regs: [], busca: '', setor: '', celula: '', situacao: 'todos',
   escopo: { todos: true, setores: [], celulas: [] }, meuCadastro: 0, discipuladorDe: 0, pessoas: [],
-  gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false, lente: 'cuidado', ferramenta: '', nomeUsuario: ''
+  gerencia: false, aba: 'acompanhar', usuarios: [], usuariosCarregados: false, lente: 'todos', ferramenta: '', nomeUsuario: ''
 };
 
 function rotulo(e: Escopo | null | undefined): string {

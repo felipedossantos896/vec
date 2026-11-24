@@ -1,8 +1,7 @@
 // ══════ DETALHE DA PESSOA ══════
-// Cabeçalho com a jornada e três abas: Resumo (o do dia a dia), Acompanhamento
-// (anotações) e Ficha completa (todas as respostas). A aba escolhida vale para a próxima pessoa.
+// A aba escolhida (Resumo ou Ficha completa) vale para a próxima pessoa.
 
-const ABAS_DETALHE: [string, string][] = [['resumo', 'Resumo'], ['notas', 'Acompanhamento'], ['ficha', 'Ficha completa']];
+const ABAS_DETALHE: [string, string][] = [['resumo', 'Resumo'], ['ficha', 'Ficha completa']];
 let abaDetalhe = 'resumo';
 
 function secao(titulo: string, linhas: [string, string][]): string {
@@ -21,7 +20,6 @@ function jornadaResumo(r: Registro): string {
 
 function abrirDetalhe(r: Registro) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
-  const agora = new Date();
   $('detNome').textContent = nomeCurto(r);
   const completo = regrasNomes.completo(r.nome);
   $('detNomeCompleto').textContent = completo;
@@ -32,24 +30,18 @@ function abrirDetalhe(r: Registro) {
 
   const nasc = r._nasc ? `${fmtData(r._nasc)}${r._idade != null ? ` · ${r._idade} anos` : ''}` : txt(r.nascimento);
   const interesses = INTERESSES.filter(([k]) => r[k] === 'S');
-  const cuidado = SITUACOES.semContato.f(r); // o líder de área fica fora da trilha (Spec 013)
-  const ultimo = r._contato ? `<span class="${cuidado ? 'det-alerta' : ''}">${fmtData(r._contato)} · ${regrasPessoas.haQuanto(r._contato, agora)}</span>` : `<span class="${cuidado ? 'det-alerta' : 'nota-fraca'}">Nenhum registrado</span>`;
-  const etiquetas = regrasPessoas.etiquetas({ contato: r._contato, lembrete: r._lembrete || null, semDiscipulador: SITUACOES.semDiscipulador.f(r), celula: String(r.celula || ''), duplicados: r._dup, papel: regrasLideranca.papel(r) }, agora);
   const trilha = regrasLideranca.temTrilha(r); // o líder de área não tem jornada (Spec 013)
   const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
   const resumo =
     (trilha ? jornadaResumo(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
-    secao('Contato e cuidado', [
+    secao('Dados principais', [
       linhasContato(r)[0],
-      ['Último contato', ultimo],
-      ...(r._lembrete ? ([['Falar de novo em', fmtData(r._lembrete)]] as [string, string][]) : []),
       ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : `<button type="button" class="btn-link${regrasLideranca.temTrilha(r) ? ' det-alerta' : ''}" data-acao="editar">Vincular</button>`],
       ['Congrega com frequência', pill(r.frequentaCultos)],
       ['Nascimento', nasc],
       ...(regrasLideranca.ehLider(r) ? ([['Discípulos', String(discipulos)]] as [string, string][]) : [])
     ]) +
     (interesses.length ? `<div class="det-sec"><h4>Quer servir como</h4><p class="det-tags">${interesses.map(([, l]) => `<span>${l}</span>`).join('')}</p></div>` : '') +
-    '<div class="det-sec" id="detUltima" hidden></div>' +
     acoesDetalhe(r);
   const ficha =
     secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]]) +
@@ -67,17 +59,15 @@ function abrirDetalhe(r: Registro) {
     secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]): [string, string] => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
     (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +
     secao('Registro', [['Enviado em', txt(r.dataHora)], ...(r.editadoEm ? ([['Editado em', `${esc(r.editadoEm)} · ${esc(r.editadoPor)}`]] as [string, string][]) : []), ['Nº do cadastro', String(r.linha)]]);
-  const paineis: Record<string, string> = { resumo, notas: blocoNotas(r), ficha };
-  const rotuloAba = (k: string, l: string): string => k === 'notas' ? `${l} <span class="det-n" id="dtNotasN" hidden></span>` : l;
+  const paineis: Record<string, string> = { resumo, ficha };
 
   $('detBody').innerHTML =
-    (etiquetas.length ? `<p class="det-status">${etiquetas.map(t => `<span class="tag-c">${esc(t)}</span>`).join('')}</p>` : '') +
+    (r._dup > 1 ? '<p class="det-status"><span class="tag-c">Possível duplicado</span></p>' : '') +
     `<div class="det-topo-acoes">
-      <button type="button" class="b-pri" data-acao="registrar">Registrar contato</button>
       ${r.telefone ? `<a class="b-zap" href="https://wa.me/55${esc(r.telefone)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
       <button type="button" class="b-sec" data-acao="editar">Editar</button>
     </div>
-    <div class="det-tabs" role="tablist" aria-label="Seções do cadastro">${ABAS_DETALHE.map(([k, l]) => `<button type="button" role="tab" id="dt-${k}" data-dtab="${k}" aria-controls="dp-${k}" aria-selected="${k === abaDetalhe}" tabindex="${k === abaDetalhe ? 0 : -1}">${rotuloAba(k, l)}</button>`).join('')}</div>
+    <div class="det-tabs" role="tablist" aria-label="Seções do cadastro">${ABAS_DETALHE.map(([k, l]) => `<button type="button" role="tab" id="dt-${k}" data-dtab="${k}" aria-controls="dp-${k}" aria-selected="${k === abaDetalhe}" tabindex="${k === abaDetalhe ? 0 : -1}">${l}</button>`).join('')}</div>
     ${ABAS_DETALHE.map(([k]) => `<div class="det-pane" role="tabpanel" id="dp-${k}" aria-labelledby="dt-${k}"${k === abaDetalhe ? '' : ' hidden'}>${paineis[k]}</div>`).join('')}`;
   const d = $<HTMLDialogElement>('det');
   d.dataset.linha = String(r.linha);
@@ -85,20 +75,8 @@ function abrirDetalhe(r: Registro) {
   $('detBody').scrollTop = 0;
   d.scrollTop = 0;
   marcarSelecionado();
-  carregarNotasDe(r);
   carregarEnderecoDe(r);
   carregarAnfitriaoDe(r);
-}
-
-// Depois que o histórico chega: contagem na aba e a última anotação com texto no Resumo
-function renderResumoNotas(lista: Anotacao[]) {
-  const n = document.getElementById('dtNotasN');
-  if (n) { n.textContent = String(lista.length); n.hidden = !lista.length; }
-  const el = document.getElementById('detUltima');
-  const ult = lista.find(a => a.texto);
-  if (!el) return;
-  el.hidden = !ult;
-  el.innerHTML = ult ? `<h4>Última anotação</h4><blockquote class="det-ult"><p>${esc(ult.texto)}</p><footer>${esc(ult.autorNome)} · ${ult.contatoEm ? regrasContato.diaMes(ult.contatoEm) : esc(ult.em.slice(0, 5))}</footer></blockquote>` : '';
 }
 
 function mostrarAbaDetalhe(k: string, focar = false) {
@@ -115,13 +93,6 @@ $('detBody').addEventListener('click', e => {
   const alvo = e.target instanceof Element ? e.target : null;
   const b = alvo?.closest<HTMLElement>('[data-dtab]');
   if (b) mostrarAbaDetalhe(b.dataset.dtab || 'resumo');
-  // "Registrar contato" leva ao formulário do Acompanhamento
-  if (alvo?.closest('[data-acao="registrar"]')) {
-    mostrarAbaDetalhe('notas');
-    const f = document.getElementById('nForm');
-    f?.scrollIntoView({ block: 'nearest' });
-    f?.querySelector<HTMLInputElement>('input[name="nTipo"]:checked')?.focus();
-  }
 });
 $('detBody').addEventListener('keydown', e => {
   const b = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-dtab]') : null;

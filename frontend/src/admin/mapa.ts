@@ -73,24 +73,18 @@ function nomeComPapel(r: Registro): string {
 const corDoRosto = (r: Registro): string => regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula as string);
 
 // Cartão (Spec 017, sobre a 014): rosto grande, nome curto, "célula · papel", outros papéis em
-// selos, a faixa "Precisa de atenção" com o motivo (só quando precisa) e os botões "Entrar em
 // contato" (WhatsApp, ou registrar o contato sem telefone) e "Ver perfil". O "x" tem 44 px.
 function cartaoPessoa(r: Registro): string {
   const p = pessoaNoMapa(r);
   const sub = regrasMapa.subtituloCartao(p, regrasLideranca.ehMembro(r) ? String(r.celula || '') : '');
   const url = regrasArea.whatsapp(r.telefone as string | undefined);
-  const acao = regrasMapa.acaoContato(url);
   const nome = nomeCurto(r);
-  const precisa = regrasLideranca.temTrilha(r) && naLente('cuidado', r);
-  const contato = acao.tipo === 'whatsapp'
-    ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">${acao.rotulo}</a>`
-    : `<button type="button" class="b-contato" data-contato="${r.linha}" aria-label="Registrar contato com ${esc(nome)}">${acao.rotulo}</button>`;
+  const contato = url ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">Entrar em contato</a>` : '';
   return `<div class="cartao">
     <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fecharFino')}</button>
     <div class="cartao-topo"><span class="cartao-rosto" data-cor="${corDoRosto(r)}">${avatar(r, 'av-c')}</span>
       <div><b class="cartao-nome" title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b><span class="cartao-sub">${esc(sub.texto)}</span></div></div>
     ${sub.extras.length ? `<ul class="cartao-papeis">${sub.extras.map(x => `<li data-selo="${x.selo}"${x.selo === 'celula' ? ` data-cor="${corDaCelula(p.destaque!.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(x.selo)}</span>${esc(x.texto)}</li>`).join('')}</ul>` : ''}
-    ${precisa ? `<div class="cartao-atencao"><p class="ca-titulo"><span class="ca-ic">${icone('aviso')}</span>Precisa de atenção<span class="sr-only">:</span></p><p class="ca-motivo">${esc(regrasArea.motivo(pessoaArea(r)))}</p></div>` : ''}
     <div class="cartao-a">${contato}<button type="button" class="b-perfil" data-mapa-pessoa="${r.linha}" aria-label="Ver o perfil de ${esc(nome)}">Ver perfil ${icone('seguir', { classe: 'ic-18' })}</button></div>
   </div>`;
 }
@@ -208,22 +202,19 @@ function desenharGrupos(f: MapaFiltrado) {
   $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
   f.grupos.forEach((g, i) => {
     // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
-    // e com "!" quando precisa de cuidado (Spec 009, ADR-0011). Mesma área de ~300 m.
     const pessoas = g.linhas.map(regDe).filter((r): r is Registro => Boolean(r))
       .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
     const acesas = pessoas.filter(r => naLente(estado.lente, r));
-    const cuidado = pessoas.some(r => naLente('cuidado', r));
     const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
     const grupo = grupoMult(pessoas[0]?.linha);
     const corPino = (r: Registro): string => grupo === 'B' ? '#15171c' : corDoRosto(r);
-    const alerta = (r: Registro): string => naLente('cuidado', r) && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : '';
     const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
     // Leque (Spec 012): todos os rostos do grupo, escondidos até abrir, com as linhas até o centro
     const pos = pessoas.length > 1 ? regrasMapa.leque(pessoas.length, t) : [];
     const leque = pos.length ? `<span class="leque" aria-hidden="true"><svg class="lq-linhas" width="1" height="1" aria-hidden="true">${pos.map(p => `<line x1="0" y1="0" x2="${p.x}" y2="${p.y}"/>`).join('')}</svg>` +
-      pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeComPapel(r))}${naLente('cuidado', r) ? ', precisa de cuidado' : ''}">${rostoPin(r, corPino(r))}${alerta(r)}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
+      pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeComPapel(r))}">${rostoPin(r, corPino(r))}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
     const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-      `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${cuidado && estado.lente !== 'servir' ? '<span class="rp-alerta" aria-hidden="true">!</span>' : ''}${leque}`;
+      `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${leque}`;
     const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
     const m = L.marker([g.lat, g.lng], {
       icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),

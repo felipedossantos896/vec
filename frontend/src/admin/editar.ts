@@ -196,9 +196,8 @@ function confirmarExclusao(r: Registro) {
   excluindo = r;
   const nome = nomeCurto(r);
   $('xTitulo').textContent = `Excluir o cadastro de ${nome}?`;
-  const notas = registroAberto() === r ? ultimaLista.length : 0;
   const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
-  $('xLista').innerHTML = regrasPessoas.consequencias(nome, notas, discipulos).map(t => `<li>${esc(t)}</li>`).join('');
+  $('xLista').innerHTML = regrasPessoas.consequencias(nome, 0, discipulos).map(t => `<li>${esc(t)}</li>`).join('');
   $('xMsg').textContent = '';
   xDlg.showModal();
   xDlg.querySelector<HTMLButtonElement>('[data-x="cancelar"]')?.focus();

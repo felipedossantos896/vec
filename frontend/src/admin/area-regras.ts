@@ -5,7 +5,7 @@
 type PessoaArea = { nome: string; diasSemContato: number | null; semDiscipulador: boolean; naoBatizado: boolean; semCelula: boolean };
 
 const regrasArea = {
-  LENTES: [['todos', 'Todos'], ['cuidado', 'Precisam de cuidado'], ['semDisc', 'Sem discipulador'], ['servir', 'Prontos para servir']] as [string, string][],
+  LENTES: [['todos', 'Todos'], ['semDisc', 'Sem discipulador'], ['servir', 'Prontos para servir']] as [string, string][],
   DIAS_ALERTA: 60,
 
   // Quanto maior, mais urgente: tempo sem contato pesa mais; sem contato nenhum conta

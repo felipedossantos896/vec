@@ -120,18 +120,15 @@ $('aConteudo').addEventListener('click', e => {
     $('registrationsTitle').scrollIntoView({ block: 'start' });
 });
 // ══════ MEUS DISCÍPULOS (Spec 009) ══════
-// Quem entra só como discipulador vê um cartão por discípulo: jornada, próximo passo e
-// o contato, com WhatsApp e "Registrar contato". O servidor já limita aos próprios discípulos.
+// O servidor limita a lista aos próprios discípulos.
 const soDiscipulador = () => estado.escopo.perfil === 'DISCIPULADOR';
 function renderDiscipulos() {
     if (!soDiscipulador())
         return;
-    const agora = new Date();
-    const lista = regrasPessoas.ordemDiscipulos(estado.regs.map(r => ({ r, nome: r.nome, contato: r._contato, ...regrasPessoas.situacaoContato(r._contato, r._lembrete || null, agora) })));
-    const falar = lista.filter(x => x.alerta).length;
+    const lista = [...estado.regs].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     const etapas = estado.regs.reduce((s, r) => s + r._jornada, 0);
     const primeiro = curtoNome(String(estado.nomeUsuario || ''));
-    const cartao = ({ r, alerta, texto }) => {
+    const cartao = (r) => {
         const prox = regrasPessoas.proximoPasso(JORNADA, k => r[k] === 'S');
         return `<article class="dc" data-cor="${r.celula ? corDaCelula(String(r.celula)) : regrasCelula.SEM_COR}">
       ${avatar(r, 'av-g')}
@@ -139,15 +136,14 @@ function renderDiscipulos() {
       <p class="dc-cel">${celulaOuPapel(r)}</p>
       <span class="dc-jor" role="img" aria-label="${r._jornada} de ${JORNADA.length} etapas da jornada">${JORNADA.map(([k]) => `<i class="${r[k] === 'S' ? 'on' : ''}"></i>`).join('')}</span>
       <p class="dc-prox">${prox ? `Próximo passo: <b>${esc(prox)}</b>` : '<b>Jornada completa</b>'}</p>
-      <p class="dc-st${alerta ? ' alerta' : ''}">${esc(texto)}</p>
-      <div class="dc-acoes">${r.telefone ? `<a class="b-zap" href="${regrasArea.whatsapp(String(r.telefone))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<button type="button" class="b-pri" data-contato="${r.linha}">Registrar contato</button></div>
+      <div class="dc-acoes">${r.telefone ? `<a class="b-zap" href="${regrasArea.whatsapp(String(r.telefone))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
     </article>`;
     };
     $('discView').innerHTML = `<section class="dc-hero" aria-labelledby="dcTitulo">
       <div><p class="ct-kick">Olá${primeiro ? `, ${esc(primeiro)}` : ''}</p>
       <h1 id="dcTitulo">${lista.length ? `Você discipula ${plural(lista.length, 'pessoa', 'pessoas')}.` : 'Ainda não há discípulos ligados a você.'}</h1>
-      <p>${!lista.length ? 'Peça à liderança da sua célula para ligar os seus discípulos ao seu cadastro.' : falar ? `${falar === 1 ? '1 precisa' : `${falar} precisam`} de um contato agora. Comece por ${falar === 1 ? 'ela' : 'elas'}.` : 'Todos em dia. Que bom!'}</p></div>
-      ${lista.length ? `<dl class="dc-num"><div><dt>para falar agora</dt><dd>${falar}</dd></div><div><dt>etapas concluídas juntos</dt><dd>${etapas}</dd></div></dl>` : ''}
+      ${lista.length ? '' : '<p>Peça à liderança da sua célula para ligar os seus discípulos ao seu cadastro.</p>'}</div>
+      ${lista.length ? `<dl class="dc-num"><div><dt>etapas concluídas juntos</dt><dd>${etapas}</dd></div></dl>` : ''}
     </section>
     ${lista.length ? `<div class="dc-grade">${lista.map(cartao).join('')}</div>` : ''}`;
 }

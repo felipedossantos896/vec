@@ -179,6 +179,7 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .ca-ic { display: block; flex: none; color: var(--atencao-ic); font-size: 19px; line-height: 0; }
 .cartao .ca-motivo { margin: 6px 0 0 3px; font: 400 14.5px/1.35 var(--ui-sistema); }
 .cartao-a { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.cartao-a > :only-child { grid-column: 1 / -1; }
 .b-contato, .b-perfil { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 10px; border-radius: 10px; font: 700 15.5px/1 var(--ui-sistema); white-space: nowrap; text-decoration: none; cursor: pointer; }
 .b-contato, .leaflet-container a.b-contato { background: var(--cartao-verde); border: 2px solid var(--cartao-verde); color: #fff; }
 .leaflet-container a.b-perfil { color: var(--cartao-ink); }

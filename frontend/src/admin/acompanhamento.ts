@@ -2,15 +2,6 @@
 // Aba Acompanhar: um resumo no topo e grupos que levam do número às pessoas; cada item abre a
 // lista já filtrada ou o cadastro. O mapa da jornada fica nos Indicadores, mas também leva à lista.
 
-// Cuidar das pessoas vem primeiro; arrumar os cadastros fica no fim da página
-const CUIDAR: [string, string][] = [
-  ['semDiscipulador', 'Sem discipulador'],
-  ['batizar', 'Receberam Jesus e ainda não foram batizados'],
-  ['quaseLa', 'Falta uma etapa para concluir a jornada'],
-  ['naoFrequenta', 'Não congregam com frequência'],
-  ['semCelula', 'Sem célula'],
-  ['semContato', `Sem contato registrado há ${DIAS_SEM_CONTATO} dias`]
-];
 const ARRUMAR: [string, string][] = [
   ['semVinculo', 'Informaram um discipulador que ainda não foi vinculado'],
   ['duplicados', 'Cadastros possivelmente duplicados']
@@ -25,7 +16,6 @@ const TONS = [8, 24, 40, 72, 100]; // cinco passos do claro ao escuro; o texto f
 const sitEtapa = (k: string): string => k === 'batismo' ? 'naoBatizados' : 'sem_' + k;
 const curto = (nome: string): string => nome.split(/\s+/).slice(0, 2).join(' ');
 const algum = (pares: [string, ...string[]][]) => (r: Registro): boolean => pares.some(([k]) => SITUACOES[k].f(r));
-const ICONE_OK = icone('emDia', { classe: 'ic-22' });
 
 function nomes(rs: Registro[]): string {
   const tres = rs.slice(0, 3).map(r => esc(nomeCurto(r)));
@@ -50,7 +40,6 @@ function grupo(id: string, titulo: string, resumo: string, corpo: string, classe
 let verSit = '';
 function notaCuidado(k: string, r: Registro): string {
   const cel = celulaOuPapel(r);
-  if (k === 'semContato') return `${cel} · ${r._contato ? `último contato ${regrasPessoas.haQuanto(r._contato, new Date())}` : 'nenhum contato registrado'}`;
   if (k === 'quaseLa') return `${cel} · falta ${JORNADA.filter(([e]) => r[e] !== 'S').map(([, etapa]) => etapa.toLowerCase()).join(', ')}`;
   return cel;
 }
@@ -62,20 +51,12 @@ function listaAberta(k: string, titulo: string, g: Registro[]): string {
 }
 const attrsVer = (k: string): string => `data-ver="${k}" aria-expanded="${verSit === k}"${verSit === k ? ' aria-controls="cuidadoAberto"' : ''}`;
 
-function cuidar(base: Registro[]): string {
-  const cards = CUIDAR.map(([k, titulo]) => {
-    const g = base.filter(SITUACOES[k].f);
-    return g.length ? `<li><button type="button" class="cuidado" ${attrsVer(k)}><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="cuidado-pes">${rostos(g)}<span class="passo-n">${nomes(g)}</span></span></button></li>${verSit === k ? listaAberta(k, titulo, g) : ''}` : '';
-  }).join('');
-  return `<section class="cuidar" id="ag-cuidar"><header class="cuidar-head"><h2 class="group-title">Cuidar das pessoas</h2><p>Quem precisa de um cuidado agora. Toque para ver quem é.</p></header>${cards ? `<ul class="cuidados">${cards}</ul>` : `<p class="em-dia">${ICONE_OK}<span><b>Tudo em dia.</b> Ninguém precisando de cuidado agora.</span></p>`}</section>`;
-}
-
 function arrumar(base: Registro[]): string {
   const itens = ARRUMAR.map(([k, titulo]) => [k, titulo, base.filter(SITUACOES[k].f)] as const).filter(([, , g]) => g.length);
   if (!itens.length) return '';
   const linhas = itens.map(([k, titulo, g]) => `<li><button type="button" class="passo" ${attrsVer(k)}><b>${g.length}</b><span class="passo-t">${titulo}</span><span class="passo-n">${nomes(g)}</span></button></li>${verSit === k ? listaAberta(k, titulo, g) : ''}`).join('');
   const n = itens.reduce((s, [, , g]) => s + g.length, 0);
-  return grupo('arrumar', 'Arrumar cadastros', plural(n, 'pendência', 'pendências'), painel('Dados para conferir', 'Não é cuidado com a pessoa: são ajustes no cadastro.', `<ul class="passos">${linhas}</ul>`));
+  return grupo('arrumar', 'Arrumar cadastros', plural(n, 'pendência', 'pendências'), painel('Dados para conferir', 'Confira os dados destes cadastros.', `<ul class="passos">${linhas}</ul>`));
 }
 
 // Grade de setores e células pelas seis etapas, usada nos Indicadores. Uma célula fora da lista
@@ -170,7 +151,6 @@ function renderAcompanhar() {
     $('aConteudo').innerHTML = estado.regs.length ? regrasEstados.html({ tipo: 'busca', titulo: 'Ninguém nesse setor ou célula', texto: 'Escolha outro filtro acima.' }) : '';
     return;
   }
-  const nCuidar = base.filter(algum(CUIDAR)).length;
   const nServir = base.filter(algum(POTENCIAL)).length;
   const nArrumar = base.filter(algum(ARRUMAR)).length;
   const aniv = proximosAniversarios(base);
@@ -181,13 +161,13 @@ function renderAcompanhar() {
   const lembrar = [hoje ? plural(hoje, 'aniversário hoje', 'aniversários hoje') : aniv.length ? plural(aniv.length, 'aniversário no mês', 'aniversários no mês') : '',
     sugs.length ? plural(sugs.length, 'sugestão', 'sugestões') : ''].filter(Boolean).join(' · ') || 'Nenhum aniversário no mês';
 
-  const chips: [string, string, string][] = [['cuidar', nCuidar ? `${plural(nCuidar, 'pessoa precisa', 'pessoas precisam')} de cuidado` : 'Tudo em dia', nCuidar ? 'quente' : 'ok']];
+  const chips: [string, string, string][] = [];
   if (discipula) chips.push(['disc', `${pctDisc}% com discipulador`, '']);
   chips.push(['servir', `${plural(nServir, 'quer', 'querem')} servir`, '']);
   chips.push(['lembrar', lembrar, hoje ? 'festa' : '']);
   if (nArrumar) chips.push(['arrumar', plural(nArrumar, 'cadastro para arrumar', 'cadastros para arrumar'), '']);
 
-  $('aConteudo').innerHTML = atalhos(chips) + cuidar(base) + (discipula ? painelDiscipulado(base, `${pctDisc}% com discipulador`) : '') +
+  $('aConteudo').innerHTML = atalhos(chips) + (discipula ? painelDiscipulado(base, `${pctDisc}% com discipulador`) : '') +
     grupo('servir', 'Quem quer servir', plural(nServir, 'pessoa', 'pessoas'), potencial(base), 'three') +
     grupo('lembrar', 'Para não esquecer', lembrar, aniversarios(aniv) + sugestoes(sugs)) +
     arrumar(base);
