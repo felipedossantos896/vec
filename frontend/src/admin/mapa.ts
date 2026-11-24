@@ -81,14 +81,14 @@ function cartaoPessoa(r: Registro): string {
   const nome = nomeCurto(r);
   const precisa = regrasLideranca.temTrilha(r) && naLente('cuidado', r);
   const contato = acao.tipo === 'whatsapp'
-    ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">${icone('whatsapp', { classe: 'ic-18' })}${acao.rotulo}</a>`
+    ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">${acao.rotulo}</a>`
     : `<button type="button" class="b-contato" data-contato="${r.linha}" aria-label="Registrar contato com ${esc(nome)}">${acao.rotulo}</button>`;
   return `<div class="cartao">
-    <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fechar')}</button>
+    <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fecharFino')}</button>
     <div class="cartao-topo"><span class="cartao-rosto" data-cor="${corDoRosto(r)}">${avatar(r, 'av-c')}</span>
       <div><b class="cartao-nome" title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b><span class="cartao-sub">${esc(sub.texto)}</span></div></div>
     ${sub.extras.length ? `<ul class="cartao-papeis">${sub.extras.map(x => `<li data-selo="${x.selo}"${x.selo === 'celula' ? ` data-cor="${corDaCelula(p.destaque!.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(x.selo)}</span>${esc(x.texto)}</li>`).join('')}</ul>` : ''}
-    ${precisa ? `<div class="cartao-atencao"><span class="ca-ic">${icone('aviso')}</span><p><b>Precisa de atenção<span class="sr-only">:</span></b> <span>${esc(regrasArea.motivo(pessoaArea(r)))}</span></p></div>` : ''}
+    ${precisa ? `<div class="cartao-atencao"><p class="ca-titulo"><span class="ca-ic">${icone('aviso')}</span>Precisa de atenção<span class="sr-only">:</span></p><p class="ca-motivo">${esc(regrasArea.motivo(pessoaArea(r)))}</p></div>` : ''}
     <div class="cartao-a">${contato}<button type="button" class="b-perfil" data-mapa-pessoa="${r.linha}" aria-label="Ver o perfil de ${esc(nome)}">Ver perfil ${icone('seguir', { classe: 'ic-18' })}</button></div>
   </div>`;
 }
@@ -343,8 +343,35 @@ function abrirCartao(g: GrupoLeque, j: number, fixo = true, focar = false) {
     .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
   cartaoDe = { g, j, pop, fixo };
   const el = pop.getElement() as HTMLElement | undefined;
+  if (!fixo) desviarCartao(pop);
   if (el && temMouse()) { el.addEventListener('mouseenter', cancelarFechar); el.addEventListener('mouseleave', agendarFechar); }
   if (focar) el?.querySelector<HTMLElement>('.b-contato')?.focus({ preventScroll: true });
+}
+
+// O mapa do Leaflet se move com transform, então o cartão fica sempre abaixo do painel, dos
+// filtros e da ferramenta, que flutuam por cima (Spec 016). O cartão aberto pelo mouse não
+// arrasta o mapa: ele desliza para o lado até sair de baixo do painel e da ferramenta, com a
+// ponta ainda no rosto. Se não couber assim (ou se esbarrar nos filtros), o mapa se ajusta.
+function desviarCartao(pop: any) {
+  const w = (pop.getElement() as HTMLElement | undefined)?.querySelector<HTMLElement>('.leaflet-popup-content-wrapper');
+  if (!w) return;
+  w.style.setProperty('translate', '0px 0px');
+  // Medida sem a animação de entrada (escala): centro e tamanho reais do cartão
+  const b = w.getBoundingClientRect(), cx = b.left + b.width / 2;
+  const r = { left: cx - w.offsetWidth / 2, right: cx + w.offsetWidth / 2, top: b.bottom - w.offsetHeight, bottom: b.bottom, width: w.offsetWidth };
+  const palco = $('areaPalco').getBoundingClientRect();
+  const cruza = (o: DOMRect): boolean => r.top < o.bottom && r.bottom > o.top;
+  let esq = palco.left + 8, dir = palco.right - 8;
+  const painel = $('areaPainel'), ferr = $('areaFerrPainel');
+  if (painel.parentElement === $('areaPalco') && cruza(painel.getBoundingClientRect())) esq = Math.max(esq, painel.getBoundingClientRect().right + 22);
+  if (!ferr.hidden && ferr.parentElement === $('areaPalco') && cruza(ferr.getBoundingClientRect())) dir = Math.min(dir, ferr.getBoundingClientRect().left - 22);
+  const limite = r.width / 2 - 30; // a ponta continua dentro do cartão
+  const quer = r.left < esq ? esq - r.left : r.right > dir ? dir - r.right : 0;
+  const dx = Math.max(-limite, Math.min(limite, quer));
+  w.style.setProperty('translate', `${Math.round(dx)}px 0px`); // CSSOM: o CSP não deixa style no HTML
+  const filtros = document.querySelector('.area-filtros')?.getBoundingClientRect();
+  const sobFiltros = !!filtros && r.top < filtros.bottom + 6 && r.right + dx > filtros.left && r.left + dx < filtros.right;
+  if (dx !== quer || sobFiltros || r.top < palco.top + 6) { pop.options.autoPan = true; pop.update(); w.style.setProperty('translate', '0px 0px'); }
 }
 
 // Fechar (Spec 014): o cartão encolhe até o rosto em 180 ms (sem animação com "reduzir

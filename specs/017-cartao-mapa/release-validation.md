@@ -43,6 +43,16 @@ Esc fecha e devolve o foco ao rosto.
   painel, e o líder de área cobre o caso sem faixa.
 - Produção: o painel por dentro não foi percorrido lá (exigiria criar um usuário).
 
+## Correção T004 (#202)
+- **Problema:** o responsável comparou o cartão com o modelo e não se pareciam.
+- **Ajuste:** o visual foi refeito com as medidas do modelo (proporção de um cartão de 340 px)
+  e conferido em captura de 2×, lado a lado com o modelo.
+- **Dois problemas que só a captura mostrou:**
+  - o Leaflet põe margem nos parágrafos do cartão, o que deixava a faixa alta demais;
+  - o cartão aberto pelo mouse ficava atrás do painel escuro. A Spec 016 dizia que o cartão
+    ficava por cima, mas o `transform` do mapa impede. Agora ele desliza para o lado.
+- **E2E:** passou a conferir que o cartão não fica atrás do painel nem dos filtros: **25/25**.
+
 ## Rollback
 Reverter #197 volta o cartão da Spec 014 (só pelo clique, com botões-ícone). Nada muda nos
 dados.
