@@ -90,6 +90,8 @@ func TestEnderecoSalvarExigeConsentimentoEValida(t *testing.T) {
 func TestPontoManualExigeAutorizacaoECoordenadasValidas(t *testing.T) {
 	lat, lng := -3.731234, -38.521234
 	entrada := enderecoValido()
+	versao := ""
+	entrada.Versao = &versao
 	entrada.Ponto = &pontoEnderecoIn{Lat: &lat, Lng: &lng}
 	if _, codigo := validarEndereco(*entrada); codigo != "consentimento_ponto" {
 		t.Fatalf("sem autorização: %q", codigo)

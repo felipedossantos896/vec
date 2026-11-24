@@ -14,6 +14,7 @@ const ERROS_ENDERECO: Record<string, string> = {
   consentimento_endereco: 'Marque a autorização da pessoa para salvar o endereço.',
   consentimento_ponto: 'Confirme a autorização específica para mostrar a posição exata.',
   ponto_invalido: 'Escolha um ponto válido no mapa.',
+  endereco_desatualizado: 'O endereço mudou em outra sessão. Recarregue o endereço antes de editar.',
   nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
   dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
@@ -103,7 +104,7 @@ function formEndereco() {
       ${enderecoAtual?.ponto?.exato ? '<label class="end-consent"><input type="checkbox" id="end_revogar_ponto"><span>Retirar a localização exata e voltar à aproximação.</span></label>' : ''}
     </fieldset>
     <div class="field"><label class="end-consent"><input type="checkbox" id="end_consentimento" aria-describedby="end_consentimento_erro"><span>${TEXTO_CONSENTIMENTO}</span></label><p class="msg" id="end_consentimento_erro"></p></div>
-    <div class="end-acoes"><button type="submit" class="btn-sec solid" id="endSalvar">Salvar endereço</button><button type="button" class="btn-link" data-end="cancelar">Cancelar</button></div>
+    <div class="end-acoes"><button type="submit" class="btn-sec solid" id="endSalvar">Salvar endereço</button><button type="button" class="btn-link" data-end="cancelar">Cancelar</button><button type="button" class="btn-link" data-end="recarregar" hidden>Recarregar endereço</button></div>
   </form>`;
   iniciarEditorPonto();
   $<HTMLInputElement>('end_cep').focus();
@@ -136,15 +137,19 @@ async function chamarEndereco(r: Registro, payload: { acao: string; [chave: stri
   try {
     const res = await api<EnderecoResult>({ ...payload, linha: r.linha, token: s.token });
     if (lerSessao()?.token !== s.token) return null;
-    if (res.ok && (payload.acao === 'endereco_salvar' || payload.acao === 'endereco_excluir')) atualizarMapaDeEndereco();
     if (registroAberto() !== r || !$<HTMLDialogElement>('det').open || !document.getElementById('endCorpo')) return null;
     if (!res.ok && res.erro === 'sessao') { limparSessao(); $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
     if (!res.ok) $('endMsg').textContent = ERROS_ENDERECO[res.erro || ''] || 'Não foi possível concluir. Atualize o painel e tente de novo.';
+    if (res.erro === 'endereco_desatualizado') {
+      const recarregar = document.querySelector<HTMLButtonElement>('[data-end="recarregar"]');
+      if (recarregar) { recarregar.hidden = false; recarregar.focus(); }
+    }
     return res;
   } catch (err) {
     if (document.getElementById('endMsg')) $('endMsg').textContent = 'Não foi possível conectar. Verifique a internet.';
     return null;
   } finally {
+    if (payload.acao !== 'endereco_ler' && lerSessao()?.token === s.token) atualizarMapaDeEndereco();
     if (botao) botao.disabled = false;
   }
 }
@@ -230,6 +235,7 @@ $('detBody').addEventListener('click', async e => {
   if (!b || !r) return;
   $('endMsg').textContent = '';
   if (b.dataset.end === 'editar') formEndereco();
+  else if (b.dataset.end === 'recarregar') await carregarEnderecoDe(r);
   else if (b.dataset.end === 'usar-ponto' && pinoEndereco) marcarPontoEndereco(pinoEndereco.getLatLng().wrap());
   else if (b.dataset.end === 'cancelar') { renderEndereco(); $('endCorpo').querySelector<HTMLButtonElement>('[data-end="editar"]')?.focus(); }
   else if (b.dataset.end === 'remover') {

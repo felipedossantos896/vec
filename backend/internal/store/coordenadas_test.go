@@ -41,14 +41,21 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	e := enderecoTeste
 	lat, lng := -3.731234, -38.521234
 	e.Ponto = &PontoEndereco{Lat: lat, Lng: lng, Exato: true}
-	e.AtualizadoEm = now.Format(time.RFC3339Nano)
+	versao := now.Format(time.RFC3339Nano)
+	e.VersaoEsperada = &versao
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, enderecoTeste, "lider", now)
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(time.Second))
 	st.GravarCoordenada(ctx, 7, enderecoTeste, nil, nil, "nominatim", GeoNaoEncontrado, now.Add(2*time.Second))
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(3*time.Second)) // versão obsoleta
 	st.SalvarEndereco(ctx, Scope{Celulas: []string{"Outra"}}, 7, e, "lider", now.Add(4*time.Second))
+	edicaoAntiga := enderecoTeste
+	edicaoAntiga.Numero = "99"
+	edicaoAntiga.VersaoEsperada = &versao
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
+	edicaoAntiga.VersaoEsperada = nil
+	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, edicaoAntiga, "lider", now.Add(4*time.Second))
 	e.Ponto, e.RevogarPonto = nil, true
-	e.AtualizadoEm = now.Add(time.Second).Format(time.RFC3339Nano)
+	versao = now.Add(time.Second).Format(time.RFC3339Nano)
 	st.SalvarEndereco(ctx, Scope{Todos: true}, 7, e, "lider", now.Add(5*time.Second))
 	var script strings.Builder
 	script.WriteString(`CREATE TABLE respostas (id INTEGER PRIMARY KEY, excluido_em TEXT, celula TEXT);
@@ -72,7 +79,7 @@ func TestPontoManualNoSQLite(t *testing.T) {
 	cmd := exec.Command(bin, "-batch", "-bail", ":memory:")
 	cmd.Stdin = strings.NewReader(script.String())
 	out, err := cmd.CombinedOutput()
-	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
+	const esperado = "1|-|0\n1|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n0|manual|-3.731234\n1|-|0"
 	if err != nil || strings.TrimSpace(string(out)) != esperado {
 		t.Fatalf("SQLite: %v\n%s", err, out)
 	}

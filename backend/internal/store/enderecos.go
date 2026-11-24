@@ -31,6 +31,7 @@ type Endereco struct {
 	AtualizadoPor    string
 	Ponto            *PontoEndereco
 	RevogarPonto     bool
+	VersaoEsperada   *string
 }
 
 type PontoEndereco struct {
@@ -98,7 +99,7 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 	}
 	quando := now.UTC().Format(time.RFC3339Nano)
 	var lat, lng, fonte, precisao, em any
-	guarda, existe := "", ""
+	guarda, existe := ` WHERE COALESCE(enderecos.geo_precisao, '') <> 'manual'`, ""
 	preservar := mesmaConsultaGeo
 	if e.RevogarPonto {
 		preservar = `0 = 1`
@@ -106,16 +107,14 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 	if e.Ponto != nil {
 		lat, lng, fonte, precisao, em = e.Ponto.Lat, e.Ponto.Lng, GeoManual, GeoManual, quando
 	}
-	if e.Ponto != nil || e.RevogarPonto {
-		guarda = ` WHERE enderecos.atualizado_em = ?`
-	}
 	params := append([]any{e.CEP, e.Logradouro, e.Numero, e.Complemento, e.Bairro, e.Cidade, e.UF,
 		quando, por, quando, por, lat, lng, fonte, precisao, em, respostaID}, args...)
-	if guarda != "" && e.AtualizadoEm != "" {
-		existe = ` AND EXISTS (SELECT 1 FROM enderecos WHERE resposta_id = respostas.id)`
-	}
-	if guarda != "" {
-		params = append(params, e.AtualizadoEm)
+	if e.VersaoEsperada != nil {
+		guarda = ` WHERE enderecos.atualizado_em = ?`
+		if *e.VersaoEsperada != "" {
+			existe = ` AND EXISTS (SELECT 1 FROM enderecos WHERE resposta_id = respostas.id)`
+		}
+		params = append(params, *e.VersaoEsperada)
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `INSERT INTO enderecos (resposta_id, ` + enderecoCols + `, lat, lng, geo_fonte, geo_precisao, geo_em)

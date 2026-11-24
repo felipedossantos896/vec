@@ -28,7 +28,7 @@ type enderecoIn struct {
 	UF           string           `json:"uf"`
 	Ponto        *pontoEnderecoIn `json:"ponto"`
 	RevogarPonto bool             `json:"revogarPonto"`
-	Versao       string           `json:"versao"`
+	Versao       *string          `json:"versao"`
 }
 
 type pontoEnderecoIn struct {
@@ -91,7 +91,7 @@ func validarEndereco(in enderecoIn) (store.Endereco, string) {
 	if e.Logradouro == "" || e.Numero == "" || e.Bairro == "" || e.Cidade == "" {
 		return store.Endereco{}, "endereco_incompleto"
 	}
-	if in.RevogarPonto && (in.Ponto != nil || in.Versao == "") {
+	if in.RevogarPonto && (in.Ponto != nil || in.Versao == nil || *in.Versao == "") {
 		return store.Endereco{}, "dados_invalidos"
 	}
 	if p := in.Ponto; p != nil {
@@ -101,9 +101,12 @@ func validarEndereco(in enderecoIn) (store.Endereco, string) {
 		if p.Lat == nil || p.Lng == nil || math.IsNaN(*p.Lat) || math.IsNaN(*p.Lng) || math.Abs(*p.Lat) > 85 || math.Abs(*p.Lng) > 180 {
 			return store.Endereco{}, "ponto_invalido"
 		}
+		if in.Versao == nil {
+			return store.Endereco{}, "endereco_desatualizado"
+		}
 		e.Ponto = &store.PontoEndereco{Lat: *p.Lat, Lng: *p.Lng, Exato: true}
 	}
-	e.AtualizadoEm = in.Versao
+	e.VersaoEsperada = in.Versao
 	e.RevogarPonto = in.RevogarPonto
 	return e, ""
 }
@@ -169,6 +172,13 @@ func (s *Server) enderecoSalvar(ctx context.Context, req adminReq) reply {
 		return s.internal("endereco_salvar", err)
 	}
 	if !ok {
+		_, _, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
+		if err != nil {
+			return s.internal("endereco_salvar", err)
+		}
+		if visivel {
+			return failReply("endereco_desatualizado")
+		}
 		return failReply("nao_encontrado")
 	}
 	s.Log.Info("endereço salvo", "linha", req.Linha, "por", a.user.Usuario)
