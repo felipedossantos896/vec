@@ -96,6 +96,14 @@ try {
     await page.getByRole('button', {name:'Iniciar novo exemplo'}).click();
     assert.equal(await page.getByLabel('Nome completo').inputValue(), '');
     assert.equal(await page.locator('h1').evaluate(el => el === document.activeElement), true);
+    if (width < 600) {
+      await page.setViewportSize({ width: 667, height: 375 });
+      await open('map');
+      const marker = page.getByRole('button', { name: 'Carla Modelo' });
+      await marker.click();
+      assert.match(await page.locator('#mx-member').innerText(), /Carla Modelo/);
+      assert(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight));
+    }
     assert.deepEqual(errors, []);
     console.log('Inventário e interações ' + width + '×' + height + ': OK');
     await page.close();
