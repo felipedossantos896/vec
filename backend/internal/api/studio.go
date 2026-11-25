@@ -68,7 +68,9 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
-		if r.URL.Path == studioPath+"screens/preview.html" {
+		// FileServer cleans the decoded path, including escaped dot segments.
+		// Apply the preview policy to every spelling that resolves to this file.
+		if path.Clean(r.URL.Path) == studioPath+"screens/preview.html" {
 			if previewErr != nil {
 				http.Error(w, "Preview indisponível", http.StatusInternalServerError)
 				return

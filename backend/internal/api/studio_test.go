@@ -53,20 +53,21 @@ func TestStudioSession(t *testing.T) {
 	if res := request(http.MethodGet, studioPath, "", cookie); !strings.Contains(res.Body.String(), "access/session.js") {
 		t.Error("a entrada deve verificar a sessão da aba mesmo com um cookie existente")
 	}
-	for _, path := range []string{"?catalogo=1", "inventory.json", "screens/preview.html", "studio/studio.js"} {
+	for _, path := range []string{"?catalogo=1", "inventory.json", "studio/studio.js"} {
 		res := request(http.MethodGet, studioPath+path, "", cookie)
 		if res.Code != 200 || res.Header().Get("Cache-Control") != "no-store" {
 			t.Errorf("arquivo com sessão %s = %d", path, res.Code)
 		}
-		if path == "screens/preview.html" {
-			policy := res.Header().Get("Content-Security-Policy")
-			if !strings.Contains(policy, "connect-src 'none'") || !strings.Contains(policy, "'sha256-") ||
-				strings.Contains(policy, "allow-same-origin") || res.Header().Get("X-Frame-Options") != "SAMEORIGIN" {
-				t.Error("preview precisa isolar a origem e permitir apenas scripts empacotados")
-			}
-			if strings.Contains(res.Body.String(), "<script src=") || !strings.Contains(res.Body.String(), "data:image/svg+xml;base64,") {
-				t.Error("preview deve carregar sem solicitar recursos autenticados")
-			}
+	}
+	for _, path := range []string{"screens/preview.html", "screens/%2e/preview.html", "screens/sub/%2e%2e/preview.html"} {
+		res := request(http.MethodGet, studioPath+path, "", cookie)
+		policy := res.Header().Get("Content-Security-Policy")
+		if res.Code != 200 || !strings.Contains(policy, "connect-src 'none'") || !strings.Contains(policy, "'sha256-") ||
+			strings.Contains(policy, "allow-same-origin") || res.Header().Get("X-Frame-Options") != "SAMEORIGIN" {
+			t.Errorf("%s: resposta %d precisa isolar a origem e permitir apenas scripts empacotados", path, res.Code)
+		}
+		if strings.Contains(res.Body.String(), "<script src=") || !strings.Contains(res.Body.String(), "data:image/svg+xml;base64,") {
+			t.Errorf("%s: preview deve carregar sem solicitar recursos autenticados", path)
 		}
 	}
 	res = request(http.MethodDelete, studioPath+"session", "", cookie)
