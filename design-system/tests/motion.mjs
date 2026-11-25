@@ -41,6 +41,12 @@ try {
     assert.equal(await frame.locator('.people-row').first().evaluate(el => el === document.activeElement), true);
     await nav.getByRole('button', {name:'A02 · Mapa da área'}).click();
     await frame.locator('.mx-pin[data-person]').first().waitFor();
+    if (width < 600) {
+      for (const control of await frame.locator('.mx-controls button').all()) {
+        const bounds = await control.evaluate(el => ({ width: el.offsetWidth, height: el.offsetHeight }));
+        assert(bounds.width >= 44 && bounds.height >= 44);
+      }
+    }
     const marker = frame.locator('.mx-pin[data-person]').first();
     const id = await marker.getAttribute('data-person');
     await marker.press('Enter');
@@ -49,6 +55,12 @@ try {
     const toggle = frame.locator('#mx-toggle');
     await toggle.press('Enter');
     assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+    const row = frame.locator('.mx-row').filter({ hasText: 'Sem localização' }).first();
+    await row.press('Enter');
+    assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
+    await frame.locator('#mx-close').press('Escape');
+    assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+    assert.equal(await row.evaluate(el => el === document.activeElement), true);
     await toggle.press('Escape');
     assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
     assert.deepEqual(errors, []);

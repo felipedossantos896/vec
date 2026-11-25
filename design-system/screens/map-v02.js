@@ -16,16 +16,24 @@ const p=v.find(p=>p.id===selected);$('#mx-member').hidden=!p;$('#mx-member').inn
 $('#mx-care-count').textContent=care.length;$('#mx-toggle').setAttribute('aria-expanded',String(expanded));$('#mx-chevron').textContent=expanded?'⌄':'⌃';$('#mx-list').hidden=!expanded;$('#mx-list').innerHTML=care.length?care.map(p=>'<button class="mx-row" data-person="'+p.id+'"><span class="mx-avatar">'+p.a+'</span><span><strong>'+p.n+'</strong><small>'+ (p.x===null?'Sem localização':'Acompanhamento pendente')+'</small></span><span>›</span></button>').join(''):'<p class="mx-empty-list">Nenhuma pendência neste filtro.</p>';
 }
 $('#mx-search').addEventListener('input',e=>{query=e.target.value;render()});$('#mx-cell').addEventListener('change',e=>{cell=e.target.value;render()});
+let openedFromList = false;
 function fecharPessoa() {
   const id = selected;
+  const restoreList = openedFromList;
+  openedFromList = false;
   selected = null;
+  if (restoreList) expanded = true;
   render();
-  ($('.mx-pin[data-person="' + id + '"]') || $('#mx-search')).focus();
+  const trigger = restoreList
+    ? $('.mx-row[data-person="' + id + '"]') || $('#mx-toggle')
+    : $('.mx-pin[data-person="' + id + '"]') || $('#mx-search');
+  trigger.focus();
 }
 app.addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   if (b.dataset.person) {
+    openedFromList = b.classList.contains('mx-row');
     selected = Number(b.dataset.person);
     if ([1, 2].includes(selected)) zoom = Math.max(2, zoom);
     expanded = false;
