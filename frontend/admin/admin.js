@@ -152,10 +152,19 @@ function salvarSessao(s) { try {
     sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(s));
 }
 catch (e) { } }
-function limparSessao() { try {
-    sessionStorage.removeItem(CHAVE_SESSAO);
+function limparSessao() {
+    try {
+        sessionStorage.removeItem(CHAVE_SESSAO);
+    }
+    catch (e) { }
+    invalidarDadosMapa();
+    mapaLeaflet?.setView([-14.2, -51.9], 4, { animate: false });
+    $('mapaLista').replaceChildren();
+    limparEditorPonto();
+    enderecoAtual = null;
+    $('det').close();
+    $('detBody').replaceChildren();
 }
-catch (e) { } }
 async function api(payload) {
     const r = await fetch(ADMIN_API_URL, {
         method: 'POST',

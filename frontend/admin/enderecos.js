@@ -8,6 +8,10 @@ const ERROS_ENDERECO = {
     uf_invalida: 'Escolha a UF.',
     endereco_incompleto: 'Preencha rua, número, bairro e cidade.',
     consentimento_endereco: 'Marque a autorização da pessoa para salvar o endereço.',
+    consentimento_ponto: 'Confirme a autorização específica para mostrar a posição exata.',
+    ponto_invalido: 'Escolha um ponto válido no mapa.',
+    endereco_desatualizado: 'O endereço mudou em outra sessão. Recarregue o endereço antes de editar.',
+    ponto_reconfirmar: 'O endereço mudou. Confirme o alfinete para este endereço ou escolha voltar à aproximação.',
     nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
     dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
@@ -17,17 +21,60 @@ const CAMPOS_ENDERECO = [
     ['cidade', 'Cidade', 'address-level2'], ['uf', 'UF', 'address-level1']
 ];
 let enderecoAtual = null;
+let revisaoEndereco = 0;
+let editorPonto = null;
+let pinoEndereco = null;
+let pontoRascunho = null;
+function limparEditorPonto() {
+    editorPonto?.remove();
+    editorPonto = pinoEndereco = pontoRascunho = null;
+}
+function marcarPontoEndereco(p) {
+    pontoRascunho = { lat: Math.round(p.lat * 1e6) / 1e6, lng: Math.round(p.lng * 1e6) / 1e6 };
+    pinoEndereco.setLatLng(pontoRascunho);
+    $('endPontoEstado').textContent = 'Ponto escolhido. Salve o endereço para confirmar.';
+}
+function iniciarEditorPonto() {
+    const el = document.getElementById('endMapa');
+    if (!el || editorPonto || typeof L === 'undefined')
+        return;
+    const atual = enderecoAtual?.ponto;
+    const centro = atual || { lat: -3.73, lng: -38.53 };
+    editorPonto = L.map(el, { maxZoom: ZOOM_MAX, keyboard: false }).setView(centro, atual ? 16 : 12);
+    L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(editorPonto);
+    editorPonto.attributionControl.setPrefix(false);
+    pinoEndereco = L.marker(centro, {
+        draggable: true, keyboard: false,
+        icon: L.divIcon({ className: 'end-pino', html: '<span class="rp-alfinete"></span>', iconSize: [24, 24], iconAnchor: [12, 24] })
+    }).addTo(editorPonto);
+    editorPonto.on('click', (e) => marcarPontoEndereco(e.latlng.wrap()));
+    pinoEndereco.on('dragend', () => marcarPontoEndereco(pinoEndereco.getLatLng().wrap()));
+    el.addEventListener('keydown', e => {
+        if (e.target !== el)
+            return;
+        const deslocamentos = { ArrowLeft: [-8, 0], ArrowRight: [8, 0], ArrowUp: [0, -8], ArrowDown: [0, 8] };
+        const d = deslocamentos[e.key];
+        if (!d)
+            return;
+        e.preventDefault();
+        const xy = editorPonto.latLngToContainerPoint(pinoEndereco.getLatLng());
+        marcarPontoEndereco(editorPonto.containerPointToLatLng(xy.add(d)).wrap());
+        editorPonto.panInside(pinoEndereco.getLatLng());
+    });
+}
 const blocoEndereco = () => `<div class="det-sec" id="endSec"><h4>Endereço</h4><div id="endCorpo"><p class="nota-fraca">Carregando endereço…</p></div><p class="msg" id="endMsg" role="alert"></p></div>`;
 function renderEndereco() {
+    limparEditorPonto();
     const e = enderecoAtual;
     $('endCorpo').innerHTML = e
         ? `<address class="end-linhas">${regrasEndereco.linhas(e).map(l => `<span>${esc(l)}</span>`).join('')}</address>
       <p class="field-hint">Autorizado em ${soData(e.consentimentoEm)} por ${esc(e.consentimentoPor)}. Atualizado em ${soData(e.atualizadoEm)} por ${esc(e.atualizadoPor)}.</p>
-      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button></div>`
+      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button><button type="button" class="btn-link" data-end="recarregar" hidden>Recarregar endereço</button></div>`
         : `<p class="nota-fraca">Sem endereço cadastrado.</p>
       <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Cadastrar endereço</button></div>`;
 }
 function formEndereco() {
+    limparEditorPonto();
     const e = enderecoAtual || { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '' };
     const campoEnd = ([k, label, auto]) => {
         const id = `end_${k}`;
@@ -41,9 +88,19 @@ function formEndereco() {
     cepBuscado = regrasEndereco.soDigitosCep(e.cep); // não rebusca o CEP já salvo ao abrir
     $('endCorpo').innerHTML = `<form id="endForm" class="end-form" novalidate>
     <div class="end-grid">${CAMPOS_ENDERECO.map(campoEnd).join('')}</div>
+    <fieldset class="field">
+      <legend>Localização no mapa</legend>
+      <p class="field-hint" id="endMapaAjuda">Arraste o alfinete, toque no mapa ou use as setas com o mapa em foco. Para usar o ponto atual sem mover, selecione o botão abaixo.</p>
+      <div id="endMapa" class="end-mapa" tabindex="0" role="region" aria-label="Ajustar localização" aria-describedby="endMapaAjuda"></div>
+      <button type="button" class="btn-link" data-end="usar-ponto">Usar posição do alfinete</button>
+      <p class="field-hint" id="endPontoEstado" role="status">${enderecoAtual?.ponto?.exato ? 'Ponto confirmado.' : enderecoAtual?.ponto ? 'Ponto inicial aproximado. Confira antes de confirmar.' : 'Sem ponto calculado. Navegue até o endereço ou salve primeiro para localizar automaticamente.'}</p>
+      <label class="end-consent"><input type="checkbox" id="end_ponto_consentimento"><span>A pessoa autorizou mostrar a localização exata no editor e no mapa da Área para quem pode editar o endereço.</span></label>
+      ${enderecoAtual?.ponto?.exato ? '<label class="end-consent"><input type="checkbox" id="end_revogar_ponto"><span>Retirar a localização exata e voltar à aproximação.</span></label>' : ''}
+    </fieldset>
     <div class="field"><label class="end-consent"><input type="checkbox" id="end_consentimento" aria-describedby="end_consentimento_erro"><span>${TEXTO_CONSENTIMENTO}</span></label><p class="msg" id="end_consentimento_erro"></p></div>
-    <div class="end-acoes"><button type="submit" class="btn-sec solid" id="endSalvar">Salvar endereço</button><button type="button" class="btn-link" data-end="cancelar">Cancelar</button></div>
+    <div class="end-acoes"><button type="submit" class="btn-sec solid" id="endSalvar">Salvar endereço</button><button type="button" class="btn-link" data-end="cancelar">Cancelar</button><button type="button" class="btn-link" data-end="recarregar" hidden>Recarregar endereço</button></div>
   </form>`;
+    iniciarEditorPonto();
     $('end_cep').focus();
 }
 function lerFormEndereco() {
@@ -75,9 +132,12 @@ async function chamarEndereco(r, payload, botao) {
     }
     if (botao)
         botao.disabled = true;
+    const revisao = revisaoEndereco;
     try {
         const res = await api({ ...payload, linha: r.linha, token: s.token });
-        if (registroAberto() !== r || !document.getElementById('endCorpo'))
+        if (lerSessao()?.token !== s.token)
+            return null;
+        if (revisao !== revisaoEndereco || registroAberto() !== r || !$('det').open || !document.getElementById('endCorpo'))
             return null;
         if (!res.ok && res.erro === 'sessao') {
             limparSessao();
@@ -87,29 +147,41 @@ async function chamarEndereco(r, payload, botao) {
         }
         if (!res.ok)
             $('endMsg').textContent = ERROS_ENDERECO[res.erro || ''] || 'Não foi possível concluir. Atualize o painel e tente de novo.';
+        if (res.erro === 'endereco_desatualizado') {
+            const recarregar = document.querySelector('[data-end="recarregar"]');
+            if (recarregar) {
+                recarregar.hidden = false;
+                recarregar.focus();
+            }
+        }
         return res;
     }
     catch (err) {
-        if (document.getElementById('endMsg'))
+        if (revisao === revisaoEndereco && document.getElementById('endMsg'))
             $('endMsg').textContent = 'Não foi possível conectar. Verifique a internet.';
         return null;
     }
     finally {
+        if (payload.acao !== 'endereco_ler' && lerSessao()?.token === s.token)
+            atualizarMapaDeEndereco();
         if (botao)
             botao.disabled = false;
     }
 }
 async function carregarEnderecoDe(r) {
+    revisaoEndereco++;
+    limparEditorPonto();
     enderecoAtual = null;
     const res = await chamarEndereco(r, { acao: 'endereco_ler' });
     if (!res)
-        return;
+        return false;
     if (!res.ok) {
         $('endCorpo').innerHTML = '<p class="nota-fraca">Endereço indisponível.</p>';
-        return;
+        return false;
     }
     enderecoAtual = res.endereco || null;
     renderEndereco();
+    return true;
 }
 // ── Busca pelo CEP (T005) ──
 // Preenche rua, bairro, cidade e UF; falha ou demora nunca impede o preenchimento manual.
@@ -149,6 +221,11 @@ async function buscarCep(cep) {
 }
 $('detBody').addEventListener('input', e => {
     const alvo = e.target;
+    if (pontoRascunho && CAMPOS_ENDERECO.some(([k]) => alvo.id === `end_${k}`)) {
+        pontoRascunho = null;
+        $('end_ponto_consentimento').checked = false;
+        $('endPontoEstado').textContent = 'O endereço mudou. Confira e selecione novamente o ponto.';
+    }
     if (alvo.id !== 'end_cep')
         return;
     const d = regrasEndereco.soDigitosCep(alvo.value);
@@ -173,7 +250,22 @@ $('detBody').addEventListener('submit', async (e) => {
     const consentimento = $('end_consentimento').checked;
     if (!mostrarErrosEndereco(regrasEndereco.validar(form, consentimento)))
         return;
-    const res = await chamarEndereco(r, { acao: 'endereco_salvar', endereco: form, consentimento }, $('endSalvar'));
+    const revogarPonto = document.querySelector('#end_revogar_ponto')?.checked || false;
+    const autorizado = $('end_ponto_consentimento').checked;
+    const atual = enderecoAtual;
+    const mudou = atual?.ponto?.exato && CAMPOS_ENDERECO.some(([k]) => (k === 'cep' ? regrasEndereco.soDigitosCep(form[k]) : form[k].trim()) !== atual[k]);
+    if (mudou && !pontoRascunho && !revogarPonto) {
+        $('endMsg').textContent = ERROS_ENDERECO.ponto_reconfirmar;
+        $('endMapa').focus();
+        return;
+    }
+    if (pontoRascunho && !revogarPonto && !autorizado) {
+        $('endMsg').textContent = ERROS_ENDERECO.consentimento_ponto;
+        $('end_ponto_consentimento').focus();
+        return;
+    }
+    const ponto = pontoRascunho && !revogarPonto ? { ...pontoRascunho, autorizado } : undefined;
+    const res = await chamarEndereco(r, { acao: 'endereco_salvar', endereco: { ...form, ponto, revogarPonto, versao: enderecoAtual?.versao || '' }, consentimento }, $('endSalvar'));
     if (!res?.ok)
         return;
     enderecoAtual = res.endereco || null;
@@ -189,6 +281,10 @@ $('detBody').addEventListener('click', async (e) => {
     $('endMsg').textContent = '';
     if (b.dataset.end === 'editar')
         formEndereco();
+    else if (b.dataset.end === 'recarregar')
+        await carregarEnderecoDe(r);
+    else if (b.dataset.end === 'usar-ponto' && pinoEndereco)
+        marcarPontoEndereco(pinoEndereco.getLatLng().wrap());
     else if (b.dataset.end === 'cancelar') {
         renderEndereco();
         $('endCorpo').querySelector('[data-end="editar"]')?.focus();
@@ -196,11 +292,22 @@ $('detBody').addEventListener('click', async (e) => {
     else if (b.dataset.end === 'remover') {
         if (!confirm(`Remover o endereço de ${nomeCurto(r)}? Ele é apagado de vez.`))
             return;
-        const res = await chamarEndereco(r, { acao: 'endereco_excluir' }, b);
+        const res = await chamarEndereco(r, { acao: 'endereco_excluir', versaoEndereco: enderecoAtual?.versao }, b);
         if (!res?.ok)
             return;
         enderecoAtual = null;
         renderEndereco();
         $('endCorpo').querySelector('[data-end="editar"]')?.focus();
     }
+});
+function atualizarMapaDeEndereco() {
+    invalidarDadosMapa();
+    if (estado.aba === 'acompanhar')
+        void carregarMapa();
+}
+$('det').addEventListener('close', () => {
+    if ($('det').open)
+        return;
+    revisaoEndereco++;
+    limparEditorPonto();
 });

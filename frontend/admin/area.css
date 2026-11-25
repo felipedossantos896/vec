@@ -49,6 +49,9 @@ body.na-area .wrap { max-width: none; padding: 0; }
 
 /* Rostos no mapa */
 .rostos-pin { display: flex; justify-content: center; }
+.rp-alfinete { position: absolute; bottom: 2px; left: 50%; width: 15px; height: 15px; background: var(--grafite); border: 2px solid #fff; border-radius: 50% 50% 50% 0; transform: translateX(-50%) rotate(-45deg); box-shadow: 0 1px 3px #15171c66; }
+.rostos-pin:has(~ .rp-alfinete)::after { content: ''; position: absolute; top: calc(var(--rosto) - 2px); bottom: 8px; left: calc(50% - 1px); width: 2px; background: var(--grafite); z-index: -1; }
+.end-mapa { height: 260px; margin-block: 8px; border-radius: 10px; }
 .rp { display: block; margin-left: calc(var(--rosto, 40px) * -0.45); border-radius: 50%; }
 .rp:first-child { margin-left: 0; }
 .av.av-pin { --av: var(--rosto, 40px); border: calc(2px + var(--rosto, 40px) * 0.03) solid var(--cel, #b7b3a8); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25); transition: width 0.15s, height 0.15s; }

@@ -39,7 +39,7 @@ function trilhosDetalhe(r: Registro): string {
     + secao('Trilho do líder de célula (opcional)', [['Treinamento Expresso 02', marco('expresso02')]]);
 }
 
-function abrirDetalhe(r: Registro) {
+function abrirDetalhe(r: Registro, ajustarLocal = false) {
   const txt = (v: unknown): string => v ? esc(v) : '<span class="pill x">—</span>';
   $('detNome').textContent = nomeCurto(r);
   const completo = regrasNomes.completo(r.nome);
@@ -96,7 +96,14 @@ function abrirDetalhe(r: Registro) {
   $('detBody').scrollTop = 0;
   d.scrollTop = 0;
   marcarSelecionado();
-  carregarEnderecoDe(r);
+  if (ajustarLocal) mostrarAbaDetalhe('ficha');
+  void carregarEnderecoDe(r).then(carregado => {
+    const editarEndereco = document.querySelector<HTMLButtonElement>('#endCorpo [data-end="editar"]');
+    if (carregado && ajustarLocal && registroAberto() === r && $<HTMLDialogElement>('det').open && editarEndereco) {
+      editarEndereco.click();
+      $('endSec').scrollIntoView({ block: 'start' });
+    }
+  });
   carregarAnfitriaoDe(r);
 }
 

@@ -210,8 +210,9 @@ type adminReq struct {
 	Papel         string           `json:"papel"`
 	CriarCadastro *cadastroLiderIn `json:"criarCadastro"`
 	// Endereço da pessoa (Spec 002): consentimento marcado agora por quem salva
-	Endereco      *enderecoIn `json:"endereco"`
-	Consentimento bool        `json:"consentimento"`
+	Endereco       *enderecoIn `json:"endereco"`
+	Consentimento  bool        `json:"consentimento"`
+	VersaoEndereco *string     `json:"versaoEndereco"`
 	// Anfitrião (Spec 004): confirmação marcada agora por quem salva
 	Anfitriao   *anfitriaoIn `json:"anfitriao"`
 	Confirmacao bool         `json:"confirmacao"`

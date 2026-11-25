@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -18,13 +19,22 @@ import (
 
 // enderecoIn é o endereço enviado pelo painel em endereco_salvar.
 type enderecoIn struct {
-	CEP         string `json:"cep"`
-	Logradouro  string `json:"logradouro"`
-	Numero      string `json:"numero"`
-	Complemento string `json:"complemento"`
-	Bairro      string `json:"bairro"`
-	Cidade      string `json:"cidade"`
-	UF          string `json:"uf"`
+	CEP          string           `json:"cep"`
+	Logradouro   string           `json:"logradouro"`
+	Numero       string           `json:"numero"`
+	Complemento  string           `json:"complemento"`
+	Bairro       string           `json:"bairro"`
+	Cidade       string           `json:"cidade"`
+	UF           string           `json:"uf"`
+	Ponto        *pontoEnderecoIn `json:"ponto"`
+	RevogarPonto bool             `json:"revogarPonto"`
+	Versao       *string          `json:"versao"`
+}
+
+type pontoEnderecoIn struct {
+	Lat        *float64 `json:"lat"`
+	Lng        *float64 `json:"lng"`
+	Autorizado bool     `json:"autorizado"`
 }
 
 const (
@@ -81,15 +91,37 @@ func validarEndereco(in enderecoIn) (store.Endereco, string) {
 	if e.Logradouro == "" || e.Numero == "" || e.Bairro == "" || e.Cidade == "" {
 		return store.Endereco{}, "endereco_incompleto"
 	}
+	if in.RevogarPonto && (in.Ponto != nil || in.Versao == nil || *in.Versao == "") {
+		return store.Endereco{}, "dados_invalidos"
+	}
+	if p := in.Ponto; p != nil {
+		if !p.Autorizado {
+			return store.Endereco{}, "consentimento_ponto"
+		}
+		if p.Lat == nil || p.Lng == nil || math.IsNaN(*p.Lat) || math.IsNaN(*p.Lng) || math.Abs(*p.Lat) > 85 || math.Abs(*p.Lng) > 180 {
+			return store.Endereco{}, "ponto_invalido"
+		}
+		if in.Versao == nil {
+			return store.Endereco{}, "endereco_desatualizado"
+		}
+		e.Ponto = &store.PontoEndereco{Lat: *p.Lat, Lng: *p.Lng, Exato: true}
+	}
+	e.VersaoEsperada = in.Versao
+	e.RevogarPonto = in.RevogarPonto
 	return e, ""
 }
 
 func enderecoOut(e store.Endereco) map[string]any {
+	ponto := e.Ponto
+	if ponto != nil && !ponto.Exato {
+		ponto = &store.PontoEndereco{Lat: arred(centroGrade(ponto.Lat)), Lng: arred(centroGrade(ponto.Lng))}
+	}
 	return map[string]any{
 		"cep": e.CEP, "logradouro": e.Logradouro, "numero": e.Numero, "complemento": e.Complemento,
 		"bairro": e.Bairro, "cidade": e.Cidade, "uf": e.UF,
 		"consentimentoEm": fmtLocal(e.ConsentimentoEm), "consentimentoPor": e.ConsentimentoPor,
 		"atualizadoEm": fmtLocal(e.AtualizadoEm), "atualizadoPor": e.AtualizadoPor,
+		"ponto": ponto, "versao": e.AtualizadoEm,
 	}
 }
 
@@ -140,10 +172,23 @@ func (s *Server) enderecoSalvar(ctx context.Context, req adminReq) reply {
 		return s.internal("endereco_salvar", err)
 	}
 	if !ok {
+		atual, _, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
+		if err != nil {
+			return s.internal("endereco_salvar", err)
+		}
+		if visivel {
+			if atual.Ponto != nil && atual.Ponto.Exato && e.Ponto == nil && !e.RevogarPonto &&
+				e.VersaoEsperada != nil && *e.VersaoEsperada == atual.AtualizadoEm {
+				return failReply("ponto_reconfirmar")
+			}
+			return failReply("endereco_desatualizado")
+		}
 		return failReply("nao_encontrado")
 	}
 	s.Log.Info("endereço salvo", "linha", req.Linha, "por", a.user.Usuario)
-	s.geocodificarDepois(req.Linha, e)
+	if e.Ponto == nil {
+		s.geocodificarDepois(req.Linha, e)
+	}
 	return s.enderecoLer(ctx, req)
 }
 
@@ -158,12 +203,22 @@ func (s *Server) enderecoExcluir(ctx context.Context, req adminReq) reply {
 	if req.Linha <= 0 {
 		return failReply("dados_invalidos")
 	}
-	ok, err := s.Store.ExcluirEndereco(ctx, a.scope, req.Linha)
+	ok, err := s.Store.ExcluirEndereco(ctx, a.scope, req.Linha, req.VersaoEndereco)
 	if err != nil {
 		return s.internal("endereco_excluir", err)
 	}
 	if !ok {
-		return failReply("nao_encontrado")
+		_, tem, visivel, err := s.Store.Endereco(ctx, a.scope, req.Linha)
+		if err != nil {
+			return s.internal("endereco_excluir", err)
+		}
+		if !visivel {
+			return failReply("nao_encontrado")
+		}
+		if tem {
+			return failReply("endereco_desatualizado")
+		}
+		return okReply(nil)
 	}
 	s.Log.Info("endereço removido", "linha", req.Linha, "por", a.user.Usuario)
 	return okReply(nil)

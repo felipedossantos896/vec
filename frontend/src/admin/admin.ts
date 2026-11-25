@@ -223,7 +223,16 @@ function lerSessao(): Sessao | null {
   } catch (e) { return null; }
 }
 function salvarSessao(s: Sessao) { try { sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(s)); } catch (e) {} }
-function limparSessao() { try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (e) {} }
+function limparSessao() {
+  try { sessionStorage.removeItem(CHAVE_SESSAO); } catch (e) {}
+  invalidarDadosMapa();
+  mapaLeaflet?.setView([-14.2, -51.9], 4, { animate: false });
+  $('mapaLista').replaceChildren();
+  limparEditorPonto();
+  enderecoAtual = null;
+  $<HTMLDialogElement>('det').close();
+  $('detBody').replaceChildren();
+}
 
 async function api<T extends ApiResult>(payload: object): Promise<T> {
   const r = await fetch(ADMIN_API_URL, {

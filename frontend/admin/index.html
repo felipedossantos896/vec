@@ -120,7 +120,7 @@
       <p class="sr-only" id="areaSub">As pessoas onde elas estão, por célula.</p>
       <!-- Spec 016: o mapa ocupa a tela; filtros e painel flutuam; o resto fica na gaveta -->
       <section class="area-palco" id="areaPalco" aria-label="Mapa da área">
-        <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com as pessoas da área, em áreas de cerca de 300 m"></div>
+        <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com pontos confirmados e áreas aproximadas"></div>
         <div class="filters ui-filter-bar area-filtros" role="group" aria-label="Filtros da área">
           <select class="input" id="aSetor" aria-label="Filtrar por setor"></select>
           <select class="input" id="aCelula" aria-label="Filtrar por célula"></select>
@@ -150,10 +150,10 @@
             <div id="gvSlotPainel"></div>
             <p class="field-hint" id="mapaStatus" role="status"></p>
             <p class="msg" id="mapaAviso"></p>
-            <p class="nota-fraca">Os marcadores mostram áreas aproximadas de 300 m.</p>
+            <p class="nota-fraca">Alfinetes mostram pontos confirmados. Os demais marcadores representam áreas aproximadas de 300 m.</p>
             <div id="aConteudo"></div>
             <details class="mapa-sec area-lista"><summary>Lista das áreas do mapa</summary><div id="mapaLista" class="mapa-lista"></div></details>
-            <p class="area-priv">Posições aproximadas (áreas de ~300 m). Endereço só na ficha.</p>
+            <p class="area-priv">Endereço completo só na ficha.</p>
           </div>
         </section>
       </section>

@@ -87,6 +87,37 @@ func TestEnderecoSalvarExigeConsentimentoEValida(t *testing.T) {
 	}
 }
 
+func TestPontoManualExigeAutorizacaoECoordenadasValidas(t *testing.T) {
+	lat, lng := -3.731234, -38.521234
+	entrada := enderecoValido()
+	versao := ""
+	entrada.Versao = &versao
+	entrada.Ponto = &pontoEnderecoIn{Lat: &lat, Lng: &lng}
+	if _, codigo := validarEndereco(*entrada); codigo != "consentimento_ponto" {
+		t.Fatalf("sem autorização: %q", codigo)
+	}
+	entrada.Ponto.Autorizado = true
+	e, codigo := validarEndereco(*entrada)
+	if codigo != "" || e.Ponto == nil || !e.Ponto.Exato || e.Ponto.Lat != lat {
+		t.Fatalf("ponto válido recusado: %q", codigo)
+	}
+	lat = 86
+	if _, codigo := validarEndereco(*entrada); codigo != "ponto_invalido" {
+		t.Fatalf("coordenada fora do mapa: %q", codigo)
+	}
+}
+
+func TestEnderecoOutProtegePontoNaoConfirmado(t *testing.T) {
+	e := store.Endereco{Ponto: &store.PontoEndereco{Lat: -3.731234, Lng: -38.521234}}
+	if p := enderecoOut(e)["ponto"].(*store.PontoEndereco); p.Exato || p.Lat == e.Ponto.Lat || p.Lng == e.Ponto.Lng {
+		t.Fatal("geocodificação automática devolvida como ponto exato")
+	}
+	e.Ponto.Exato = true
+	if p := enderecoOut(e)["ponto"].(*store.PontoEndereco); !p.Exato || p.Lat != e.Ponto.Lat || p.Lng != e.Ponto.Lng {
+		t.Fatal("posição confirmada foi alterada")
+	}
+}
+
 func TestEnderecoForaDoEscopoEhNaoEncontrado(t *testing.T) {
 	s, db, token := painelServer(t, 0) // nenhum cadastro visível no escopo
 	db.endereco = linhaEndereco

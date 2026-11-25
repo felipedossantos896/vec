@@ -46,7 +46,8 @@ func TestEnderecoUsaEscopoEmTodasAsOperacoes(t *testing.T) {
 	if _, err := st.SalvarEndereco(ctx, sc, 7, enderecoTeste, "lider", time.Now()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.ExcluirEndereco(ctx, sc, 7); err != nil {
+	versao := "versao anterior"
+	if _, err := st.ExcluirEndereco(ctx, sc, 7, &versao); err != nil {
 		t.Fatal(err)
 	}
 	if len(db.doCalls) != 3 {
@@ -57,8 +58,8 @@ func TestEnderecoUsaEscopoEmTodasAsOperacoes(t *testing.T) {
 			exigeEscopo(t, stmt, sc, 7)
 		}
 	}
-	if !strings.HasPrefix(strings.TrimSpace(db.doCalls[2][1].SQL), "DELETE FROM enderecos") {
-		t.Fatalf("remoção deve apagar a linha: %s", db.doCalls[2][1].SQL)
+	if stmt := db.doCalls[2][0]; !strings.HasPrefix(stmt.SQL, "DELETE FROM enderecos WHERE atualizado_em = ?") || stmt.Args[0] != versao {
+		t.Fatalf("remoção deve limitar pela versão: %#v", stmt)
 	}
 }
 
@@ -68,7 +69,7 @@ func TestEnderecoSemEscopoNaoConsulta(t *testing.T) {
 	ctx := context.Background()
 	_, tem, visivel, err := st.Endereco(ctx, Scope{}, 7)
 	salvo, err2 := st.SalvarEndereco(ctx, Scope{}, 7, enderecoTeste, "x", time.Now())
-	removido, err3 := st.ExcluirEndereco(ctx, Scope{}, 7)
+	removido, err3 := st.ExcluirEndereco(ctx, Scope{}, 7, nil)
 	if err != nil || err2 != nil || err3 != nil || tem || visivel || salvo || removido || len(db.doCalls) != 0 {
 		t.Fatalf("escopo vazio deve negar sem consultar: %v %v %v %v %d", tem, visivel, salvo, removido, len(db.doCalls))
 	}
@@ -109,7 +110,7 @@ func TestSalvarEnderecoRegistraConsentimentoDeQuemSalva(t *testing.T) {
 	}
 	args := db.doCalls[0][0].Args
 	want := []any{"60000000", "Rua Exemplo", "10", "Casa B", "Centro", "Fortaleza", "CE",
-		"2026-11-20T16:00:00Z", "lider", "2026-11-20T16:00:00Z", "lider", int64(7)}
+		"2026-11-20T16:00:00Z", "lider", "2026-11-20T16:00:00Z", "lider", nil, nil, nil, nil, nil, int64(7)}
 	for i, w := range want {
 		if args[i] != w {
 			t.Fatalf("arg %d = %#v, queria %#v (todos: %#v)", i, args[i], w, args)

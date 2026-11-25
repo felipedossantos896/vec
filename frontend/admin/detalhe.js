@@ -34,7 +34,7 @@ function trilhosDetalhe(r) {
     ]) + secao('Trilho do discipulador', [['Treinamento Expresso 01', marco('expresso01')]])
         + secao('Trilho do líder de célula (opcional)', [['Treinamento Expresso 02', marco('expresso02')]]);
 }
-function abrirDetalhe(r) {
+function abrirDetalhe(r, ajustarLocal = false) {
     const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
     $('detNome').textContent = nomeCurto(r);
     const completo = regrasNomes.completo(r.nome);
@@ -92,7 +92,15 @@ function abrirDetalhe(r) {
     $('detBody').scrollTop = 0;
     d.scrollTop = 0;
     marcarSelecionado();
-    carregarEnderecoDe(r);
+    if (ajustarLocal)
+        mostrarAbaDetalhe('ficha');
+    void carregarEnderecoDe(r).then(carregado => {
+        const editarEndereco = document.querySelector('#endCorpo [data-end="editar"]');
+        if (carregado && ajustarLocal && registroAberto() === r && $('det').open && editarEndereco) {
+            editarEndereco.click();
+            $('endSec').scrollIntoView({ block: 'start' });
+        }
+    });
     carregarAnfitriaoDe(r);
 }
 function mostrarAbaDetalhe(k, focar = false) {

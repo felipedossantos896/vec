@@ -1,8 +1,7 @@
 "use strict";
 // ══════ MAPA: REGRAS PURAS ══════
 // Recorte dos dados do mapa pelo filtro atual, sem tocar no DOM nem no Leaflet,
-// para poder ser testado em Node. O servidor já entrega só o escopo do usuário e
-// só o centro de cada área de ~300 m (nunca a coordenada de alguém).
+// para poder ser testado em Node. Os pontos confirmados têm a marca exato.
 const regrasMapa = {
     LEQUE_CIRCULO: 8, // até 8 rostos em círculo; acima disso, espiral (Spec 012)
     // Posições do leque em pixels, em volta do centro da área (só visual: nenhuma posição real).
