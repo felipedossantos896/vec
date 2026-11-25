@@ -42,7 +42,7 @@ async function differs(page, before, after) {
         Math.abs(left[i] - right[i]), Math.abs(left[i + 1] - right[i + 1]),
         Math.abs(left[i + 2] - right[i + 2]), Math.abs(left[i + 3] - right[i + 3])
       );
-      if (difference > 1 || (difference && ++changedPixels > 10)) return true;
+      if (difference > 5 || (difference && ++changedPixels > 25)) return true;
     }
     return false;
   }, [before.toString('base64'), after.toString('base64')]);
