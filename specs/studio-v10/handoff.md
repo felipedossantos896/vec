@@ -4,4 +4,4 @@ T001 / #232 em `codex/studio-v10`. O catálogo apresenta as duas galerias de ref
 
 O teste de inventário identifica cada frame por título e estado, e a galeria verifica contraste de texto, foco visível, retorno de foco e altura dos controles.
 
-As suítes de Pessoas, Inventário, Movimento e Biblioteca passaram com Playwright e Chrome em Full HD, QHD, 4K e mobile. A suíte visual gravou e comparou as 92 capturas da V1.0. O PR registra os gates de CI e revisão, e as capturas acompanham o relatório de entrega.
+As suítes de Pessoas, Inventário, Movimento e Biblioteca passaram com Playwright e Chrome em Full HD, QHD, 4K e mobile. A suíte visual gravou e comparou as 93 capturas da V1.0, incluindo a região rolável do mapa mobile. O PR registra os gates de CI e revisão, e as capturas acompanham o relatório de entrega.
