@@ -34,11 +34,11 @@
   let opener = null;
   const mentorName = p => people[p.mentor]?.name || '';
 
-  function renderList(message = '') {
+  function renderList() {
     const query = norm(search.value.trim());
     const matches = people.map((p, id) => ({ ...p, id })).filter(p =>
       (!cell.value || p.cell === cell.value) && [p.name, mentorName(p)].some(name => norm(name).includes(query)));
-    status.textContent = message || (matches.length ? `${matches.length} de ${people.length} pessoas` : 'Nenhuma pessoa encontrada.');
+    status.textContent = matches.length ? `${matches.length} de ${people.length} pessoas` : 'Nenhuma pessoa encontrada.';
     rows.innerHTML = matches.map(p => `<li><button type="button" class="people-row" data-person="${p.id}">
       <span class="avatar" aria-hidden="true">${html(initials(p.name))}</span>
       <span><strong>${html(p.name)}</strong><small>${html(p.cell)}</small></span>
@@ -52,9 +52,10 @@
     if (!dialog.open) dialog.showModal();
     dialog.querySelector('h2').focus();
   }
-  function profile() {
+  function profile(saved = false) {
     const p = people[selected];
     show('Ficha individual', `
+      ${saved ? '<p role="status">Cadastro fictício salvo.</p>' : ''}
       <div class="person"><span class="avatar" aria-hidden="true">${html(initials(p.name))}</span><div><strong>${html(p.name)}</strong><br><small>${html(p.cell)} · ${html(mentorName(p) || 'Sem discipulador')}</small></div></div>
       <section><h3>Trilho do membro</h3><ul class="people-stages">${stages.map(stage => `<li>${stage}<span class="people-badge">${p.stages.includes(stage) ? 'Concluída' : 'Não informada'}</span></li>`).join('')}</ul></section>
       <section><h3>Trilho do discipulador</h3><p>Expresso 01 · ${p.disciple ? 'Registrado' : 'Não informado'}</p></section>
@@ -112,8 +113,8 @@
     } else {
       Object.assign(people[selected], values);
     }
-    renderList('Cadastro fictício salvo.');
-    profile();
+    renderList();
+    profile(true);
   });
   renderList();
   if (key === 'profile') { selected = 0; profile(); }

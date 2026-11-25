@@ -70,6 +70,15 @@ try {
     await page.getByText('4 de 4 pessoas').waitFor();
     assert.equal(await page.locator('.people-row').count(), 4);
     assert.match(await page.locator('.people-row').filter({ hasText: 'Clara Ensaio' }).innerText(), /Ana Exemplo/);
+    await search.fill('Bruno Modelo');
+    await page.getByLabel('Célula', { exact: true }).selectOption('Horizonte');
+    await page.locator('.people-row').filter({ hasText: 'Bruno Modelo' }).press('Enter');
+    await dialog.getByRole('button', { name: 'Editar pessoa' }).click();
+    await dialog.getByLabel('Célula').selectOption('Aurora');
+    await dialog.getByRole('button', { name: 'Salvar' }).click();
+    assert.match(await dialog.getByRole('status').innerText(), /Cadastro fictício salvo/);
+    await page.keyboard.press('Escape');
+    assert.match(await page.getByRole('status').innerText(), /Nenhuma pessoa encontrada/);
     for (const frame of ['profile', 'new-person', 'edit-person']) {
       await open(frame);
       assert.equal(await page.getByRole('dialog').isVisible(), true);
