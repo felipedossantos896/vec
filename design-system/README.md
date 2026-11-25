@@ -24,3 +24,7 @@ Frames A07, A08, A14 e A15 compartilham busca e filtro, ficha em gaveta com trê
 ## V0.4 — Complete Inventory
 
 Os 21 frames têm preview. As ferramentas da Área simulam resultados, Indicadores e Discípulos usam fixtures, e os fluxos de acesso e cadastro público demonstram as transições sem criar contas nem enviar dados.
+
+## V0.5 — Motion & Interaction
+
+O catálogo oferece navegação por setas, Home e End. O mapa e a ficha devolvem o foco ao fechar, e as transições respeitam a preferência por movimento reduzido. O preview mobile mantém escala de 100% e oferece rolagem quando a janela do catálogo é menor.

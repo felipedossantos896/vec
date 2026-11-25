@@ -1,0 +1,16 @@
+:root { --motion-fast: 120ms; --motion-enter: 200ms; --motion-ease: cubic-bezier(.2,.75,.3,1); }
+button, .people-row { transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
+#preview { transition: opacity var(--motion-fast) var(--motion-ease); }
+#stage[data-loading="true"] #preview { opacity: .55; }
+.people-dialog[open] { animation: studio-drawer var(--motion-enter) var(--motion-ease); }
+.people-dialog[open]::backdrop { animation: studio-reveal var(--motion-fast) ease-out; }
+.mx-member:not([hidden]), .mx-list:not([hidden]) { animation: studio-reveal var(--motion-fast) ease-out; }
+@keyframes studio-drawer { from { opacity: .6; translate: 14px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes studio-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  button, .people-dialog[open], .people-dialog[open]::backdrop, .mx-member:not([hidden]), .mx-list:not([hidden]), #preview {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (max-width: 600px) { .mx-controls button { width: 44px; } }
