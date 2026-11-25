@@ -8,6 +8,12 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const inventory = JSON.parse(await readFile(path.join(root, 'inventory.json'), 'utf8'));
 assert.equal(inventory.screens.length, 21);
 assert.equal(new Set(inventory.screens.map(screen => screen.key)).size, 21);
+const headings = {
+  login: 'Entrar no painel', member: 'Mapa da área', care: 'Mapa da área',
+  multiply: 'Planejar multiplicação', people: 'Pessoas', profile: 'Pessoas',
+  'new-person': 'Pessoas', 'edit-person': 'Pessoas', disciples: 'Meus discípulos'
+};
+const personDialogs = new Set(['profile', 'new-person', 'edit-person']);
 const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'chrome' } : {});
 try {
   for (const { width, height } of inventory.viewports) {
@@ -24,7 +30,14 @@ try {
     for (const screen of inventory.screens) {
       assert.equal(screen.status, 'prototype');
       await open(screen.key);
-      assert.doesNotMatch(await page.locator('h1').innerText(), /Frame planejado/);
+      assert.equal(await page.locator('h1').innerText(), headings[screen.key] ?? screen.title, screen.key);
+      if (personDialogs.has(screen.key)) {
+        assert(await page.getByRole('dialog', { name: screen.title, exact: true }).isVisible());
+      }
+      if (['map', 'member', 'care'].includes(screen.key)) {
+        assert.equal(await page.locator('#mx-member').isVisible(), screen.key === 'member');
+        assert.equal(await page.locator('#mx-list').isVisible(), screen.key === 'care');
+      }
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, screen.key + ' em ' + width);
       if (process.env.STUDIO_ARTIFACTS) await page.screenshot({path: path.join(process.env.STUDIO_ARTIFACTS, screen.id + '-' + width + '.png')});
     }
@@ -39,6 +52,7 @@ try {
     await open('metrics');
     await page.getByLabel('Célula').selectOption('Horizonte');
     assert.equal(await page.locator('.inv-kpis strong').first().innerText(), '8');
+    assert(await page.getByRole('meter', { name: 'Setembro' }).isVisible());
     await open('settings');
     await page.getByRole('link',{name:'Novo usuário'}).click();
     await page.getByLabel('Nome',{exact:true}).fill('Persona Teste');
@@ -50,7 +64,10 @@ try {
     await page.getByRole('button',{name:'Continuar'}).click();
     await page.getByRole('button',{name:'Voltar'}).click();
     assert.equal(await page.getByLabel('Nome completo').inputValue(), 'Persona Teste');
-    for (let i=0; i<4; i++) await page.getByRole('button',{name:'Continuar'}).click();
+    for (const heading of ['Sua fé', 'Sua célula', 'Treinamentos', 'Para terminar']) {
+      await page.getByRole('button',{name:'Continuar'}).click();
+      assert.equal(await page.locator('h1').innerText(), heading);
+    }
     await page.getByLabel('Confirmo que usei dados fictícios').check();
     await page.getByRole('button',{name:'Concluir'}).click();
     assert.match(await page.locator('h1').innerText(), /Cadastro recebido/);

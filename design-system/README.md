@@ -48,3 +48,5 @@ A matriz registra páginas completas. Para a lista do mapa e a gaveta de Pessoas
 Use controles nativos com rótulos e foco visível. Os controles compartilhados usam altura mínima de 36 px no desktop e 44 px no mobile. Prefira uma ação primária por contexto. Em diálogos, mova o foco para dentro ao abrir e devolva ao acionador ao fechar. Use `foundations/motion.css` para integrar transições e respeitar movimento reduzido.
 
 Ao alterar um token, valide os 21 frames e ambas as galerias. O ADR-0014 descreve os limites de integração.
+
+Para executar os testes de interação, instale as dependências da raiz com `npm ci` e o navegador com `npx playwright install chromium`. Execute `node design-system/tests/people.mjs`, `node design-system/tests/inventory.mjs`, `node design-system/tests/motion.mjs` e `node design-system/tests/library.mjs`.

@@ -104,7 +104,7 @@
       view.querySelector('.inv-kpis').innerHTML = ['Pessoas', 'Novos cadastros', 'Jornada completa', 'Com discipulador'].map((label, i) =>
         '<div class="panel"><small>' + label + '</small><strong>' + [count, 2, count / 2, count - 2][i] + '</strong></div>').join('');
       view.querySelector('ul').innerHTML = ['Setembro', 'Outubro', 'Novembro'].map((label, i) =>
-        '<li><span>' + label + '</span><meter min="0" max="12" value="' + (count - i * 2) + '">' + (count - i * 2) + '</meter><span>' + (count - i * 2) + '</span></li>').join('');
+        '<li><span id="metric-month-' + i + '">' + label + '</span><meter aria-labelledby="metric-month-' + i + '" min="0" max="12" value="' + (count - i * 2) + '">' + (count - i * 2) + '</meter><span>' + (count - i * 2) + '</span></li>').join('');
     }
     picker.addEventListener('change', metrics);
     metrics();
