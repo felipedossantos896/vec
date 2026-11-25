@@ -20,6 +20,7 @@ try {
     await page.route(url => url.hostname !== 'studio.test', route => route.abort());
     await page.goto('https://studio.test/');
     const nav = page.getByRole('navigation', {name:'Inventário'});
+    await nav.getByRole('button', {name:'B06 · Cadastro recebido'}).waitFor();
     const foundations = nav.getByRole('button', {name:'Fundamentos'});
     await foundations.press('ArrowDown');
     assert.equal(await page.locator(':focus').innerText(), 'Componentes');
