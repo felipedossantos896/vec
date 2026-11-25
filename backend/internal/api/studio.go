@@ -44,7 +44,7 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 	mux.Handle("GET "+studioPath+"access/session.js", files)
 	mux.HandleFunc("GET "+studioPath, func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(studioCookie)
-		if err != nil && r.URL.Path == studioPath {
+		if r.URL.Path == studioPath && (r.URL.Query().Get("catalogo") != "1" || err != nil) {
 			entry := r.Clone(r.Context())
 			entry.URL.Path = studioPath + "access/"
 			files.ServeHTTP(w, entry)

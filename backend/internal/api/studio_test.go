@@ -50,7 +50,10 @@ func TestStudioSession(t *testing.T) {
 	if !cookie.Secure || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != studioPath {
 		t.Error("cookie do Studio precisa ser restrito à rota e ao HTTPS")
 	}
-	for _, path := range []string{"", "inventory.json", "screens/preview.html", "studio/studio.js"} {
+	if res := request(http.MethodGet, studioPath, "", cookie); !strings.Contains(res.Body.String(), "access/session.js") {
+		t.Error("a entrada deve verificar a sessão da aba mesmo com um cookie existente")
+	}
+	for _, path := range []string{"?catalogo=1", "inventory.json", "screens/preview.html", "studio/studio.js"} {
 		res := request(http.MethodGet, studioPath+path, "", cookie)
 		if res.Code != 200 || res.Header().Get("Cache-Control") != "no-store" {
 			t.Errorf("arquivo com sessão %s = %d", path, res.Code)
