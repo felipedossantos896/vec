@@ -9,3 +9,5 @@ O preview funciona em origem opaca. O servidor incorpora seus recursos e autoriz
 A entrada verifica o token da aba em cada abertura e faz uma única tentativa de troca por cookie. Playwright verificou duas contas sintéticas em abas alternadas e a mensagem exibida quando o navegador bloqueia o cookie.
 
 O HTML do catálogo sai pela troca autenticada, e a URL de entrada sempre entrega a tela de acesso. Playwright confirmou que abrir a URL em outra aba sem sessão permanece na tela de acesso mesmo quando há um cookie válido no navegador.
+
+Cada sessão usa um caminho de recursos e um cookie próprios. Playwright confirmou que sair da conta B preserva a navegação no catálogo aberto pela conta A no mesmo navegador.

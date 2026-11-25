@@ -47,12 +47,20 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.Error(w, "Catálogo indisponível", http.StatusInternalServerError)
 			return
 		}
-		writeStudioCookie(w, token, 0)
+		assetRoot := studioAssetRoot(token)
+		writeStudioCookie(w, assetRoot, token, 0)
+		w.Header().Set("X-Vec-Studio-Assets", assetRoot)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		catalog = bytes.Replace(catalog, []byte("<meta charset="), []byte(`<base href="`+assetRoot+`"><meta charset=`), 1)
 		_, _ = w.Write(catalog)
 	})
-	mux.HandleFunc("DELETE "+studioPath+"session", func(w http.ResponseWriter, _ *http.Request) {
-		writeStudioCookie(w, "", -1)
+	mux.HandleFunc("DELETE "+studioPath+"session", func(w http.ResponseWriter, r *http.Request) {
+		token, bearer := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if !bearer || token == "" {
+			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
+			return
+		}
+		writeStudioCookie(w, studioAssetRoot(token), "", -1)
 		w.WriteHeader(http.StatusNoContent)
 	})
 	mux.HandleFunc("GET "+studioPath+"access/session.js", func(w http.ResponseWriter, r *http.Request) {
@@ -65,8 +73,10 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			serveFile(w, r, "access/index.html")
 			return
 		}
+		key, asset, matched := strings.Cut(strings.TrimPrefix(relative, "files/"), "/")
+		assetRoot := studioPath + "files/" + key + "/"
 		cookie, err := r.Cookie(studioCookie)
-		if err != nil {
+		if !strings.HasPrefix(relative, "files/") || !matched || err != nil || assetRoot != studioAssetRoot(cookie.Value) {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
@@ -80,10 +90,11 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			return
 		}
 		if session == nil {
-			writeStudioCookie(w, "", -1)
+			writeStudioCookie(w, assetRoot, "", -1)
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
+		name = strings.TrimPrefix(path.Clean("/"+asset), "/")
 		if name == "screens/preview.html" {
 			if previewErr != nil {
 				http.Error(w, "Preview indisponível", http.StatusInternalServerError)
@@ -144,9 +155,14 @@ func studioPreview(assets fs.FS) (string, string, error) {
 	return preview, policy, assetErr
 }
 
-func writeStudioCookie(w http.ResponseWriter, token string, maxAge int) {
+func studioAssetRoot(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return studioPath + "files/" + base64.RawURLEncoding.EncodeToString(sum[:]) + "/"
+}
+
+func writeStudioCookie(w http.ResponseWriter, assetRoot, token string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
-		Name: studioCookie, Value: token, Path: studioPath, MaxAge: maxAge,
+		Name: studioCookie, Value: token, Path: assetRoot, MaxAge: maxAge,
 		Secure: true, HttpOnly: true, SameSite: http.SameSiteStrictMode,
 	})
 }

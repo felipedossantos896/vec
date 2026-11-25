@@ -243,9 +243,12 @@ function entrar() {
 }
 $('btnLogout').addEventListener('click', () => {
     const s = lerSessao();
-    if (s)
+    if (s) {
         api({ acao: 'logout', token: s.token }).catch(() => { });
-    fetch('/design-system/session', { method: 'DELETE', keepalive: true }).catch(() => { });
+        fetch('/design-system/session', {
+            method: 'DELETE', headers: { Authorization: 'Bearer ' + s.token }, keepalive: true
+        }).catch(() => { });
+    }
     limparSessao();
     estado.regs = [];
     estado.usuarios = [];

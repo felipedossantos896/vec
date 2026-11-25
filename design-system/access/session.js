@@ -10,7 +10,12 @@
     });
     if (response.ok) {
       const catalog = await response.text();
-      const check = await fetch('/design-system/inventory.json', { method: 'HEAD', headers });
+      const root = response.headers.get('X-Vec-Studio-Assets') || '';
+      if (!/^\/design-system\/files\/[A-Za-z0-9_-]{43}\/$/.test(root)) {
+        status.textContent = 'Não foi possível abrir o catálogo. Tente novamente.';
+        return;
+      }
+      const check = await fetch(root + 'inventory.json', { method: 'HEAD', headers });
       if (!check.ok) {
         status.textContent = 'Permita cookies para o Área VEC e abra o endereço do Studio novamente.';
         return;
