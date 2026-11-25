@@ -49,6 +49,8 @@ Use controles nativos com rótulos e foco visível. Os controles compartilhados 
 
 Ao alterar um token, valide os 21 frames e ambas as galerias. O ADR-0014 descreve os limites de integração.
 
+O iframe permite a validação nativa dos formulários que executam ações locais, e a política `form-action 'none'` bloqueia envios pelo navegador.
+
 Para executar os testes de interação, instale as dependências da raiz com `npm ci` e o navegador com `npx playwright install chromium`. Execute `node design-system/tests/people.mjs`, `node design-system/tests/inventory.mjs`, `node design-system/tests/motion.mjs` e `node design-system/tests/library.mjs`.
 
 A V0.6 ([PR #235](https://github.com/felipedossantos896/vec/pull/235)) é a primeira revisão do Studio com o executor de comparação. Para mudanças posteriores à V1.0, gere a referência a partir do merge da V1.0 ou use o JSON e os PNGs do pacote de evidências da entrega.

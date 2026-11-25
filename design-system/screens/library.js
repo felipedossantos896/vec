@@ -26,7 +26,7 @@
         <div class="actions"><span class="tag library-ok">Concluído</span><span class="tag library-warn">Pendente</span><span class="tag library-danger">Indisponível</span></div>
       </section>
       <dialog aria-labelledby="library-dialog-title"><h2 id="library-dialog-title">Nova pessoa</h2>
-        <p>Cadastro demonstrativo.</p><form method="dialog"><button class="primary" autofocus>Fechar</button></form>
+        <p>Cadastro demonstrativo.</p><button type="button" class="primary" autofocus>Fechar</button>
       </dialog>`
   };
   const key = new URLSearchParams(location.search).get('screen');
@@ -38,6 +38,7 @@
   const cell = app.querySelector('select');
   const status = app.querySelector('[role="status"]');
   app.querySelector('[data-action="dialog"]').addEventListener('click', () => dialog.showModal());
+  dialog.querySelector('button').addEventListener('click', () => dialog.close());
   app.querySelector('[data-action="clear"]').addEventListener('click', () => {
     search.value = '';
     cell.selectedIndex = 0;

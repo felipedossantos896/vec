@@ -20,10 +20,12 @@ async function readable(locator) {
 }
 const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'chrome' } : {});
 try {
-  for (const { width, height } of viewports) {
+  for (const [index, { width, height }] of viewports.entries()) {
     const page = await browser.newPage({ viewport: { width, height } });
-    await page.route('https://studio.test/**', route =>
-      route.fulfill({ path: path.join(root, new URL(route.request().url()).pathname.slice(1)) }));
+    await page.route('https://studio.test/**', route => {
+      const pathname = new URL(route.request().url()).pathname;
+      return route.fulfill({ path: path.join(root, pathname === '/' ? 'index.html' : pathname.slice(1)) });
+    });
     await page.goto('https://studio.test/screens/preview.html?screen=foundations');
     assert.equal(await page.locator('.swatch').count(), 3);
     for (const swatch of await page.locator('.swatch').all()) await readable(swatch);
@@ -48,6 +50,23 @@ try {
     assert.equal(await search.inputValue(), '');
     assert.equal(await page.getByRole('status').innerText(), 'Filtros limpos.');
     if (process.env.STUDIO_ARTIFACTS) await page.screenshot({ path: path.join(process.env.STUDIO_ARTIFACTS, 'components-' + width + '.png') });
+    await page.goto('https://studio.test/');
+    await page.getByRole('button', { name: 'B06 · Cadastro recebido' }).waitFor();
+    await page.getByLabel('Viewport').selectOption(String(index));
+    await page.getByRole('button', { name: 'Componentes', exact: true }).click();
+    const frame = page.frameLocator('#preview');
+    const embeddedTrigger = frame.getByRole('button', { name: 'Nova pessoa' });
+    await embeddedTrigger.press('Enter');
+    const embeddedDialog = frame.getByRole('dialog', { name: 'Nova pessoa' });
+    const close = embeddedDialog.getByRole('button', { name: 'Fechar' });
+    const point = await close.evaluate(button => {
+      const bounds = button.getBoundingClientRect();
+      return [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2];
+    });
+    const outer = await page.locator('#preview').boundingBox();
+    await page.mouse.click(outer.x + point[0] * outer.width / width, outer.y + point[1] * outer.height / height);
+    await embeddedDialog.waitFor({ state: 'hidden' });
+    assert.equal(await embeddedTrigger.evaluate(el => document.activeElement === el), true);
     console.log('Biblioteca e foco ' + width + '×' + height + ': OK');
     await page.close();
   }
