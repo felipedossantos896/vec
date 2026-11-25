@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "viewports": [
+    {
+      "name": "Full HD",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "name": "QHD",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "name": "4K",
+      "width": 3840,
+      "height": 2160
+    },
+    {
+      "name": "Mobile",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "screens": [
+    {
+      "id": "A01",
+      "title": "Login",
+      "key": "login",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A02",
+      "title": "Mapa da área",
+      "key": "map",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A03",
+      "title": "Membro no mapa",
+      "key": "member",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A04",
+      "title": "Central de cuidado",
+      "key": "care",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A05",
+      "title": "Escolher anfitrião",
+      "key": "host",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A06",
+      "title": "Multiplicação",
+      "key": "multiply",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A07",
+      "title": "Gestão de pessoas",
+      "key": "people",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A08",
+      "title": "Ficha individual",
+      "key": "profile",
+      "source": "frontend/admin/index.html",
+      "status": "prototype"
+    },
+    {
+      "id": "A09",
+      "title": "Discípulos",
+      "key": "disciples",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A10",
+      "title": "Indicadores",
+      "key": "metrics",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A11",
+      "title": "Configurações e usuários",
+      "key": "settings",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A12",
+      "title": "Novo usuário",
+      "key": "new-user",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A13",
+      "title": "Acesso salvo",
+      "key": "saved",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A14",
+      "title": "Nova pessoa",
+      "key": "new-person",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "A15",
+      "title": "Editar pessoa",
+      "key": "edit-person",
+      "source": "frontend/admin/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B01",
+      "title": "Dados pessoais",
+      "key": "registration-1",
+      "source": "frontend/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B02",
+      "title": "Sua fé",
+      "key": "registration-2",
+      "source": "frontend/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B03",
+      "title": "Sua célula",
+      "key": "registration-3",
+      "source": "frontend/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B04",
+      "title": "Treinamentos",
+      "key": "registration-4",
+      "source": "frontend/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B05",
+      "title": "Para terminar",
+      "key": "registration-5",
+      "source": "frontend/index.html",
+      "status": "planned"
+    },
+    {
+      "id": "B06",
+      "title": "Cadastro recebido",
+      "key": "registration-done",
+      "source": "frontend/index.html",
+      "status": "planned"
+    }
+  ]
+}
