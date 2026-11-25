@@ -55,6 +55,11 @@ try {
       if (process.env.STUDIO_ARTIFACTS) await page.screenshot({path: path.join(process.env.STUDIO_ARTIFACTS, screen.id + '-' + width + '.png')});
     }
     await open('map');
+    if (width < 1024) {
+      await page.keyboard.press('Tab');
+      assert.equal(await page.locator('.panel-nav a[aria-current]').evaluate(link =>
+        document.activeElement === link && getComputedStyle(link).outlineColor === 'rgb(21, 23, 28)'), true);
+    }
     await page.getByRole('navigation', { name: 'Seções do painel' }).getByRole('link', { name: 'Pessoas' }).click();
     await page.getByRole('heading', { name: 'Pessoas', exact: true }).waitFor();
     await open('host');

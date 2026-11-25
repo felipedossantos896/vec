@@ -18,5 +18,6 @@
   .panel-nav nav { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 4px; border-radius: 8px; background: #292a30; }
   .panel-nav a { justify-content: center; min-height: 44px; padding: 0 4px; font-size: 12px; }
   .panel-nav a[aria-current] { background: white; color: #15171c; box-shadow: none; }
+  .panel-nav a[aria-current]:focus-visible { outline-color: #15171c; }
   .panel-nav svg { display: none; }
 }
