@@ -14,6 +14,11 @@ const headings = {
   'new-person': 'Pessoas', 'edit-person': 'Pessoas', disciples: 'Meus discípulos'
 };
 const personDialogs = new Set(['profile', 'new-person', 'edit-person']);
+const activeSections = {
+  map: 'Área', member: 'Área', care: 'Área', host: 'Área', multiply: 'Área',
+  people: 'Pessoas', profile: 'Pessoas', 'new-person': 'Pessoas', 'edit-person': 'Pessoas', disciples: 'Pessoas',
+  metrics: 'Indicadores', settings: 'Configurações', 'new-user': 'Configurações', saved: 'Configurações'
+};
 const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'chrome' } : {});
 try {
   for (const { width, height } of inventory.viewports) {
@@ -31,6 +36,14 @@ try {
       assert.equal(screen.status, 'prototype');
       await open(screen.key);
       assert.equal(await page.locator('h1').innerText(), headings[screen.key] ?? screen.title, screen.key);
+      const navigation = page.locator('.panel-nav nav');
+      if (activeSections[screen.key]) {
+        assert.deepEqual(await navigation.locator('a').allTextContents().then(labels => labels.map(label => label.trim())),
+          ['Área', 'Pessoas', 'Indicadores', 'Configurações'], screen.key);
+        assert.equal((await navigation.locator('[aria-current="page"]').textContent()).trim(), activeSections[screen.key]);
+      } else {
+        assert.equal(await navigation.count(), 0, screen.key);
+      }
       if (personDialogs.has(screen.key)) {
         assert(await page.getByRole('dialog', { name: screen.title, exact: true }).isVisible());
       }
@@ -41,6 +54,9 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, screen.key + ' em ' + width);
       if (process.env.STUDIO_ARTIFACTS) await page.screenshot({path: path.join(process.env.STUDIO_ARTIFACTS, screen.id + '-' + width + '.png')});
     }
+    await open('map');
+    await page.getByRole('navigation', { name: 'Seções do painel' }).getByRole('link', { name: 'Pessoas' }).click();
+    await page.getByRole('heading', { name: 'Pessoas', exact: true }).waitFor();
     await open('host');
     await page.getByLabel('Célula').selectOption('Horizonte');
     assert.match(await page.locator('ol').innerText(), /Bruno Modelo/);
@@ -57,7 +73,7 @@ try {
     await page.getByRole('link',{name:'Novo usuário'}).click();
     await page.getByLabel('Nome',{exact:true}).fill('Persona Teste');
     await page.getByRole('button',{name:'Salvar acesso de exemplo'}).click();
-    assert.match(await page.locator('h1').innerText(), /Acesso salvo/);
+    await page.getByRole('heading', { name: 'Acesso salvo', exact: true }).waitFor();
     await open('registration-1');
     await page.getByLabel('Nome completo').fill('Persona Teste');
     await page.getByLabel('Nascimento').fill('2000-01-01');

@@ -44,6 +44,10 @@ func TestStudioSession(t *testing.T) {
 	if res := request(http.MethodPost, studioPath+"session", "inválido", nil); res.Code != 401 {
 		t.Errorf("sessão inválida = %d", res.Code)
 	}
+	if res := request(http.MethodPost, studioPath+"session", token, nil); res.Code != 403 || len(res.Result().Cookies()) != 0 {
+		t.Errorf("sessão sem permissão administrativa = %d", res.Code)
+	}
+	db.gerente = true
 	res := request(http.MethodPost, studioPath+"session", token, nil)
 	cookies := res.Result().Cookies()
 	if res.Code != 200 || len(cookies) != 1 || !strings.Contains(res.Body.String(), "studio/studio.js") {
@@ -87,5 +91,11 @@ func TestStudioSession(t *testing.T) {
 	}
 	if res := request(http.MethodGet, studioAssetRoot(other)+"inventory.json", "", cookie); res.Code != 401 {
 		t.Errorf("cookie enviado ao caminho de outra sessão = %d, esperado 401", res.Code)
+	}
+	db.gerente = false
+	for _, path := range []string{"inventory.json", "screens/preview.html"} {
+		if res := request(http.MethodGet, assetRoot+path, "", cookie); res.Code != 403 {
+			t.Errorf("%s após remover a permissão administrativa = %d", path, res.Code)
+		}
 	}
 }
