@@ -1,0 +1,21 @@
+.library { display: grid; gap: var(--space-4); max-width: 960px; }
+.library .panel { display: grid; gap: var(--space-3); }
+.library .swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.library .swatch { display: grid; align-content: start; gap: var(--space-2); width: auto; height: auto; }
+.library .swatch-cloud { background: var(--cloud); border: 1px solid var(--line); }
+.library .swatch-navy { background: var(--navy); color: var(--white); }
+.library .swatch-blue { background: var(--blue); color: var(--white); }
+.library-title { font-size: var(--text-title); font-weight: 700; }
+.library-heading { font-size: var(--text-heading); font-weight: 700; }
+.library-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.library-fields label { display: grid; gap: var(--space-2); }
+.library-fields input, .library-fields select { width: 100%; }
+.library-ok { color: var(--ok); }
+.library-warn { color: var(--warn); }
+.library-danger { color: var(--danger); }
+.library dialog { color: var(--navy); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+.library dialog > * + * { margin-top: var(--space-3); }
+.library dialog::backdrop { background: var(--backdrop); }
+@media (max-width: 600px) {
+  .library-fields, .library .swatches { grid-template-columns: 1fr; }
+}

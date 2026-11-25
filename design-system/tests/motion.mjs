@@ -20,10 +20,10 @@ try {
     await page.route(url => url.hostname !== 'studio.test', route => route.abort());
     await page.goto('https://studio.test/');
     const nav = page.getByRole('navigation', {name:'Inventário'});
-    await nav.getByRole('button', {name:'Foundations'}).press('End');
+    await nav.getByRole('button', {name:'Fundamentos'}).press('End');
     assert.match(await page.locator(':focus').innerText(), /B06/);
     await nav.getByRole('button', {name:'B06 · Cadastro recebido'}).press('Home');
-    assert.equal(await page.locator(':focus').innerText(), 'Foundations');
+    assert.equal(await page.locator(':focus').innerText(), 'Fundamentos');
     const people = nav.getByRole('button', {name:'A07 · Gestão de pessoas'});
     await people.press('Enter');
     const frame = page.frameLocator('#preview');
