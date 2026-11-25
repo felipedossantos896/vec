@@ -6,16 +6,13 @@ Na raiz: `python3 -m http.server 4173 --bind 127.0.0.1 --directory design-system
 Abra http://127.0.0.1:4173. Sem instalação npm, login ou API. O preview usa iframe com viewport CSS real e escala visual; 4K não implica DPR 4.
 
 ## Escopo
-Inventário inicial de 21 frames, seis protótipos (login, mapa, membro, cuidado, pessoas, ficha), foundations e componentes. Demais frames explicitamente planejados. Mapa esquemático fictício, sem tiles externos. Ações internas são demonstrativas, não persistem dados.
+Inventário de 21 frames e duas galerias, Fundamentos e Componentes. O mapa esquemático usa marcadores fictícios. As ações dos protótipos usam estado local durante a sessão.
 
 ## Governança
 Tokens V2 são candidatos isolados; não substituem frontend/design-tokens.css nem ADRs aceitos. Aprovar identidade e telas antes de migrar produção. Registrar estados, acessibilidade, comportamento e screenshots sintéticos por PR. Nunca copiar dados reais. Não incluir Studio em rotas ou embed do servidor. CI atual pode disparar deploy em merge de documentação; não alterar pipeline neste PR.
 
-## Próximas entregas
-Completar frames e estados; validar visualmente os quatro viewports e escala do SO; adicionar regressão Playwright; aprovar ADR de identidade e reconciliar Specs existentes antes da migração. Reutilizar Phosphor e fontes locais do projeto na integração; protótipo inicial usa fonte de sistema e ícones textuais.
-
 ## V0.2 — Map Experience
-Frames A02–A04 agora usam o mesmo protótipo interativo: busca por nome/célula, filtro de célula e cuidado, contagens derivadas, seleção, grupo demonstrativo, zoom esquemático e gaveta. Contato/perfil apenas mostram feedback local. Não é mapa geográfico: sem pan, tiles, geocodificação ou dados reais. Testar manualmente os quatro viewports, teclado, Escape, filtros vazios, pessoa sem localização e movimento reduzido. Testes de navegador ainda pendentes.
+Frames A02–A04 compartilham busca por nome ou célula, filtros, contagens derivadas, seleção, zoom esquemático e gaveta. Contato e perfil mostram feedback local. A suíte de movimento cobre navegação por teclado, fechamento com Escape e retorno de foco no mapa.
 
 ## V0.3 — People Management
 
@@ -43,3 +40,17 @@ Use `STUDIO_CHROME=1` para testar com o Chrome instalado e `STUDIO_ARTIFACTS` pa
 Preserve as capturas de referência junto do JSON com o mesmo caminho relativo. Use diretórios distintos para gravação e comparação. A suíte tolera até 64 pixels por frame com diferença máxima de cinco níveis por canal, para acomodar variações de rasterização observadas no Chrome.
 
 A matriz registra páginas completas. Para a lista do mapa e a gaveta de Pessoas, também registra o fim da região interna quando há conteúdo rolável.
+
+## V1.0 — Design System
+
+`foundations/tokens.css` define Cloud para o fundo, Navy para a estrutura e azul para a ação primária. Use 60/30/10 como proporção visual aproximada. As cores semânticas indicam estado com texto visível. A tipografia usa a fonte do sistema em escala de 24, 17 e 14 px.
+
+Use controles nativos com rótulos e foco visível. Os controles compartilhados usam altura mínima de 36 px no desktop e 44 px no mobile. Prefira uma ação primária por contexto. Em diálogos, mova o foco para dentro ao abrir e devolva ao acionador ao fechar. Use `foundations/motion.css` para integrar transições e respeitar movimento reduzido.
+
+Ao alterar um token, valide os 21 frames e ambas as galerias. O ADR-0014 descreve os limites de integração.
+
+O iframe permite a validação nativa dos formulários que executam ações locais, e a política `form-action 'none'` bloqueia envios pelo navegador.
+
+Para executar os testes de interação, instale as dependências da raiz com `npm ci` e o navegador com `npx playwright install chromium`. Execute `node design-system/tests/people.mjs`, `node design-system/tests/inventory.mjs`, `node design-system/tests/motion.mjs` e `node design-system/tests/library.mjs`.
+
+A V0.6 ([PR #235](https://github.com/felipedossantos896/vec/pull/235)) é a primeira revisão do Studio com o executor de comparação. Para mudanças posteriores à V1.0, gere a referência a partir do merge da V1.0 ou use o JSON e os PNGs do pacote de evidências da entrega.
