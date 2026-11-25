@@ -69,6 +69,7 @@ func main() {
 	root.Handle("/api/foto", apiHandler)
 	root.Handle("/healthz", apiHandler)
 	root.HandleFunc("/version", versionHandler(version))
+	registerStudioEntryPoint(root)
 	root.Handle("/", noCacheHTML(http.FileServerFS(frontend.FS)))
 
 	port := os.Getenv("PORT")
@@ -98,6 +99,13 @@ func main() {
 		fatal(log, "http", err)
 	}
 	log.Info("servidor encerrado")
+}
+
+func registerStudioEntryPoint(mux *http.ServeMux) {
+	const studioURL = "https://vec-design-studio.secret-sage-3814.chatgpt.site/"
+	redirect := http.RedirectHandler(studioURL, http.StatusFound)
+	mux.Handle("GET /design-system", redirect)
+	mux.Handle("GET /design-system/{$}", redirect)
 }
 
 func versionHandler(appVersion string) http.HandlerFunc {
