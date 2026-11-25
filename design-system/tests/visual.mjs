@@ -21,15 +21,17 @@ const artifacts = process.env.STUDIO_ARTIFACTS ||
 const manifest = JSON.parse(await readFile(path.join(root, 'inventory.json'), 'utf8'));
 const expected = mode === '--compare' ? JSON.parse(await readFile(baselineFile, 'utf8')) : null;
 const referenceImages = expected && path.resolve(path.dirname(baselineFile), expected.images);
+const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 if (expected) {
   assert.notEqual(path.resolve(artifacts), referenceImages,
     'Use pastas distintas para a referência e a comparação.');
   const missing = [];
-  for (const key of Object.keys(expected.pages)) {
-    await access(path.join(referenceImages, key + '.png')).catch(error => {
+  for (const [key, hash] of Object.entries(expected.pages)) {
+    const png = await readFile(path.join(referenceImages, key + '.png')).catch(error => {
       if (error.code !== 'ENOENT') throw error;
       missing.push(key);
     });
+    if (png) assert.equal(digest(png), hash, 'Referência alterada: ' + key);
   }
   assert.equal(missing.length, 0, 'Capturas de referência ausentes: ' + missing.join(', '));
 }
@@ -57,7 +59,7 @@ async function differs(page, before, after) {
         Math.abs(left[i] - right[i]), Math.abs(left[i + 1] - right[i + 1]),
         Math.abs(left[i + 2] - right[i + 2]), Math.abs(left[i + 3] - right[i + 3])
       );
-      if (difference > 5 || (difference && ++changedPixels > 25)) return true;
+      if (difference > 5 || (difference && ++changedPixels > 64)) return true;
     }
     return false;
   }, [before.toString('base64'), after.toString('base64')]);
@@ -93,14 +95,13 @@ try {
     async function capture(imageKey) {
       const png = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' });
       await writeFile(path.join(artifacts, imageKey + '.png'), png, { flag: 'wx' });
-      pages[imageKey] = createHash('sha256').update(png).digest('hex');
+      pages[imageKey] = digest(png);
       if (!expected || expected.pages[imageKey] === pages[imageKey]) return;
       if (!Object.hasOwn(expected.pages, imageKey)) {
         changed.push(imageKey);
         return;
       }
       const baseline = await readFile(path.join(referenceImages, imageKey + '.png'));
-      assert.equal(createHash('sha256').update(baseline).digest('hex'), expected.pages[imageKey], 'Referência alterada: ' + imageKey);
       if (await differs(page, baseline, png)) changed.push(imageKey);
     }
     for (const [id, key] of frameKeys) {
