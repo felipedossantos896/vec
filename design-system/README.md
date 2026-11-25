@@ -20,3 +20,7 @@ Frames A02–A04 agora usam o mesmo protótipo interativo: busca por nome/célul
 ## V0.3 — People Management
 
 Frames A07, A08, A14 e A15 compartilham busca e filtro, ficha em gaveta com três trilhos e formulários de cadastro e edição. Cadastros demonstrativos duram apenas enquanto o frame está aberto.
+
+## V0.4 — Complete Inventory
+
+Os 21 frames têm preview. As ferramentas da Área simulam resultados, Indicadores e Discípulos usam fixtures, e os fluxos de acesso e cadastro público demonstram as transições sem criar contas nem enviar dados.

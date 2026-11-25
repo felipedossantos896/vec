@@ -1,0 +1,14 @@
+.inv-screen { width: min(100%, 1180px); }
+.inv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.inv-stack, .inv-form, .inv-form label { display: grid; gap: 9px; }
+.inv-stack select { margin-inline-start: 6px; }
+.inv-ranking, .inv-chart { list-style: none; margin: 0; padding: 0; }
+.inv-ranking li, .inv-chart li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-block: 8px; border-bottom: 1px solid var(--line); }
+.inv-kpis strong { display: block; font-size: 24px; color: var(--blue); }
+.inv-chart meter { flex: 1; max-width: 480px; min-width: 0; }
+.inv-form .inv-check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.inv-form input[type=checkbox] { accent-color: var(--blue); min-height: 0; width: 18px; height: 18px; }
+.inv-form textarea { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+.inv-screen a { color: var(--blue); padding-block: 8px; }
+.inv-registration .panel { width: min(100%, 480px); }
+@media (max-width: 600px) { .inv-screen a { display: inline-flex; align-items: center; min-height: 44px; } }
