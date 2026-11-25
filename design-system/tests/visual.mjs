@@ -54,7 +54,10 @@ async function differs(page, before, after) {
   }, [before.toString('base64'), after.toString('base64')]);
 }
 await mkdir(artifacts, { recursive: true });
-const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'chrome' } : {});
+const browser = await chromium.launch({
+  channel: process.env.STUDIO_CHROME ? 'chrome' : undefined,
+  args: ['--disable-gpu']
+});
 try {
   const environment = { browser: browser.version(), platform: process.platform, deviceScaleFactor: 1 };
   if (expected) assert.deepEqual(environment, expected.environment, 'A referência precisa do mesmo navegador, plataforma e DPR.');
