@@ -42,9 +42,12 @@ try {
     await nav.getByRole('button', {name:'A02 · Mapa da área'}).click();
     await frame.locator('.mx-pin[data-person]').first().waitFor();
     if (width < 600) {
+      await page.setViewportSize({ width: 360, height });
+      assert(await page.locator('#stage').evaluate(el => el.scrollWidth > el.clientWidth));
+      assert(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
       for (const control of await frame.locator('.mx-controls button').all()) {
-        const bounds = await control.evaluate(el => ({ width: el.offsetWidth, height: el.offsetHeight }));
-        assert(bounds.width >= 44 && bounds.height >= 44);
+        const bounds = await control.boundingBox();
+        assert(bounds && bounds.width >= 44 && bounds.height >= 44);
       }
     }
     const marker = frame.locator('.mx-pin[data-person]').first();

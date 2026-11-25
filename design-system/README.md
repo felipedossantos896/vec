@@ -27,4 +27,4 @@ Os 21 frames têm preview. As ferramentas da Área simulam resultados, Indicador
 
 ## V0.5 — Motion & Interaction
 
-O catálogo oferece navegação por setas, Home e End. O mapa e a ficha devolvem o foco ao fechar, e as transições respeitam a preferência por movimento reduzido.
+O catálogo oferece navegação por setas, Home e End. O mapa e a ficha devolvem o foco ao fechar, e as transições respeitam a preferência por movimento reduzido. O preview mobile mantém escala de 100% e oferece rolagem quando a janela do catálogo é menor.
