@@ -2,11 +2,13 @@
 
 .mx-canvas { position: absolute; inset: 0; }
 .mx-panel { z-index: 1; }
+.mx-care { z-index: 2; }
+.mx-member { z-index: 3; }
 @media (max-height: 560px) {
   .mx { height: auto; overflow: visible; }
   .mx-map { min-height: 480px; }
 }
-@media (max-width: 700px) {
+@media (max-width: 1023px) {
   .mx { height: auto; overflow: visible; }
   .mx-map { display: flex; flex-direction: column; gap: 8px; background: none; border: 0; overflow: visible; }
   .mx-panel { position: static; width: auto; }

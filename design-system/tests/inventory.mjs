@@ -107,6 +107,15 @@ try {
         assert((await page.locator('#mx-member').innerText()).includes(person));
         assert(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight));
       }
+      await page.setViewportSize({ width: 768, height: 600 });
+      await open('map');
+      const care = page.getByRole('button', { name: /Central de cuidado/ });
+      await care.click();
+      await page.getByRole('button', { name: /Fábio Modelo/ }).click();
+      await page.getByRole('button', { name: 'Fechar cartão' }).click();
+      assert.equal(await care.getAttribute('aria-expanded'), 'true');
+      await care.click();
+      assert.equal(await care.getAttribute('aria-expanded'), 'false');
     }
     assert.deepEqual(errors, []);
     console.log('Inventário e interações ' + width + '×' + height + ': OK');
