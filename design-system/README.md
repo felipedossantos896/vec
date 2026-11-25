@@ -16,3 +16,7 @@ Completar frames e estados; validar visualmente os quatro viewports e escala do 
 
 ## V0.2 — Map Experience
 Frames A02–A04 agora usam o mesmo protótipo interativo: busca por nome/célula, filtro de célula e cuidado, contagens derivadas, seleção, grupo demonstrativo, zoom esquemático e gaveta. Contato/perfil apenas mostram feedback local. Não é mapa geográfico: sem pan, tiles, geocodificação ou dados reais. Testar manualmente os quatro viewports, teclado, Escape, filtros vazios, pessoa sem localização e movimento reduzido. Testes de navegador ainda pendentes.
+
+## V0.3 — People Management
+
+Frames A07, A08, A14 e A15 compartilham busca e filtro, ficha em gaveta com três trilhos e formulários de cadastro e edição. Cadastros demonstrativos duram apenas enquanto o frame está aberto.
