@@ -1,4 +1,7 @@
-const inventory=await fetch('../design-system/inventory.json'.replace('../design-system/','./')).then(r=>{if(!r.ok)throw Error('Inventário indisponível');return r.json()}).catch(()=>null);
+window.addEventListener('pageshow', event => {
+  if (event.persisted) location.reload();
+});
+const inventory=await fetch('./inventory.json').then(r=>{if(!r.ok)throw Error('Inventário indisponível');return r.json()}).catch(()=>null);
 const nav=document.querySelector('#nav'),select=document.querySelector('#viewport'),frame=document.querySelector('#preview'),stage=document.querySelector('#stage');
 if(!inventory){document.querySelector('#status').textContent='Não foi possível carregar o inventário. Execute o servidor local conforme README.';}else{
 for(const s of inventory.screens){const b=document.createElement('button');b.dataset.key=s.key;b.textContent=s.id+' · '+s.title;nav.append(b)}

@@ -3,16 +3,23 @@
   try {
     const session = JSON.parse(sessionStorage.getItem('vec_admin_sessao') || 'null');
     if (!session?.token || session.expira <= Date.now()) return;
-    if (new URLSearchParams(location.search).get('catalogo') === '1') {
-      status.textContent = 'Permita cookies para o Área VEC e abra o endereço do Studio novamente.';
-      return;
-    }
-    const response = await fetch('session', {
+    const headers = { Authorization: 'Bearer ' + session.token };
+    const response = await fetch('/design-system/session', {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + session.token }
+      headers
     });
     if (response.ok) {
-      location.replace('?catalogo=1');
+      const catalog = await response.text();
+      const check = await fetch('/design-system/inventory.json', { method: 'HEAD', headers });
+      if (!check.ok) {
+        status.textContent = 'Permita cookies para o Área VEC e abra o endereço do Studio novamente.';
+        return;
+      }
+      // The authenticated server response contains only bundled Studio HTML.
+      history.replaceState(null, '', '/design-system/');
+      document.open();
+      document.write(catalog);
+      document.close();
     } else if (response.status !== 401) {
       status.textContent = 'Não foi possível abrir o catálogo. Tente novamente.';
     }

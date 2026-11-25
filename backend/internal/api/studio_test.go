@@ -43,21 +43,26 @@ func TestStudioSession(t *testing.T) {
 	}
 	res := request(http.MethodPost, studioPath+"session", token, nil)
 	cookies := res.Result().Cookies()
-	if res.Code != 204 || len(cookies) != 1 {
+	if res.Code != 200 || len(cookies) != 1 || !strings.Contains(res.Body.String(), "studio/studio.js") {
 		t.Fatalf("sessão válida = %d, cookies %d", res.Code, len(cookies))
 	}
 	cookie := cookies[0]
 	if !cookie.Secure || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != studioPath {
 		t.Error("cookie do Studio precisa ser restrito à rota e ao HTTPS")
 	}
-	if res := request(http.MethodGet, studioPath, "", cookie); !strings.Contains(res.Body.String(), "access/session.js") {
-		t.Error("a entrada deve verificar a sessão da aba mesmo com um cookie existente")
+	for _, path := range []string{"", "?catalogo=1", "index.html", "screens/%2e%2e/index.html"} {
+		if res := request(http.MethodGet, studioPath+path, "", cookie); !strings.Contains(res.Body.String(), "access/session.js") {
+			t.Errorf("%s: a entrada deve verificar a sessão da aba mesmo com um cookie existente", path)
+		}
 	}
-	for _, path := range []string{"?catalogo=1", "inventory.json", "studio/studio.js"} {
+	for _, path := range []string{"inventory.json", "studio/studio.js"} {
 		res := request(http.MethodGet, studioPath+path, "", cookie)
 		if res.Code != 200 || res.Header().Get("Cache-Control") != "no-store" {
 			t.Errorf("arquivo com sessão %s = %d", path, res.Code)
 		}
+	}
+	if res := request(http.MethodHead, studioPath+"inventory.json", "outro-token", cookie); res.Code != 401 {
+		t.Errorf("cookie de outra sessão = %d, esperado 401", res.Code)
 	}
 	for _, path := range []string{"screens/preview.html", "screens/%2e/preview.html", "screens/sub/%2e%2e/preview.html"} {
 		res := request(http.MethodGet, studioPath+path, "", cookie)

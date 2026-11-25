@@ -34,8 +34,14 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
+		catalog, err := fs.ReadFile(assets, "index.html")
+		if err != nil {
+			http.Error(w, "Catálogo indisponível", http.StatusInternalServerError)
+			return
+		}
 		writeStudioCookie(w, token, 0)
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(catalog)
 	})
 	mux.HandleFunc("DELETE "+studioPath+"session", func(w http.ResponseWriter, _ *http.Request) {
 		writeStudioCookie(w, "", -1)
@@ -43,14 +49,20 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 	})
 	mux.Handle("GET "+studioPath+"access/session.js", files)
 	mux.HandleFunc("GET "+studioPath, func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(studioCookie)
-		if r.URL.Path == studioPath && (r.URL.Query().Get("catalogo") != "1" || err != nil) {
+		canonical := path.Clean(r.URL.Path)
+		if canonical == strings.TrimSuffix(studioPath, "/") || canonical == studioPath+"index.html" {
 			entry := r.Clone(r.Context())
 			entry.URL.Path = studioPath + "access/"
+			entry.URL.RawPath = ""
 			files.ServeHTTP(w, entry)
 			return
 		}
+		cookie, err := r.Cookie(studioCookie)
 		if err != nil {
+			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
+			return
+		}
+		if bearer := r.Header.Get("Authorization"); bearer != "" && bearer != "Bearer "+cookie.Value {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
@@ -61,16 +73,12 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 		}
 		if session == nil {
 			writeStudioCookie(w, "", -1)
-			if r.URL.Path == studioPath {
-				http.Redirect(w, r, studioPath, http.StatusSeeOther)
-				return
-			}
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
 		// FileServer cleans the decoded path, including escaped dot segments.
 		// Apply the preview policy to every spelling that resolves to this file.
-		if path.Clean(r.URL.Path) == studioPath+"screens/preview.html" {
+		if canonical == studioPath+"screens/preview.html" {
 			if previewErr != nil {
 				http.Error(w, "Preview indisponível", http.StatusInternalServerError)
 				return
