@@ -1,9 +1,14 @@
 package api
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"io/fs"
 	"net/http"
+	"path"
+	"regexp"
 	"strings"
+	"time"
 )
 
 const studioPath = "/design-system/"
@@ -13,6 +18,7 @@ const studioCookie = "__Secure-vec_studio"
 func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 	mux := http.NewServeMux()
 	files := http.StripPrefix(studioPath, http.FileServerFS(assets))
+	preview, previewCSP, previewErr := studioPreview(assets)
 	mux.HandleFunc("POST "+studioPath+"session", func(w http.ResponseWriter, r *http.Request) {
 		token, bearer := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if !bearer {
@@ -63,8 +69,14 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			return
 		}
 		if r.URL.Path == studioPath+"screens/preview.html" {
+			if previewErr != nil {
+				http.Error(w, "Preview indisponível", http.StatusInternalServerError)
+				return
+			}
 			w.Header().Set("X-Frame-Options", "SAMEORIGIN")
-			w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; frame-ancestors 'self'; form-action 'none'; sandbox allow-scripts allow-forms allow-same-origin; base-uri 'none'; object-src 'none'")
+			w.Header().Set("Content-Security-Policy", previewCSP)
+			http.ServeContent(w, r, "preview.html", time.Time{}, strings.NewReader(preview))
+			return
 		}
 		files.ServeHTTP(w, r)
 	})
@@ -72,6 +84,43 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 		w.Header().Set("Cache-Control", "no-store")
 		mux.ServeHTTP(w, r)
 	})
+}
+
+var studioPreviewAsset = regexp.MustCompile(`<link rel="stylesheet" href="([^"]+)">|<script src="([^"]+)"></script>`)
+
+// Inline the preview's bundled files so its opaque-origin iframe needs no
+// authenticated subresource requests. Only the bundled scripts are executable.
+func studioPreview(assets fs.FS) (string, string, error) {
+	html, err := fs.ReadFile(assets, "screens/preview.html")
+	if err != nil {
+		return "", "", err
+	}
+	svg, err := fs.ReadFile(assets, "screens/map.svg")
+	if err != nil {
+		return "", "", err
+	}
+	var hashes []string
+	var assetErr error
+	preview := studioPreviewAsset.ReplaceAllStringFunc(string(html), func(tag string) string {
+		if assetErr != nil {
+			return ""
+		}
+		match := studioPreviewAsset.FindStringSubmatch(tag)
+		if match[1] != "" {
+			var css []byte
+			css, assetErr = fs.ReadFile(assets, path.Join("screens", match[1]))
+			cssText := strings.ReplaceAll(string(css), "url(map.svg)", "url(data:image/svg+xml;base64,"+base64.StdEncoding.EncodeToString(svg)+")")
+			return "<style>" + cssText + "</style>"
+		}
+		var script []byte
+		script, assetErr = fs.ReadFile(assets, path.Join("screens", match[2]))
+		sum := sha256.Sum256(script)
+		hashes = append(hashes, "'sha256-"+base64.StdEncoding.EncodeToString(sum[:])+"'")
+		return "<script>" + string(script) + "</script>"
+	})
+	policy := "default-src 'none'; script-src " + strings.Join(hashes, " ") +
+		"; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; frame-ancestors 'self'; form-action 'none'; sandbox allow-scripts allow-forms; base-uri 'none'"
+	return preview, policy, assetErr
 }
 
 func writeStudioCookie(w http.ResponseWriter, token string, maxAge int) {

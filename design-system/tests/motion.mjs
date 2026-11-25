@@ -34,6 +34,14 @@ try {
     await people.press('Enter');
     const frame = page.frameLocator('#preview');
     await frame.locator('.people-row').first().waitFor();
+    assert.equal(await frame.locator('body').evaluate(() => {
+      try {
+        void window.parent.sessionStorage;
+        return true;
+      } catch {
+        return false;
+      }
+    }), false);
     assert.equal(await people.getAttribute('aria-current'), 'true');
     const index = viewports.findIndex(v => v.width === width);
     await page.getByLabel('Viewport').selectOption(String(index));

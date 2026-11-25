@@ -55,9 +55,15 @@ func TestStudioSession(t *testing.T) {
 		if res.Code != 200 || res.Header().Get("Cache-Control") != "no-store" {
 			t.Errorf("arquivo com sessão %s = %d", path, res.Code)
 		}
-		if path == "screens/preview.html" && (!strings.Contains(res.Header().Get("Content-Security-Policy"), "connect-src 'none'") ||
-			res.Header().Get("X-Frame-Options") != "SAMEORIGIN") {
-			t.Error("preview precisa permitir somente o iframe da própria origem")
+		if path == "screens/preview.html" {
+			policy := res.Header().Get("Content-Security-Policy")
+			if !strings.Contains(policy, "connect-src 'none'") || !strings.Contains(policy, "'sha256-") ||
+				strings.Contains(policy, "allow-same-origin") || res.Header().Get("X-Frame-Options") != "SAMEORIGIN" {
+				t.Error("preview precisa isolar a origem e permitir apenas scripts empacotados")
+			}
+			if strings.Contains(res.Body.String(), "<script src=") || !strings.Contains(res.Body.String(), "data:image/svg+xml;base64,") {
+				t.Error("preview deve carregar sem solicitar recursos autenticados")
+			}
 		}
 	}
 	res = request(http.MethodDelete, studioPath+"session", "", cookie)

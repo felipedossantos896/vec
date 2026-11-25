@@ -112,7 +112,7 @@
     layout('Configurações e usuários', '<div class="panel inv-stack"><div class="top"><h2>Acessos fictícios</h2><a href="?screen=new-user">Novo usuário</a></div><ul class="inv-ranking"><li><strong>Ana Exemplo</strong><span>Liderança de área</span></li><li><strong>Bruno Modelo</strong><span>Liderança de célula</span></li></ul></div>');
   } else if (key === 'new-user') {
     const view = layout('Novo usuário', '<form class="panel inv-form"><label>Nome<input required autocomplete="off"></label><label>Perfil<select><option>Líder de área</option><option>Líder de setor</option><option>Líder de célula</option></select></label><div class="actions"><a href="?screen=settings">Cancelar</a><button class="primary">Salvar acesso de exemplo</button></div></form>');
-    view.querySelector('form').addEventListener('submit', event => { event.preventDefault(); location.search = '?screen=saved'; });
+    view.querySelector('form').addEventListener('submit', event => { event.preventDefault(); navigatePreview('saved'); });
   } else if (key === 'saved') {
     layout('Acesso salvo', '<div class="panel inv-stack"><h2>Simulação concluída</h2><p>Nenhuma conta ou senha foi criada.</p><a href="?screen=settings">Voltar aos acessos</a></div>');
   }

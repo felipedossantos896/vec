@@ -1,4 +1,18 @@
 const key=new URLSearchParams(location.search).get('screen')||'map',app=document.querySelector('#app');
+function navigatePreview(screen) {
+  if (window.parent === window) {
+    location.search = '?screen=' + encodeURIComponent(screen);
+    return;
+  }
+  window.parent.postMessage({ vecStudioScreen: screen }, location.origin);
+}
+
+app.addEventListener('click', event => {
+  const link = event.target.closest('a[href^="?screen="]');
+  if (!link || window.parent === window) return;
+  event.preventDefault();
+  navigatePreview(new URL(link.href).searchParams.get('screen'));
+});
 const people=[['AM','Ana Modelo','Célula Exemplo A','Acompanhar'],['BM','Bruno Modelo','Célula Exemplo A','Sem discipulador'],['CM','Carla Modelo','Célula Exemplo B','Pronto para servir']];
 const list=()=>people.map(p=>'<div class="person"><span class="avatar">'+p[0]+'</span><div><strong>'+p[1]+'</strong><br><small>'+p[2]+'</small></div><span class="tag">'+p[3]+'</span></div>').join('');
 const shell=(title,body)=>'<div class="shell"><aside class="side"><div class="brand">Área VEC</div><p class="'+(['map','member','care'].includes(key)?'active':'')+'">Mapa da área</p><p class="'+(['people','profile'].includes(key)?'active':'')+'">Pessoas</p><p>Indicadores</p><p>Configurações</p></aside><section class="content"><div class="top"><div><small>Área demonstrativa / V2</small><h1>'+title+'</h1></div><div class="actions"><input aria-label="Buscar pessoas" placeholder="Buscar pessoas…"><select aria-label="Setor"><option>Todos os setores</option></select></div></div>'+body+'</section></div>';
