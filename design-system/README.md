@@ -28,3 +28,14 @@ Os 21 frames têm preview. As ferramentas da Área simulam resultados, Indicador
 ## V0.5 — Motion & Interaction
 
 O catálogo oferece navegação por setas, Home e End. O mapa e a ficha devolvem o foco ao fechar, e as transições respeitam a preferência por movimento reduzido. O preview mobile mantém escala de 100% e oferece rolagem quando a janela do catálogo é menor.
+
+## V0.6 — Visual Testing
+
+Com Playwright e Chromium disponíveis, execute a partir da raiz:
+
+```sh
+node design-system/tests/visual.mjs --record /tmp/vec-referencia.json
+node design-system/tests/visual.mjs --compare /tmp/vec-referencia.json
+```
+
+Use `STUDIO_CHROME=1` para testar com o Chrome instalado e `STUDIO_ARTIFACTS` para escolher a pasta das capturas. Registre a referência a partir de uma revisão aprovada e compare usando a mesma plataforma, versão de navegador e DPR. Para aprovar uma mudança visual intencional, registre em um novo arquivo.
