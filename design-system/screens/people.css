@@ -1,0 +1,20 @@
+.people-screen { display: grid; gap: 12px; width: min(100%, 1180px); }
+.people-filters { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.people-filters label, .people-form label { display: grid; gap: 4px; min-width: 0; font-weight: 600; }
+.people-list, .people-stages { list-style: none; padding: 0; margin: 0; }
+.people-list { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+.people-list:empty { display: none; }
+.people-list li + li { border-top: 1px solid var(--line); }
+.people-row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr); align-items: center; gap: 12px; border: 0; text-align: left; padding: 8px 12px; overflow-wrap: anywhere; }
+.people-row small { display: block; }
+.people-dialog { position: fixed; inset: 0 0 0 auto; width: min(100%, 480px); height: 100dvh; max-height: 100dvh; max-width: 100vw; margin: 0; overflow: auto; border: 0; color: var(--navy); background: var(--white); padding: 20px; }
+.people-dialog[open], .people-form { display: grid; align-content: start; gap: 16px; }
+.people-dialog::backdrop { background: #14243d66; }
+.people-stages li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.people-badge { color: var(--blue); font-size: 12px; flex: none; }
+@media (max-width: 600px) {
+  .people-filters { grid-template-columns: 1fr; }
+  .people-row { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 6px 10px; }
+  .people-mentor { grid-column: 2; }
+  .people-count { grid-column: 3; grid-row: 2; }
+}

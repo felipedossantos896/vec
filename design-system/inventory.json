@@ -119,14 +119,14 @@
       "title": "Nova pessoa",
       "key": "new-person",
       "source": "frontend/admin/index.html",
-      "status": "planned"
+      "status": "prototype"
     },
     {
       "id": "A15",
       "title": "Editar pessoa",
       "key": "edit-person",
       "source": "frontend/admin/index.html",
-      "status": "planned"
+      "status": "prototype"
     },
     {
       "id": "B01",
