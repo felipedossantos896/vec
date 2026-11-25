@@ -43,9 +43,12 @@ try {
     assert.equal(await page.locator('.people-row').first().evaluate(el => document.activeElement === el), true);
     await page.getByRole('button', { name: 'Nova pessoa' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Nome completo').fill('Ana Exemplo');
+    await dialog.getByLabel('Nome completo').fill('   ');
     await dialog.getByLabel('Nascimento').fill('2027-04-12');
     await dialog.getByLabel('Célula').selectOption('Horizonte');
+    await dialog.getByRole('button', { name: 'Salvar' }).click();
+    assert.match(await dialog.getByRole('alert').innerText(), /Informe o nome/);
+    await dialog.getByLabel('Nome completo').fill('Ana Exemplo');
     await capture('form');
     await dialog.getByRole('button', { name: 'Salvar' }).click();
     assert.match(await dialog.innerText(), /Ana Exemplo/);
@@ -53,7 +56,18 @@ try {
     await dialog.getByLabel('Nome completo').fill('Pessoa Alterada');
     await dialog.getByRole('button', { name: 'Salvar' }).click();
     assert.match(await dialog.innerText(), /Pessoa Alterada/);
+    await dialog.getByRole('button', { name: 'Editar pessoa' }).click();
+    await dialog.getByLabel('Nome completo').fill('Rascunho descartado');
+    await dialog.getByRole('button', { name: 'Cancelar' }).click();
+    assert.match(await dialog.innerText(), /Pessoa Alterada/);
+    assert.doesNotMatch(await dialog.innerText(), /Rascunho descartado/);
     await page.keyboard.press('Escape');
+    assert.equal(await search.inputValue(), 'ana');
+    assert.equal(await page.getByLabel('Célula', { exact: true }).inputValue(), 'Aurora');
+    assert.equal(await page.locator('.people-row').count(), 2);
+    await search.fill('');
+    await page.getByLabel('Célula', { exact: true }).selectOption('');
+    await page.getByText('4 de 4 pessoas').waitFor();
     assert.equal(await page.locator('.people-row').count(), 4);
     assert.match(await page.locator('.people-row').filter({ hasText: 'Clara Ensaio' }).innerText(), /Ana Exemplo/);
     for (const frame of ['profile', 'new-person', 'edit-person']) {

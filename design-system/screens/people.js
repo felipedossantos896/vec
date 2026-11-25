@@ -77,7 +77,8 @@
     </form>`);
   }
 
-  section.addEventListener('input', () => renderList());
+  search.addEventListener('input', () => renderList());
+  cell.addEventListener('change', () => renderList());
   section.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button) return;
@@ -108,7 +109,6 @@
     if (selected < 0) {
       selected = people.length;
       people.push({ ...values, stages: [], disciple: false, leader: false });
-      search.value = cell.value = '';
     } else {
       Object.assign(people[selected], values);
     }
