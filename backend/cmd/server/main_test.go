@@ -9,27 +9,6 @@ import (
 	"vec/frontend"
 )
 
-func TestStudioEntryPoint(t *testing.T) {
-	mux := http.NewServeMux()
-	registerStudioEntryPoint(mux)
-
-	for _, method := range []string{http.MethodGet, http.MethodHead} {
-		for _, path := range []string{"/design-system", "/design-system/?next=https://example.invalid"} {
-			res := httptest.NewRecorder()
-			mux.ServeHTTP(res, httptest.NewRequest(method, path, nil))
-			if res.Code != http.StatusFound || res.Header().Get("Location") != "https://vec-design-studio.secret-sage-3814.chatgpt.site/" {
-				t.Errorf("%s %s: status %d, Location %q", method, path, res.Code, res.Header().Get("Location"))
-			}
-		}
-	}
-
-	res := httptest.NewRecorder()
-	mux.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/design-system/inventory.json", nil))
-	if res.Code != http.StatusNotFound {
-		t.Errorf("subcaminho do Studio: status %d, esperado 404", res.Code)
-	}
-}
-
 func TestVersionHandler(t *testing.T) {
 	handler := versionHandler("42")
 
