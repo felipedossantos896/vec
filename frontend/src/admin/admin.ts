@@ -263,6 +263,10 @@ $('loginForm').addEventListener('submit', async e => {
     if (r.ok) {
       salvarSessao({ token: r.token, nome: r.nome, usuario: r.usuario || usuario.toLowerCase(), expira: Date.now() + (r.expiraEm - 60) * 1000 });
       $<HTMLInputElement>('senha').value = '';
+      if (new URLSearchParams(location.search).get('studio') === '1') {
+        location.assign('/design-system/');
+        return;
+      }
       entrar();
     } else if (r.erro === 'sem_escopo') {
       msg.textContent = 'Seu acesso ainda não foi configurado. Fale com a liderança da área.';
@@ -301,7 +305,12 @@ function entrar() {
 
 $('btnLogout').addEventListener('click', () => {
   const s = lerSessao();
-  if (s) api({ acao: 'logout', token: s.token }).catch(() => {});
+  if (s) {
+    api({ acao: 'logout', token: s.token }).catch(() => {});
+    fetch('/design-system/session', {
+      method: 'DELETE', headers: { Authorization: 'Bearer ' + s.token }, keepalive: true
+    }).catch(() => {});
+  }
   limparSessao();
   estado.regs = [];
   estado.usuarios = [];

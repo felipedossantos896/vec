@@ -197,6 +197,10 @@ $('loginForm').addEventListener('submit', async (e) => {
         if (r.ok) {
             salvarSessao({ token: r.token, nome: r.nome, usuario: r.usuario || usuario.toLowerCase(), expira: Date.now() + (r.expiraEm - 60) * 1000 });
             $('senha').value = '';
+            if (new URLSearchParams(location.search).get('studio') === '1') {
+                location.assign('/design-system/');
+                return;
+            }
             entrar();
         }
         else if (r.erro === 'sem_escopo') {
@@ -239,8 +243,12 @@ function entrar() {
 }
 $('btnLogout').addEventListener('click', () => {
     const s = lerSessao();
-    if (s)
+    if (s) {
         api({ acao: 'logout', token: s.token }).catch(() => { });
+        fetch('/design-system/session', {
+            method: 'DELETE', headers: { Authorization: 'Bearer ' + s.token }, keepalive: true
+        }).catch(() => { });
+    }
     limparSessao();
     estado.regs = [];
     estado.usuarios = [];
