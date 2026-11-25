@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -10,8 +10,14 @@ const [mode, baselineFile] = process.argv.slice(2);
 assert(['--record', '--compare'].includes(mode) && baselineFile,
   'Uso: node design-system/tests/visual.mjs --record|--compare arquivo.json');
 const root = fileURLToPath(new URL('../', import.meta.url));
+if (mode === '--record') {
+  await access(baselineFile).then(
+    () => assert.fail('A referência já existe. Escolha um novo arquivo.'),
+    error => { if (error.code !== 'ENOENT') throw error; }
+  );
+}
 const artifacts = process.env.STUDIO_ARTIFACTS ||
-  path.join(tmpdir(), 'vec-studio-visual-' + mode.slice(2));
+  await mkdtemp(path.join(tmpdir(), 'vec-studio-visual-' + mode.slice(2) + '-'));
 const manifest = JSON.parse(await readFile(path.join(root, 'inventory.json'), 'utf8'));
 const expected = mode === '--compare' ? JSON.parse(await readFile(baselineFile, 'utf8')) : null;
 if (expected) {
@@ -85,7 +91,8 @@ try {
       assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [width, height]);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Overflow em ' + imageKey);
       assert.doesNotMatch(await heading.innerText(), /Frame planejado/);
-      const png = await page.screenshot({ path: path.join(artifacts, imageKey + '.png'), animations: 'disabled', caret: 'hide' });
+      const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });
+      await writeFile(path.join(artifacts, imageKey + '.png'), png, { flag: 'wx' });
       pages[imageKey] = createHash('sha256').update(png).digest('hex');
       if (expected && expected.pages[imageKey] !== pages[imageKey]) {
         if (!expected.pages[imageKey]) {
