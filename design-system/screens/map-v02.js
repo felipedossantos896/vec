@@ -16,5 +16,48 @@ const p=v.find(p=>p.id===selected);$('#mx-member').hidden=!p;$('#mx-member').inn
 $('#mx-care-count').textContent=care.length;$('#mx-toggle').setAttribute('aria-expanded',String(expanded));$('#mx-chevron').textContent=expanded?'⌄':'⌃';$('#mx-list').hidden=!expanded;$('#mx-list').innerHTML=care.length?care.map(p=>'<button class="mx-row" data-person="'+p.id+'"><span class="mx-avatar">'+p.a+'</span><span><strong>'+p.n+'</strong><small>'+ (p.x===null?'Sem localização':'Acompanhamento pendente')+'</small></span><span>›</span></button>').join(''):'<p class="mx-empty-list">Nenhuma pendência neste filtro.</p>';
 }
 $('#mx-search').addEventListener('input',e=>{query=e.target.value;render()});$('#mx-cell').addEventListener('change',e=>{cell=e.target.value;render()});
-app.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.person){selected=Number(b.dataset.person);if([1,2].includes(selected))zoom=Math.max(2,zoom);expanded=false;render();$('#mx-close')?.focus();return}if(b.dataset.demo){$('#mx-note').textContent=b.dataset.demo+' — ação demonstrativa, sem integração.';return}if(b.dataset.mode)mode=b.dataset.mode;else if(b.id==='mx-toggle')expanded=!expanded;else if(b.id==='mx-close')selected=null;else if(b.id==='mx-plus'||b.id==='mx-cluster')zoom=Math.min(3,zoom+1);else if(b.id==='mx-minus')zoom=Math.max(1,zoom-1);else if(b.id==='mx-center')zoom=1;else if(b.id==='mx-reset'){query='';cell='all';mode='all';selected=null;zoom=1;$('#mx-search').value='';$('#mx-cell').value='all'}else return;render()});app.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected){selected=null;render();$('#mx-search').focus()}});render();
+function fecharPessoa() {
+  const id = selected;
+  selected = null;
+  render();
+  ($('.mx-pin[data-person="' + id + '"]') || $('#mx-search')).focus();
+}
+app.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.person) {
+    selected = Number(b.dataset.person);
+    if ([1, 2].includes(selected)) zoom = Math.max(2, zoom);
+    expanded = false;
+    render();
+    $('#mx-close')?.focus();
+    return;
+  }
+  if (b.dataset.demo) {
+    $('#mx-note').textContent = b.dataset.demo + ' — ação demonstrativa, sem integração.';
+    return;
+  }
+  if (b.id === 'mx-close') { fecharPessoa(); return; }
+  if (b.dataset.mode) mode = b.dataset.mode;
+  else if (b.id === 'mx-toggle') expanded = !expanded;
+  else if (b.id === 'mx-plus' || b.id === 'mx-cluster') zoom = Math.min(3, zoom + 1);
+  else if (b.id === 'mx-minus') zoom = Math.max(1, zoom - 1);
+  else if (b.id === 'mx-center') zoom = 1;
+  else if (b.id === 'mx-reset') {
+    query = ''; cell = 'all'; mode = 'all'; selected = null; zoom = 1;
+    $('#mx-search').value = ''; $('#mx-cell').value = 'all';
+  } else return;
+  render();
+  if (b.id === 'mx-cluster') $('#mx-plus').focus();
+});
+app.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (selected) fecharPessoa();
+  else if (expanded) {
+    expanded = false;
+    render();
+    $('#mx-toggle').focus();
+  }
+});
+render();
 })();
