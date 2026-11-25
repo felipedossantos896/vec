@@ -20,9 +20,18 @@ const artifacts = process.env.STUDIO_ARTIFACTS ||
   await mkdtemp(path.join(tmpdir(), 'vec-studio-visual-' + mode.slice(2) + '-'));
 const manifest = JSON.parse(await readFile(path.join(root, 'inventory.json'), 'utf8'));
 const expected = mode === '--compare' ? JSON.parse(await readFile(baselineFile, 'utf8')) : null;
+const referenceImages = expected && path.resolve(path.dirname(baselineFile), expected.images);
 if (expected) {
-  assert.notEqual(path.resolve(artifacts), path.resolve(path.dirname(baselineFile), expected.images),
+  assert.notEqual(path.resolve(artifacts), referenceImages,
     'Use pastas distintas para a referência e a comparação.');
+  const missing = [];
+  for (const key of Object.keys(expected.pages)) {
+    await access(path.join(referenceImages, key + '.png')).catch(error => {
+      if (error.code !== 'ENOENT') throw error;
+      missing.push(key);
+    });
+  }
+  assert.equal(missing.length, 0, 'Capturas de referência ausentes: ' + missing.join(', '));
 }
 const frameKeys = [...manifest.screens.map(({ id, key }) => [id, key]), ['foundations', 'foundations'], ['components', 'components']];
 const changed = [];
@@ -81,6 +90,19 @@ try {
       errors.push('Pedido externo: ' + route.request().url());
       return route.abort();
     });
+    async function capture(imageKey) {
+      const png = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' });
+      await writeFile(path.join(artifacts, imageKey + '.png'), png, { flag: 'wx' });
+      pages[imageKey] = createHash('sha256').update(png).digest('hex');
+      if (!expected || expected.pages[imageKey] === pages[imageKey]) return;
+      if (!Object.hasOwn(expected.pages, imageKey)) {
+        changed.push(imageKey);
+        return;
+      }
+      const baseline = await readFile(path.join(referenceImages, imageKey + '.png'));
+      assert.equal(createHash('sha256').update(baseline).digest('hex'), expected.pages[imageKey], 'Referência alterada: ' + imageKey);
+      if (await differs(page, baseline, png)) changed.push(imageKey);
+    }
     for (const [id, key] of frameKeys) {
       const imageKey = id + '-' + width + 'x' + height;
       await page.goto('https://studio.test/screens/preview.html?screen=' + encodeURIComponent(key));
@@ -94,17 +116,14 @@ try {
       assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight]), [width, height]);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Overflow em ' + imageKey);
       assert.doesNotMatch(await heading.innerText(), /Frame planejado/);
-      const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });
-      await writeFile(path.join(artifacts, imageKey + '.png'), png, { flag: 'wx' });
-      pages[imageKey] = createHash('sha256').update(png).digest('hex');
-      if (expected && expected.pages[imageKey] !== pages[imageKey]) {
-        if (!expected.pages[imageKey]) {
-          changed.push(imageKey);
-          continue;
-        }
-        const baseline = await readFile(path.join(path.dirname(baselineFile), expected.images, imageKey + '.png'));
-        assert.equal(createHash('sha256').update(baseline).digest('hex'), expected.pages[imageKey], 'Referência alterada: ' + imageKey);
-        if (await differs(page, baseline, png)) changed.push(imageKey);
+      await capture(imageKey);
+      const scroller = page.locator('.mx-list:not([hidden]), .people-dialog[open]').first();
+      if (await scroller.count()) {
+        const scrolled = await scroller.evaluate(element => {
+          element.scrollTop = element.scrollHeight;
+          return element.scrollTop > 0;
+        });
+        if (scrolled) await capture(imageKey + '-scroll');
       }
     }
     assert.deepEqual(errors, []);
