@@ -28,7 +28,11 @@ try {
     const search = page.getByRole('searchbox', { name: 'Busca' });
     await search.fill('Ninguém');
     assert.match(await page.getByRole('status').innerText(), /Nenhuma pessoa/);
+    await search.fill('Exemplo Bruno');
+    assert.equal(await page.locator('.people-row').count(), 0);
     await search.fill('ana');
+    await page.getByLabel('Célula', { exact: true }).selectOption('Horizonte');
+    assert.equal(await page.locator('.people-row').count(), 0);
     await page.getByLabel('Célula', { exact: true }).selectOption('Aurora');
     assert.equal(await page.locator('.people-row').count(), 2);
     await page.locator('.people-row').first().press('Enter');

@@ -35,8 +35,9 @@
   const mentorName = p => people[p.mentor]?.name || '';
 
   function renderList(message = '') {
+    const query = norm(search.value.trim());
     const matches = people.map((p, id) => ({ ...p, id })).filter(p =>
-      (!cell.value || p.cell === cell.value) && norm(p.name + ' ' + mentorName(p)).includes(norm(search.value.trim())));
+      (!cell.value || p.cell === cell.value) && [p.name, mentorName(p)].some(name => norm(name).includes(query)));
     status.textContent = message || (matches.length ? `${matches.length} de ${people.length} pessoas` : 'Nenhuma pessoa encontrada.');
     rows.innerHTML = matches.map(p => `<li><button type="button" class="people-row" data-person="${p.id}">
       <span class="avatar" aria-hidden="true">${html(initials(p.name))}</span>
