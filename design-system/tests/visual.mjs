@@ -14,7 +14,39 @@ const artifacts = process.env.STUDIO_ARTIFACTS ||
   path.join(tmpdir(), 'vec-studio-visual-' + mode.slice(2));
 const manifest = JSON.parse(await readFile(path.join(root, 'inventory.json'), 'utf8'));
 const expected = mode === '--compare' ? JSON.parse(await readFile(baselineFile, 'utf8')) : null;
+if (expected) {
+  assert.notEqual(path.resolve(artifacts), path.resolve(path.dirname(baselineFile), expected.images),
+    'Use pastas distintas para a referência e a comparação.');
+}
 const frameKeys = [...manifest.screens.map(({ id, key }) => [id, key]), ['foundations', 'foundations'], ['components', 'components']];
+const changed = [];
+async function differs(page, before, after) {
+  return page.evaluate(async sources => {
+    const images = await Promise.all(sources.map(async source => {
+      const image = new Image();
+      image.src = 'data:image/png;base64,' + source;
+      await image.decode();
+      return image;
+    }));
+    const [first, second] = images;
+    if (first.width !== second.width || first.height !== second.height) return true;
+    const canvas = new OffscreenCanvas(first.width, first.height);
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const [left, right] = images.map(image => {
+      context.drawImage(image, 0, 0);
+      return context.getImageData(0, 0, image.width, image.height).data;
+    });
+    let changedPixels = 0;
+    for (let i = 0; i < left.length; i += 4) {
+      const difference = Math.max(
+        Math.abs(left[i] - right[i]), Math.abs(left[i + 1] - right[i + 1]),
+        Math.abs(left[i + 2] - right[i + 2]), Math.abs(left[i + 3] - right[i + 3])
+      );
+      if (difference > 1 || (difference && ++changedPixels > 10)) return true;
+    }
+    return false;
+  }, [before.toString('base64'), after.toString('base64')]);
+}
 await mkdir(artifacts, { recursive: true });
 const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'chrome' } : {});
 try {
@@ -55,17 +87,26 @@ try {
       assert.doesNotMatch(await heading.innerText(), /Frame planejado/);
       const png = await page.screenshot({ path: path.join(artifacts, imageKey + '.png'), animations: 'disabled', caret: 'hide' });
       pages[imageKey] = createHash('sha256').update(png).digest('hex');
+      if (expected && expected.pages[imageKey] !== pages[imageKey]) {
+        if (!expected.pages[imageKey]) {
+          changed.push(imageKey);
+          continue;
+        }
+        const baseline = await readFile(path.join(path.dirname(baselineFile), expected.images, imageKey + '.png'));
+        assert.equal(createHash('sha256').update(baseline).digest('hex'), expected.pages[imageKey], 'Referência alterada: ' + imageKey);
+        if (await differs(page, baseline, png)) changed.push(imageKey);
+      }
     }
     assert.deepEqual(errors, []);
     console.log(frameKeys.length + ' frames em ' + width + '×' + height + ': OK');
     await page.close();
   }
   if (expected) {
-    const keys = new Set([...Object.keys(expected.pages), ...Object.keys(pages)]);
-    const changed = [...keys].filter(key => expected.pages[key] !== pages[key]);
+    changed.push(...Object.keys(expected.pages).filter(key => !Object.hasOwn(pages, key)));
     assert.equal(changed.length, 0, 'Capturas diferentes: ' + changed.join(', ') + '. Veja ' + artifacts);
   } else {
-    await writeFile(baselineFile, JSON.stringify({ environment, pages }, null, 2) + '\n', { flag: 'wx' });
+    const images = path.relative(path.dirname(path.resolve(baselineFile)), path.resolve(artifacts));
+    await writeFile(baselineFile, JSON.stringify({ environment, images, pages }, null, 2) + '\n', { flag: 'wx' });
   }
   console.log(Object.keys(pages).length + ' capturas em ' + artifacts);
 } finally { await browser.close(); }

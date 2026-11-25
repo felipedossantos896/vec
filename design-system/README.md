@@ -39,3 +39,5 @@ node design-system/tests/visual.mjs --compare /tmp/vec-referencia.json
 ```
 
 Use `STUDIO_CHROME=1` para testar com o Chrome instalado e `STUDIO_ARTIFACTS` para escolher a pasta das capturas. Registre a referência a partir de uma revisão aprovada e compare usando a mesma plataforma, versão de navegador e DPR. Para aprovar uma mudança visual intencional, registre em um novo arquivo.
+
+Preserve as capturas de referência junto do JSON com o mesmo caminho relativo. Use diretórios distintos para gravação e comparação. A suíte tolera até dez pixels por frame com diferença máxima de um nível por canal, para acomodar variações de renderização observadas no Chrome.
