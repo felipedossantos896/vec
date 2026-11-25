@@ -16,7 +16,10 @@ try {
     page.setDefaultTimeout(6000);
     page.on('pageerror', error => errors.push(error.message));
     await page.route('https://studio.test/**', route => route.fulfill({ path: path.join(root, new URL(route.request().url()).pathname.slice(1)) }));
-    await page.route(url => url.hostname !== 'studio.test', route => route.abort());
+    await page.route(url => url.hostname !== 'studio.test', route => {
+      errors.push('Pedido externo: ' + route.request().url());
+      return route.abort();
+    });
     const open = frame => page.goto('https://studio.test/screens/preview.html?screen=' + frame);
     for (const screen of inventory.screens) {
       assert.equal(screen.status, 'prototype');
@@ -51,6 +54,10 @@ try {
     await page.getByLabel('Confirmo que usei dados fictícios').check();
     await page.getByRole('button',{name:'Concluir'}).click();
     assert.match(await page.locator('h1').innerText(), /Cadastro recebido/);
+    assert.equal(await page.locator('h1').evaluate(el => el === document.activeElement), true);
+    await page.getByRole('button', {name:'Iniciar novo exemplo'}).click();
+    assert.equal(await page.getByLabel('Nome completo').inputValue(), '');
+    assert.equal(await page.locator('h1').evaluate(el => el === document.activeElement), true);
     assert.deepEqual(errors, []);
     console.log('Inventário e interações ' + width + '×' + height + ': OK');
     await page.close();

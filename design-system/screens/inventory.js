@@ -29,7 +29,10 @@
     form.addEventListener('submit', event => {
       event.preventDefault();
       remember();
-      if (step === 4) done();
+      if (step === 4) {
+        done();
+        app.querySelector('h1').focus();
+      }
       else { step++; formView(); app.querySelector('h1').focus(); }
     });
     form.querySelector('[data-back]')?.addEventListener('click', () => { remember(); step--; formView(); app.querySelector('h1').focus(); });
@@ -39,7 +42,12 @@
   function done() {
     draft.length = 0;
     app.innerHTML = '<div class="login"><section class="panel"><h1>Cadastro recebido</h1><p>Simulação concluída. Nenhum dado foi enviado.</p><button type="button" class="primary">Iniciar novo exemplo</button></section></div>';
-    app.querySelector('button').addEventListener('click', () => { step = 0; formView(); });
+    app.querySelector('h1').tabIndex = -1;
+    app.querySelector('button').addEventListener('click', () => {
+      step = 0;
+      formView();
+      app.querySelector('h1').focus();
+    });
   }
   if (key === 'registration-done') { done(); return; }
   if (/^registration-[1-5]$/.test(key)) { formView(); return; }
