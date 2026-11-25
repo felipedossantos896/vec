@@ -50,7 +50,7 @@ func TestStudioSession(t *testing.T) {
 	if !cookie.Secure || !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != studioPath {
 		t.Error("cookie do Studio precisa ser restrito à rota e ao HTTPS")
 	}
-	for _, path := range []string{"", "?catalogo=1", "index.html", "screens/%2e%2e/index.html"} {
+	for _, path := range []string{"", "?catalogo=1", "index.html", "screens/%2e%2e/index.html", "%2e%2e/index.html"} {
 		if res := request(http.MethodGet, studioPath+path, "", cookie); !strings.Contains(res.Body.String(), "access/session.js") {
 			t.Errorf("%s: a entrada deve verificar a sessão da aba mesmo com um cookie existente", path)
 		}
@@ -64,7 +64,7 @@ func TestStudioSession(t *testing.T) {
 	if res := request(http.MethodHead, studioPath+"inventory.json", "outro-token", cookie); res.Code != 401 {
 		t.Errorf("cookie de outra sessão = %d, esperado 401", res.Code)
 	}
-	for _, path := range []string{"screens/preview.html", "screens/%2e/preview.html", "screens/sub/%2e%2e/preview.html"} {
+	for _, path := range []string{"screens/preview.html", "screens/%2e/preview.html", "screens/sub/%2e%2e/preview.html", "%2e%2e/screens/preview.html"} {
 		res := request(http.MethodGet, studioPath+path, "", cookie)
 		policy := res.Header().Get("Content-Security-Policy")
 		if res.Code != 200 || !strings.Contains(policy, "connect-src 'none'") || !strings.Contains(policy, "'sha256-") ||

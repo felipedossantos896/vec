@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"io/fs"
@@ -17,8 +18,15 @@ const studioCookie = "__Secure-vec_studio"
 // StudioHandler serves the synthetic catalog using the panel's existing session.
 func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 	mux := http.NewServeMux()
-	files := http.StripPrefix(studioPath, http.FileServerFS(assets))
 	preview, previewCSP, previewErr := studioPreview(assets)
+	serveFile := func(w http.ResponseWriter, r *http.Request, name string) {
+		content, err := fs.ReadFile(assets, name)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeContent(w, r, name, time.Time{}, bytes.NewReader(content))
+	}
 	mux.HandleFunc("POST "+studioPath+"session", func(w http.ResponseWriter, r *http.Request) {
 		token, bearer := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if !bearer {
@@ -47,14 +55,14 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 		writeStudioCookie(w, "", -1)
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.Handle("GET "+studioPath+"access/session.js", files)
+	mux.HandleFunc("GET "+studioPath+"access/session.js", func(w http.ResponseWriter, r *http.Request) {
+		serveFile(w, r, "access/session.js")
+	})
 	mux.HandleFunc("GET "+studioPath, func(w http.ResponseWriter, r *http.Request) {
-		canonical := path.Clean(r.URL.Path)
-		if canonical == strings.TrimSuffix(studioPath, "/") || canonical == studioPath+"index.html" {
-			entry := r.Clone(r.Context())
-			entry.URL.Path = studioPath + "access/"
-			entry.URL.RawPath = ""
-			files.ServeHTTP(w, entry)
+		relative := strings.TrimPrefix(r.URL.Path, studioPath)
+		name := strings.TrimPrefix(path.Clean("/"+relative), "/")
+		if name == "" || name == "index.html" {
+			serveFile(w, r, "access/index.html")
 			return
 		}
 		cookie, err := r.Cookie(studioCookie)
@@ -76,9 +84,7 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
-		// FileServer cleans the decoded path, including escaped dot segments.
-		// Apply the preview policy to every spelling that resolves to this file.
-		if canonical == studioPath+"screens/preview.html" {
+		if name == "screens/preview.html" {
 			if previewErr != nil {
 				http.Error(w, "Preview indisponível", http.StatusInternalServerError)
 				return
@@ -88,7 +94,12 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.ServeContent(w, r, "preview.html", time.Time{}, strings.NewReader(preview))
 			return
 		}
-		files.ServeHTTP(w, r)
+		// All HTML entry points have their own handler and policy.
+		if path.Ext(name) == ".html" {
+			http.NotFound(w, r)
+			return
+		}
+		serveFile(w, r, name)
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
