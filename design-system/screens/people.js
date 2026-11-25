@@ -2,9 +2,9 @@
   if (!['people', 'profile', 'new-person', 'edit-person'].includes(key)) return;
   const cells = ['Aurora', 'Horizonte'];
   const people = [
-    { name: 'Ana Exemplo', cell: 'Aurora', mentor: 'Bruno Modelo', birth: '1995-04-12', stages: ['Café com o Pastor', 'Estação DNA'], disciple: true, leader: false },
-    { name: 'Bruno Modelo', cell: 'Horizonte', mentor: '', birth: '1990-08-26', stages: [], disciple: false, leader: false },
-    { name: 'Clara Ensaio', cell: 'Aurora', mentor: 'Ana Exemplo', birth: '1998-02-10', stages: ['Nova Criatura'], disciple: false, leader: true }
+    { name: 'Ana Exemplo', cell: 'Aurora', mentor: 1, birth: '1995-04-12', stages: ['Café com o Pastor', 'Estação DNA'], disciple: true, leader: false },
+    { name: 'Bruno Modelo', cell: 'Horizonte', mentor: null, birth: '1990-08-26', stages: [], disciple: false, leader: false },
+    { name: 'Clara Ensaio', cell: 'Aurora', mentor: 0, birth: '1998-02-10', stages: ['Nova Criatura'], disciple: false, leader: true }
   ];
   const stages = ['Café com o Pastor', 'Estação DNA', 'Acompanhamento Inicial', 'Nova Criatura', 'Batismo nas Águas', 'Batismo no Espírito'];
   const html = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -32,15 +32,16 @@
   const dialog = app.querySelector('dialog');
   let selected = -1;
   let opener = null;
+  const mentorName = p => people[p.mentor]?.name || '';
 
   function renderList(message = '') {
     const matches = people.map((p, id) => ({ ...p, id })).filter(p =>
-      (!cell.value || p.cell === cell.value) && norm(p.name + ' ' + p.mentor).includes(norm(search.value.trim())));
+      (!cell.value || p.cell === cell.value) && norm(p.name + ' ' + mentorName(p)).includes(norm(search.value.trim())));
     status.textContent = message || (matches.length ? `${matches.length} de ${people.length} pessoas` : 'Nenhuma pessoa encontrada.');
     rows.innerHTML = matches.map(p => `<li><button type="button" class="people-row" data-person="${p.id}">
       <span class="avatar" aria-hidden="true">${html(initials(p.name))}</span>
       <span><strong>${html(p.name)}</strong><small>${html(p.cell)}</small></span>
-      <span class="people-mentor"><small>Discipulador</small>${html(p.mentor || 'Sem discipulador')}</span>
+      <span class="people-mentor"><small>Discipulador</small>${html(mentorName(p) || 'Sem discipulador')}</span>
       <span class="people-count"><small>Etapas da jornada</small>${p.stages.length} de ${stages.length}</span>
     </button></li>`).join('');
   }
@@ -53,7 +54,7 @@
   function profile() {
     const p = people[selected];
     show('Ficha individual', `
-      <div class="person"><span class="avatar" aria-hidden="true">${html(initials(p.name))}</span><div><strong>${html(p.name)}</strong><br><small>${html(p.cell)} · ${html(p.mentor || 'Sem discipulador')}</small></div></div>
+      <div class="person"><span class="avatar" aria-hidden="true">${html(initials(p.name))}</span><div><strong>${html(p.name)}</strong><br><small>${html(p.cell)} · ${html(mentorName(p) || 'Sem discipulador')}</small></div></div>
       <section><h3>Trilho do membro</h3><ul class="people-stages">${stages.map(stage => `<li>${stage}<span class="people-badge">${p.stages.includes(stage) ? 'Concluída' : 'Não informada'}</span></li>`).join('')}</ul></section>
       <section><h3>Trilho do discipulador</h3><p>Expresso 01 · ${p.disciple ? 'Registrado' : 'Não informado'}</p></section>
       <section><h3>Trilho do líder de célula (opcional)</h3><p>Expresso 02 · ${p.leader ? 'Registrado' : 'Não informado'}</p></section>
@@ -61,11 +62,15 @@
   }
   function form() {
     const p = people[selected];
+    const now = new Date();
+    const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map(n => String(n).padStart(2, '0')).join('-');
+    const mentors = people.map((person, id) => id === selected ? '' :
+      `<option value="${id}"${p?.mentor === id ? ' selected' : ''}>${html(person.name)} · Cadastro ${id + 1}</option>`).join('');
     show(p ? 'Editar pessoa' : 'Nova pessoa', `<form class="people-form">
       <label>Nome completo<input name="name" maxlength="100" required value="${html(p?.name || '')}"></label>
-      <label>Nascimento<input name="birth" type="date" required max="2026-11-25" value="${html(p?.birth || '')}"></label>
+      <label>Nascimento<input name="birth" type="date" required max="${today}" value="${html(p?.birth || '')}"></label>
       <label>Célula<select name="cell" aria-label="Célula" required><option value="">Selecione</option>${options(cells, p?.cell)}</select></label>
-      <label>Discipulador<select name="mentor" aria-label="Discipulador"><option value="">Sem discipulador</option>${options([...new Set(people.filter((_, id) => id !== selected).map(item => item.name))], p?.mentor)}</select></label>
+      <label>Discipulador<select name="mentor" aria-label="Discipulador"><option value="">Sem discipulador</option>${mentors}</select></label>
       <p class="muted">Use somente dados fictícios.</p><p role="alert"></p>
       <div class="actions"><button type="submit" class="primary">Salvar</button><button type="button" data-cancel>Cancelar</button></div>
     </form>`);
@@ -98,14 +103,12 @@
       event.target.elements.name.focus();
       return;
     }
-    const values = { name, birth: data.get('birth'), cell: data.get('cell'), mentor: data.get('mentor') };
+    const values = { name, birth: data.get('birth'), cell: data.get('cell'), mentor: data.get('mentor') === '' ? null : Number(data.get('mentor')) };
     if (selected < 0) {
       selected = people.length;
       people.push({ ...values, stages: [], disciple: false, leader: false });
       search.value = cell.value = '';
     } else {
-      const oldName = people[selected].name;
-      for (const p of people) if (p.mentor === oldName) p.mentor = name;
       Object.assign(people[selected], values);
     }
     renderList('Cadastro fictício salvo.');

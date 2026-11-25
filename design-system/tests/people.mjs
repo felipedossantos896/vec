@@ -10,6 +10,7 @@ const browser = await chromium.launch(process.env.STUDIO_CHROME ? { channel: 'ch
 try {
   for (const { width, height } of inventory.viewports) {
     const page = await browser.newPage({ viewport: { width, height }, hasTouch: width < 600 });
+    await page.clock.setFixedTime(new Date(2027, 3, 12, 12));
     page.setDefaultTimeout(6000);
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -38,18 +39,19 @@ try {
     assert.equal(await page.locator('.people-row').first().evaluate(el => document.activeElement === el), true);
     await page.getByRole('button', { name: 'Nova pessoa' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Nome completo').fill('Pessoa Fictícia');
-    await dialog.getByLabel('Nascimento').fill('2000-01-01');
+    await dialog.getByLabel('Nome completo').fill('Ana Exemplo');
+    await dialog.getByLabel('Nascimento').fill('2027-04-12');
     await dialog.getByLabel('Célula').selectOption('Horizonte');
     await capture('form');
     await dialog.getByRole('button', { name: 'Salvar' }).click();
-    assert.match(await dialog.innerText(), /Pessoa Fictícia/);
+    assert.match(await dialog.innerText(), /Ana Exemplo/);
     await dialog.getByRole('button', { name: 'Editar pessoa' }).click();
     await dialog.getByLabel('Nome completo').fill('Pessoa Alterada');
     await dialog.getByRole('button', { name: 'Salvar' }).click();
     assert.match(await dialog.innerText(), /Pessoa Alterada/);
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('.people-row').count(), 4);
+    assert.match(await page.locator('.people-row').filter({ hasText: 'Clara Ensaio' }).innerText(), /Ana Exemplo/);
     for (const frame of ['profile', 'new-person', 'edit-person']) {
       await open(frame);
       assert.equal(await page.getByRole('dialog').isVisible(), true);
