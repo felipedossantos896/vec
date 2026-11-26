@@ -53,6 +53,13 @@ function atualizarMapaBase() {
     camada.addTo(mapaLeaflet);
     camadaBaseVetorial = camada;
     const renderizador = camada.getMaplibreMap();
+    renderizador.once('style.load', () => {
+      if (camadaBaseVetorial !== camada) return;
+      for (const nome of ['Pathway label', 'Pedestrian labels']) {
+        const rotulo = renderizador.getLayer(nome);
+        if (rotulo) renderizador.setLayerZoomRange(nome, Math.max(16, rotulo.minzoom ?? 0), rotulo.maxzoom ?? 24);
+      }
+    });
     renderizador.once('idle', () => {
       if (camadaBaseVetorial !== camada) return;
       canvas.classList.add('mapa-vetorial');
@@ -274,12 +281,17 @@ function desenharGrupos(f: MapaFiltrado) {
       .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
     const acesas = pessoas.filter(r => naLente(estado.lente, r));
     const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
-    const grupo = grupoMult(pessoas[0]?.linha);
-    const corPino = (r: Registro): string => grupo === 'B' ? '#15171c' : corDoRosto(r);
-    const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo" data-grupo="${grupo}">${grupo}</span>` : '');
+    const rostosHtml = pessoas.slice(0, 3).map(r => {
+      const grupo = grupoMult(r.linha);
+      return rostoPin(r, grupo === 'A' ? '#2563eb' : grupo === 'B' ? '#7643a6' : corDoRosto(r));
+    }).join('');
+    const seloGrupo = (r: Registro | undefined) => {
+      const grupo = grupoMult(r?.linha);
+      return grupo ? ` <span class="rp-grupo" data-grupo="${grupo}" aria-hidden="true">${grupo}</span>` : '';
+    };
     const nomes = pessoas.length > 1
-      ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}">${esc(nomeCurto(r))}</button>`).join('')}</span>`
-      : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}</span>`;
+      ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}</button>`).join('')}</span>`
+      : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}</span>`;
     const html = `<span class="rostos-pin">${rostosHtml}</span>${nomes}`;
     const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55);
     const m = L.marker([g.lat, g.lng], {
@@ -355,6 +367,8 @@ function abrirCartao(g: MarcadorPessoas, j: number, fixo = true, focar = false) 
   const pop = L.popup({ offset: [0, -Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
     .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
   cartaoDe = { g, j, pop, fixo };
+  g.el.classList.add('selecionado');
+  g.el.querySelectorAll('.rp-pessoa')[j]?.classList.add('selecionada');
   const el = pop.getElement() as HTMLElement | undefined;
   if (!fixo) desviarCartao(pop);
   if (el && temMouse()) { el.addEventListener('mouseenter', cancelarFechar); el.addEventListener('mouseleave', agendarFechar); }
@@ -413,7 +427,11 @@ document.addEventListener('click', e => {
 // Toque no mapa, arrasto e zoom fecham o cartão.
 function ligarCartaoMapa() {
   mapaLeaflet.on('click dragstart zoomstart', () => mapaLeaflet.closePopup());
-  mapaLeaflet.on('popupclose', () => { cartaoDe = null; });
+  mapaLeaflet.on('popupclose', () => {
+    cartaoDe?.g.el.classList.remove('selecionado');
+    cartaoDe?.g.el.querySelector('.rp-pessoa.selecionada')?.classList.remove('selecionada');
+    cartaoDe = null;
+  });
 }
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]') || !cartaoDe) return;

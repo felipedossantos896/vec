@@ -16,7 +16,7 @@ function renderPainelArea(base: Registro[]) {
   $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div></div>
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
-    <p class="ap-kick">Ferramentas</p><div class="ap-ferr"><button type="button" data-ferr="anfPainel">Escolher anfitrião ${icone('seguir', { classe: 'ic-16' })}</button><button type="button" data-ferr="multPainel">Planejar multiplicação ${icone('seguir', { classe: 'ic-16' })}</button>${celulasNova().length ? `<button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button>` : ''}</div>`;
+    ${celulasNova().length ? `<div class="ap-ferr"><button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button></div>` : ''}`;
   $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Toque num rosto para ver a pessoa e agir.`;
 }
 
@@ -34,16 +34,21 @@ $('areaPainel').addEventListener('click', e => {
     estado.lente = lente.dataset.lente || 'todos';
     renderArea(); renderMapa();
     $('areaPainel').querySelector<HTMLButtonElement>(`[data-lente="${estado.lente}"]`)?.focus();
-    return;
   }
-  const ferr = alvo?.closest<HTMLElement>('[data-ferr]');
-  if (ferr) abrirFerramenta(ferr.dataset.ferr || '');
+});
+
+$('areaModos').addEventListener('click', e => {
+  const modo = e.target instanceof Element ? e.target.closest<HTMLButtonElement>('[data-modo]') : null;
+  if (modo && modo.dataset.modo !== estado.ferramenta) abrirFerramenta(modo.dataset.modo || '');
 });
 
 // Ferramenta no mapa (Spec 009): o painel abre ao lado do mapa e o mapa desenha as casas
 // (anfitrião) ou os grupos (multiplicação). Uma de cada vez.
 function abrirFerramenta(id: string) {
   estado.ferramenta = id;
+  $('areaModos').querySelectorAll<HTMLButtonElement>('[data-modo]').forEach(botao => {
+    botao.setAttribute('aria-pressed', String(botao.dataset.modo === id));
+  });
   const aberta = id === 'anfPainel' || id === 'multPainel';
   ['anfPainel', 'multPainel'].forEach(k => { const d = $<HTMLDetailsElement>(k); d.open = k === id; d.hidden = !!aberta && k !== id; });
   $('areaFerrPainel').hidden = !aberta;
@@ -52,7 +57,7 @@ function abrirFerramenta(id: string) {
   if (aberta && matchMedia(CELULAR).matches) { abrirGaveta(); $('gvCorpo').scrollTop = 0; }
   renderMapa();
   if (aberta) $<HTMLDetailsElement>(id).querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
-  else $('areaPainel').querySelector<HTMLElement>('[data-ferr]')?.focus();
+  else $('areaModos').querySelector<HTMLElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 $('areaFerrPainel').addEventListener('click', e => {
   if (e.target instanceof Element && e.target.closest('[data-ferr-sair]')) abrirFerramenta('');
