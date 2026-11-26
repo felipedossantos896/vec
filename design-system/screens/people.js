@@ -11,19 +11,23 @@
   const initials = name => name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
   const options = (items, selected) => items.map(item => `<option${item === selected ? ' selected' : ''}>${html(item)}</option>`).join('');
   const norm = text => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR');
-  app.innerHTML = shell('Pessoas', `
-    <section class="people-screen" aria-label="Gestão de pessoas">
-      <div class="top"><h2>Cadastros</h2><button type="button" class="primary" data-new>Nova pessoa</button></div>
+  app.innerHTML = `<div class="shell">${panelNavigation(key)}
+    <div class="content"><section class="people-screen" aria-labelledby="people-title">
+      <header class="top people-heading">
+        <div><h1 id="people-title">Pessoas</h1><p class="muted" role="status" id="people-status"></p></div>
+        <button type="button" class="primary" data-new>Nova pessoa</button>
+      </header>
       <div class="people-filters">
         <label>Busca<input type="search" placeholder="Nome ou discipulador"></label>
         <label>Célula<select aria-label="Célula"><option value="">Todas as células</option>${options(cells)}</select></label>
       </div>
-      <p class="muted" role="status" id="people-status"></p>
-      <ul class="people-list" aria-label="Pessoas"></ul>
+      <div class="people-directory">
+        <div class="people-columns" aria-hidden="true"><span>Pessoa e célula</span><span>Discipulador</span><span>Jornada</span></div>
+        <ul class="people-list" aria-label="Pessoas"></ul>
+      </div>
       <p class="muted">Dados fictícios. Alterações são descartadas ao sair do preview.</p>
-    </section>
-    <dialog class="people-dialog" aria-labelledby="people-dialog-title"></dialog>`);
-  app.querySelector('.content > .top .actions').remove();
+    </section></div></div>
+    <dialog class="people-dialog" aria-labelledby="people-dialog-title"></dialog>`;
   const section = app.querySelector('.people-screen');
   const rows = section.querySelector('ul');
   const search = section.querySelector('input');
@@ -40,10 +44,10 @@
       (!cell.value || p.cell === cell.value) && [p.name, mentorName(p)].some(name => norm(name).includes(query)));
     status.textContent = matches.length ? `${matches.length} de ${people.length} pessoas` : 'Nenhuma pessoa encontrada.';
     rows.innerHTML = matches.map(p => `<li><button type="button" class="people-row" data-person="${p.id}">
-      <span class="avatar" aria-hidden="true">${html(initials(p.name))}</span>
-      <span><strong>${html(p.name)}</strong><small>${html(p.cell)}</small></span>
-      <span class="people-mentor"><small>Discipulador</small>${html(mentorName(p) || 'Sem discipulador')}</span>
-      <span class="people-count"><small>Etapas da jornada</small>${p.stages.length} de ${stages.length}</span>
+      <span class="people-person"><span class="avatar" aria-hidden="true">${html(initials(p.name))}</span>
+      <span><strong>${html(p.name)}</strong><small>${html(p.cell)}</small></span></span>
+      <span class="people-mentor"><small class="people-field-label">Discipulador</small>${html(mentorName(p) || 'Sem discipulador')}</span>
+      <span class="people-count"><small class="people-field-label">Etapas da jornada</small>${p.stages.length} de ${stages.length}</span>
     </button></li>`).join('');
   }
 
@@ -57,7 +61,10 @@
     show('Ficha individual', `
       ${saved ? '<p role="status">Cadastro fictício salvo.</p>' : ''}
       <div class="person"><span class="avatar" aria-hidden="true">${html(initials(p.name))}</span><div><strong>${html(p.name)}</strong><br><small>${html(p.cell)} · ${html(mentorName(p) || 'Sem discipulador')}</small></div></div>
-      <section><h3>Trilho do membro</h3><ul class="people-stages">${stages.map(stage => `<li>${stage}<span class="people-badge">${p.stages.includes(stage) ? 'Concluída' : 'Não informada'}</span></li>`).join('')}</ul></section>
+      <section><h3>Trilho do membro</h3><ul class="people-stages">${stages.map(stage => {
+        const complete = p.stages.includes(stage);
+        return `<li><span>${stage}</span><span class="people-badge${complete ? ' is-complete' : ''}">${complete ? 'Concluída' : 'Não informada'}</span></li>`;
+      }).join('')}</ul></section>
       <section><h3>Trilho do discipulador</h3><p>Expresso 01 · ${p.disciple ? 'Registrado' : 'Não informado'}</p></section>
       <section><h3>Trilho do líder de célula (opcional)</h3><p>Expresso 02 · ${p.leader ? 'Registrado' : 'Não informado'}</p></section>
       <button type="button" class="primary" data-edit>Editar pessoa</button>`);

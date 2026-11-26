@@ -21,13 +21,16 @@ try {
     await page.route(url => url.hostname !== 'studio.test', route => route.abort());
     const open = frame => page.goto(`https://studio.test/screens/preview.html?screen=${frame}`);
     const capture = (name) => process.env.STUDIO_ARTIFACTS &&
-      page.screenshot({ path: path.join(process.env.STUDIO_ARTIFACTS, `people-${width}-${name}.png`) });
+      page.screenshot({ path: path.join(process.env.STUDIO_ARTIFACTS, `people-${width}-${name}.png`), animations: 'disabled' });
     await open('people');
     assert.equal(await page.locator('.people-row').count(), 3);
+    assert.equal(await page.locator('.people-columns').isVisible(), width > 600);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await capture('list');
     const search = page.getByRole('searchbox', { name: 'Busca' });
     await search.fill('Ninguém');
     assert.match(await page.getByRole('status').innerText(), /Nenhuma pessoa/);
+    assert.equal(await page.locator('.people-directory').isVisible(), false);
     await search.fill('Exemplo Bruno');
     assert.equal(await page.locator('.people-row').count(), 0);
     await search.fill('ana');
@@ -37,6 +40,7 @@ try {
     assert.equal(await page.locator('.people-row').count(), 2);
     await page.locator('.people-row').first().press('Enter');
     assert.match(await page.getByRole('dialog').innerText(), /Trilho do discipulador/);
+    assert.equal(await page.locator('.people-badge.is-complete').count(), 2);
     await capture('profile');
     await page.keyboard.press('Escape');
     assert.equal(await search.inputValue(), 'ana');
