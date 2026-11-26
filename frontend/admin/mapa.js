@@ -6,9 +6,9 @@
 // Política de tiles do OSM: atribuição sempre visível, sem pré-carga nem uso offline.
 const TILES_OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATRIBUICAO_OSM = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Reportar erro no mapa</a>';
-const ZOOM_MAX = 16; // além disso não há o que ver: as posições são aproximadas
+const ZOOM_MAX = 18; // aproxima o mapa-base; as posições permanecem aproximadas
 const ZOOM_ENQUADRAMENTO = 14;
-const ZOOM_TILES = 17; // detectRetina reduz em um o teto efetivo da camada no Leaflet 1.9.4
+const ZOOM_TILES = ZOOM_MAX + 1; // detectRetina reduz em um o teto efetivo da camada no Leaflet 1.9.4
 const RECARREGAR_APOS_MS = 60000;
 let dadosMapa = null;
 let mapaCarregadoEm = 0;
