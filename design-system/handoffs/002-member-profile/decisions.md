@@ -1,0 +1,6 @@
+# Ficha individual e trilhos
+Status: proposta visual. Origem: discussão de 26/11/2026. Frame A08; Issue documental #268.
+Desktop: gaveta lateral preserva mapa, opção de ficha expandida; mobile: bottom sheet expansível. Cabeçalho fixo, avatar, nome, célula e discipulado; ações WhatsApp e editar compactas. Abas candidatas: visão geral, ficha pessoal, jornada, histórico (somente se houver dados e autorização).
+Seções: dados pessoais, localização, anfitrião, célula e serviço. Campos em duas colunas quando houver espaço; uma no mobile. Endereço e autorização preservam regras atuais; ações destrutivas em menu contextual com confirmação. Títulos naturais, 24 px nome, 14 px seção, 13–14 px conteúdo, 12 px auxiliar; botões 36/44 px mínimos conforme V1.0, espaçamento 12/16 px, raio 12 px.
+Jornada: conversão, batismo, discipulado, treinamentos, serviço, liderança são exemplos a reconciliar com trilhos reais. Estados independentes: registrado, em acompanhamento (se suportado), não informado. Não inferir sequência, conclusão, maturidade ou percentual. Sem novos campos ou histórico inventado.
+Referências: [desktop](references/profile-desktop.svg), [mobile](references/profile-mobile.svg), [jornada](references/journey.svg), [aceite](acceptance-criteria.md).

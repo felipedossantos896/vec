@@ -1,0 +1,2 @@
+# Movimento
+Hover 150 ms; seleção 180 ms; cluster merge 350 ms; spiderfy 300 ms; câmera 600 ms. Halo suave 2000 ms apenas na seleção, preferir até dois ciclos para evitar movimento contínuo. Nenhum alerta pulsa permanentemente. Usar transform/opacity e tokens existentes; respeitar prefers-reduced-motion, com estado final imediato. Não animar posição geográfica fictícia como se fosse rastreamento real.

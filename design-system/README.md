@@ -56,3 +56,6 @@ O iframe permite a validação nativa dos formulários que executam ações loca
 Para executar os testes de interação, instale as dependências da raiz com `npm ci` e o navegador com `npx playwright install chromium`. Execute `node design-system/tests/people.mjs`, `node design-system/tests/inventory.mjs`, `node design-system/tests/motion.mjs` e `node design-system/tests/library.mjs`.
 
 A V0.6 ([PR #235](https://github.com/felipedossantos896/vec/pull/235)) é a primeira revisão do Studio com o executor de comparação. Para mudanças posteriores à V1.0, gere a referência a partir do merge da V1.0 ou use o JSON e os PNGs do pacote de evidências da entrega.
+
+## Design Handoffs
+Consulte [handoffs/README.md](handoffs/README.md) para propostas versionadas, referências e critérios compartilhados entre agentes. Não são autorização de implementação.

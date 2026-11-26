@@ -31,3 +31,6 @@ Ambos seguem a mesma fonte de verdade: este arquivo, as ADRs, Specs e Issues.
 - Manter JavaScript/CSS compilados versionados sincronizados com as fontes.
 - Criar PR com Issue, Spec, critérios de aceite, evidências, riscos, rollback e handoff atualizado.
 - Não afirmar que testes passaram sem executá-los.
+
+## Referências de design
+Para tarefas de UX/UI, consulte `design-system/handoffs/README.md` e o handoff vinculado à Issue. Referências propostas não substituem Specs/ADRs aprovados nem autorizam implementação. Use apenas fixtures sintéticas e registre evidências visuais.
