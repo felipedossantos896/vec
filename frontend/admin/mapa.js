@@ -63,6 +63,10 @@ function nomeComPapel(r) {
     const papeis = regrasMapa.papeisDoCard(pessoaNoMapa(r)).map(p => p.texto.charAt(0).toLowerCase() + p.texto.slice(1));
     return [nomeCurto(r), ...papeis].join(', ');
 }
+const avisoNoMapa = (r) => r && naLente('semDisc', r) ? 'Sem discipulador' : '';
+const nomeDoMarcador = (r) => [nomeComPapel(r), avisoNoMapa(r)].filter(Boolean).join(', ');
+const seloCuidado = (r) => avisoNoMapa(r)
+    ? ' <span class="rp-cuidado" aria-hidden="true" title="Sem discipulador">!</span>' : '';
 // Cor do anel do rosto: a da célula; neutra para líder de área ou de setor
 const corDoRosto = (r) => regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula);
 // Cartão (Spec 017, sobre a 014): rosto grande, nome curto, "célula · papel", outros papéis em
@@ -213,14 +217,15 @@ let ultimoFiltro = null;
 function desenharGrupos(f) {
     mapaLeaflet.closePopup();
     camadaGrupos.clearLayers();
-    const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), matchMedia('(pointer: coarse), (max-width: 720px)').matches);
+    const toque = matchMedia('(any-pointer: coarse), (max-width: 720px)').matches;
+    const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), toque);
     $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
     f.grupos.forEach((g, i) => {
         // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
         const pessoas = g.linhas.map(regDe).filter((r) => Boolean(r))
             .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
         const acesas = pessoas.filter(r => naLente(estado.lente, r));
-        const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
+        const rotulo = `Área ${i + 1}: ${pessoas.map(nomeDoMarcador).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
         const rostosHtml = pessoas.slice(0, 3).map(r => {
             const grupo = grupoMult(r.linha);
             return rostoPin(r, grupo === 'A' ? '#2563eb' : grupo === 'B' ? '#7643a6' : corDoRosto(r));
@@ -230,10 +235,10 @@ function desenharGrupos(f) {
             return grupo ? ` <span class="rp-grupo" data-grupo="${grupo}" aria-hidden="true">${grupo}</span>` : '';
         };
         const nomes = pessoas.length > 1
-            ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}</button>`).join('')}</span>`
-            : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}</span>`;
+            ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-expanded="false" aria-label="${esc(nomeDoMarcador(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}${seloCuidado(r)}</button>`).join('')}</span>`
+            : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}${seloCuidado(pessoas[0])}</span>`;
         const html = `<span class="rostos-pin">${rostosHtml}</span>${nomes}`;
-        const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55);
+        const larg = Math.max(toque ? 48 : 44, Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55));
         const m = L.marker([g.lat, g.lng], {
             icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
             keyboard: true, riseOnHover: true
@@ -247,6 +252,8 @@ function desenharGrupos(f) {
         const nomesBotoes = el.querySelectorAll('.rp-pessoa');
         if (nomesBotoes.length)
             el.setAttribute('role', 'group');
+        else
+            el.setAttribute('aria-expanded', 'false');
         nomesBotoes.forEach((botao, j) => {
             botao.addEventListener('click', e => {
                 e.stopPropagation();
@@ -310,7 +317,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
             cartaoDe.pop.update();
         } // agora cabe na tela
         if (focar)
-            cartaoDe.pop.getElement()?.querySelector('.b-contato')?.focus({ preventScroll: true });
+            cartaoDe.pop.getElement()?.querySelector('.cartao-a > :first-child')?.focus({ preventScroll: true });
         return;
     }
     // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
@@ -319,7 +326,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
         .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
     cartaoDe = { g, j, pop, fixo };
     g.el.classList.add('selecionado');
-    g.el.querySelectorAll('.rp-pessoa')[j]?.classList.add('selecionada');
+    (g.el.querySelectorAll('.rp-pessoa')[j] ?? g.el).setAttribute('aria-expanded', 'true');
     const el = pop.getElement();
     if (!fixo)
         desviarCartao(pop);
@@ -328,7 +335,7 @@ function abrirCartao(g, j, fixo = true, focar = false) {
         el.addEventListener('mouseleave', agendarFechar);
     }
     if (focar)
-        el?.querySelector('.b-contato')?.focus({ preventScroll: true });
+        el?.querySelector('.cartao-a > :first-child')?.focus({ preventScroll: true });
 }
 // O mapa do Leaflet se move com transform, então o cartão fica sempre abaixo do painel, dos
 // filtros e da ferramenta, que flutuam por cima (Spec 016). O cartão aberto pelo mouse não
@@ -397,7 +404,9 @@ function ligarCartaoMapa() {
     mapaLeaflet.on('click dragstart zoomstart', () => mapaLeaflet.closePopup());
     mapaLeaflet.on('popupclose', () => {
         cartaoDe?.g.el.classList.remove('selecionado');
-        cartaoDe?.g.el.querySelector('.rp-pessoa.selecionada')?.classList.remove('selecionada');
+        cartaoDe?.g.el.querySelector('.rp-pessoa[aria-expanded="true"]')?.setAttribute('aria-expanded', 'false');
+        if (cartaoDe?.g.el.hasAttribute('aria-expanded'))
+            cartaoDe.g.el.setAttribute('aria-expanded', 'false');
         cartaoDe = null;
     });
 }
