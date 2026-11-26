@@ -24,7 +24,7 @@ const CAMPOS_ENDERECO: [keyof EnderecoForm, string, string][] = [
 let enderecoAtual: EnderecoSalvo | null = null;
 
 const blocoEndereco = (): string =>
-  `<div class="det-sec" id="endSec"><h4>Endereço</h4><div id="endCorpo"><p class="nota-fraca">Carregando endereço…</p></div><p class="msg" id="endMsg" role="alert"></p></div>`;
+  `<div class="det-sec" id="endSec"><h4>${icone('mapa', { classe: 'ic-18' })}Localização</h4><div id="endCorpo"><p class="nota-fraca">Carregando endereço…</p></div><p class="msg" id="endMsg" role="alert"></p></div>`;
 
 function renderEndereco() {
   const e = enderecoAtual;

@@ -1,17 +1,18 @@
 "use strict";
 // ══════ DETALHE DA PESSOA ══════
 // A aba escolhida (Resumo ou Ficha completa) vale para a próxima pessoa.
-const ABAS_DETALHE = [['resumo', 'Resumo'], ['ficha', 'Ficha completa']];
+const ABAS_DETALHE = [['resumo', 'Resumo', 'casa'], ['ficha', 'Ficha completa', 'ficha']];
 let abaDetalhe = 'resumo';
-function secao(titulo, linhas) {
-    return `<div class="det-sec"><h4>${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
+function secao(titulo, linhas, simbolo) {
+    return `<div class="det-sec"><h4>${simbolo ? icone(simbolo, { classe: 'ic-18' }) : ''}${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
 const ICONE_CHECK = icone('feito', { classe: 'ic-12' });
-// Jornada como lista de etapas marcadas, em duas colunas no espaço da ficha
+// Cada etapa mantém o próprio estado e a data já registrada.
 function jornadaResumo(r) {
-    return `<div class="det-sec"><h4>Jornada · ${r._jornada} de ${JORNADA.length}</h4><ul class="jor-lista">${JORNADA.map(([k, l]) => {
+    return `<div class="det-sec"><h4>${icone('indicadores', { classe: 'ic-18' })}Jornada espiritual</h4><ul class="jor-lista" tabindex="0" aria-label="Etapas da jornada">${JORNADA.map(([k, l]) => {
         const ok = r[k] === 'S';
-        return `<li class="${ok ? 'ok' : ''}"><span class="jor-c" aria-hidden="true">${ok ? ICONE_CHECK : ''}</span><span>${l}<span class="sr-only">${ok ? ': concluída' : ': ainda não'}</span>${dataEtapa(r, k)}</span></li>`;
+        const situacao = ok ? 'registrado' : r[k] === 'N' ? 'não' : 'não informado';
+        return `<li class="${ok ? 'ok' : ''}"><span class="jor-c" aria-hidden="true">${ok ? ICONE_CHECK : '–'}</span><span>${l}<span class="sr-only">: ${situacao}</span>${dataEtapa(r, k)}</span></li>`;
     }).join('')}</ul></div>`;
 }
 function trilhosDetalhe(r) {
@@ -47,18 +48,25 @@ function abrirDetalhe(r) {
     const interesses = INTERESSES.filter(([k]) => r[k] === 'S');
     const trilha = regrasLideranca.temTrilha(r); // o líder de área não tem jornada (Spec 013)
     const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
-    const resumo = (trilha ? trilhosDetalhe(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
+    const destaques = trilha ? `<dl class="det-resumo-cards">
+    <div><dt>${icone('indicadores', { classe: 'ic-18' })}Jornada</dt><dd>${r._jornada} de ${JORNADA.length} etapas registradas</dd></div>
+    <div><dt>${icone('pessoas', { classe: 'ic-18' })}Célula</dt><dd>${r.celula ? celulaChip(r.celula) : 'Sem célula'}</dd></div>
+    <div class="det-resumo-cuidado"><dt>${icone('discipulos', { classe: 'ic-18' })}Cuidado</dt><dd>${SITUACOES.semDiscipulador.f(r) ? 'Sem discipulador' : 'Discipulador informado'}</dd></div>
+  </dl>` : '';
+    const resumo = destaques + (trilha ? jornadaResumo(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
         secao('Dados principais', [
             linhasContato(r)[0],
             ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : `<button type="button" class="btn-link${regrasLideranca.temTrilha(r) ? ' det-alerta' : ''}" data-acao="editar">Vincular</button>`],
             ['Congrega com frequência', pill(r.frequentaCultos)],
             ['Nascimento', nasc],
             ...(regrasLideranca.ehLider(r) ? [['Discípulos', String(discipulos)]] : [])
-        ]) +
+        ], 'ficha') +
+        (trilha ? trilhosDetalhe(r) : '') +
         (interesses.length ? `<div class="det-sec"><h4>Quer servir como</h4><p class="det-tags">${interesses.map(([, l]) => `<span>${l}</span>`).join('')}</p></div>` : '') +
         acoesDetalhe(r);
-    const ficha = secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]]) +
-        blocoEndereco() +
+    const ficha = '<div class="det-ficha-dados">' +
+        secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]], 'ficha') +
+        '<div class="det-ficha-apoio">' + blocoEndereco() +
         blocoAnfitriao() +
         secao('Célula e serviço', [
             ...(regrasLideranca.ehLider(r) ? [['Papel', esc(regrasLideranca.rotulo(r))]] : []),
@@ -66,7 +74,7 @@ function abrirDetalhe(r) {
             ['Congrega com frequência', pill(r.frequentaCultos)],
             ['Serve em ministério', pill(r.serveMinisterio)],
             ...(r.serveMinisterio === 'S' ? [['Ministério', txt(r.ministerioNome)]] : [])
-        ]) +
+        ], 'pessoas') + '</div></div>' +
         (trilha ? jornadaResumo(r) : '') +
         secao('Treinamentos', TREINOS.map(([k, l]) => [l, pill(r[k])])) +
         secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]) => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
@@ -76,10 +84,10 @@ function abrirDetalhe(r) {
     $('detBody').innerHTML =
         (r._dup > 1 ? '<p class="det-status"><span class="tag-c">Possível duplicado</span></p>' : '') +
             `<div class="det-topo-acoes">
-      ${r.telefone ? `<a class="b-zap" href="https://wa.me/55${esc(r.telefone)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
-      <button type="button" class="b-sec" data-acao="editar">Editar</button>
+      ${r.telefone ? `<a class="b-zap" href="https://wa.me/55${esc(r.telefone)}" target="_blank" rel="noopener">${icone('whatsapp', { classe: 'ic-16' })}WhatsApp</a>` : ''}
+      <button type="button" class="b-sec" data-acao="editar">${icone('ficha', { classe: 'ic-16' })}Editar perfil</button>
     </div>
-    <div class="det-tabs" role="tablist" aria-label="Seções do cadastro">${ABAS_DETALHE.map(([k, l]) => `<button type="button" role="tab" id="dt-${k}" data-dtab="${k}" aria-controls="dp-${k}" aria-selected="${k === abaDetalhe}" tabindex="${k === abaDetalhe ? 0 : -1}">${l}</button>`).join('')}</div>
+    <div class="det-tabs" role="tablist" aria-label="Seções do cadastro">${ABAS_DETALHE.map(([k, l, simbolo]) => `<button type="button" role="tab" id="dt-${k}" data-dtab="${k}" aria-controls="dp-${k}" aria-selected="${k === abaDetalhe}" tabindex="${k === abaDetalhe ? 0 : -1}">${icone(simbolo, { classe: 'ic-16' })}${l}</button>`).join('')}</div>
     ${ABAS_DETALHE.map(([k]) => `<div class="det-pane" role="tabpanel" id="dp-${k}" aria-labelledby="dt-${k}"${k === abaDetalhe ? '' : ' hidden'}>${paineis[k]}</div>`).join('')}`;
     const d = $('det');
     d.dataset.linha = String(r.linha);

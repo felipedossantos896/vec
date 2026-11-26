@@ -12,7 +12,7 @@ const ERROS_ANFITRIAO = {
     dados_invalidos: 'Algum campo não foi aceito. Confira e tente de novo.'
 };
 let anfitriaoAtual = null;
-const blocoAnfitriao = () => `<div class="det-sec" id="anfSec"><h4>Anfitrião</h4><div id="anfCorpo"><p class="nota-fraca">Carregando…</p></div><p class="msg" id="anfMsg" role="alert"></p></div>`;
+const blocoAnfitriao = () => `<div class="det-sec" id="anfSec"><h4>${icone('casa', { classe: 'ic-18' })}Anfitrião</h4><div id="anfCorpo"><p class="nota-fraca">Carregando…</p></div><p class="msg" id="anfMsg" role="alert"></p></div>`;
 function renderAnfitriao(r) {
     const a = anfitriaoAtual;
     $('anfCorpo').innerHTML = a

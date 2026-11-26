@@ -17,7 +17,7 @@ const ERROS_ANFITRIAO: Record<string, string> = {
 let anfitriaoAtual: AnfitriaoSalvo | null = null;
 
 const blocoAnfitriao = (): string =>
-  `<div class="det-sec" id="anfSec"><h4>Anfitrião</h4><div id="anfCorpo"><p class="nota-fraca">Carregando…</p></div><p class="msg" id="anfMsg" role="alert"></p></div>`;
+  `<div class="det-sec" id="anfSec"><h4>${icone('casa', { classe: 'ic-18' })}Anfitrião</h4><div id="anfCorpo"><p class="nota-fraca">Carregando…</p></div><p class="msg" id="anfMsg" role="alert"></p></div>`;
 
 function renderAnfitriao(r: Registro) {
   const a = anfitriaoAtual;

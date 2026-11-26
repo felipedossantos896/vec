@@ -18,7 +18,7 @@ const CAMPOS_ENDERECO = [
     ['cidade', 'Cidade', 'address-level2'], ['uf', 'UF', 'address-level1']
 ];
 let enderecoAtual = null;
-const blocoEndereco = () => `<div class="det-sec" id="endSec"><h4>Endereço</h4><div id="endCorpo"><p class="nota-fraca">Carregando endereço…</p></div><p class="msg" id="endMsg" role="alert"></p></div>`;
+const blocoEndereco = () => `<div class="det-sec" id="endSec"><h4>${icone('mapa', { classe: 'ic-18' })}Localização</h4><div id="endCorpo"><p class="nota-fraca">Carregando endereço…</p></div><p class="msg" id="endMsg" role="alert"></p></div>`;
 function renderEndereco() {
     const e = enderecoAtual;
     $('endCorpo').innerHTML = e
