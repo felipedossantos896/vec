@@ -4,17 +4,16 @@
 .config-seg button { font-weight: 600; font-size: var(--t13); }
 .config-seg button[aria-pressed="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, 0.16); }
 .page-heading .ct-kick { margin-bottom: 2px; }
-.est-acoes .b-sec, .est-acoes .b-pri { min-height: var(--control-height); padding: 0 16px; }
 
 /* ── Setores ── */
 .est-setores { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; margin-bottom: 14px; }
 .est-setor { position: relative; padding: 16px 18px; border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
-.est-setor h2 { overflow: hidden; font: 700 1.15rem/1.2 var(--display); text-overflow: ellipsis; white-space: nowrap; padding-right: 76px; }
+.est-setor h2 { font: 700 1.1rem/1.25 var(--display); letter-spacing: -0.01em; overflow-wrap: anywhere; padding-right: 84px; }
 .est-setor dl { display: flex; gap: 28px; margin-top: 12px; }
 .est-setor dl div { display: flex; flex-direction: column-reverse; }
 .est-setor dd { font: 700 1.6rem/1 var(--display); font-variant-numeric: tabular-nums; }
 .est-setor dt { margin-top: 4px; color: var(--muted); font-size: var(--t12); }
-.est-setor .btn-link { position: absolute; top: 8px; right: 6px; }
+.est-setor .btn-link { position: absolute; top: 10px; right: 10px; }
 
 /* ── Tabela de células (celular: cartões) ── */
 .est-tab, .ulist { overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--cream); box-shadow: var(--shadow-card); }

@@ -50,6 +50,7 @@
   /* Escala de tipos (ADR-0009): rótulos · dados · texto · nomes · seções · página · números-chave */
   --t12: 12px;
   --t13: 13px;
+  --t14: 14px;
   --t15: 15px;
   --t17: 17px;
   --t21: 21px;
@@ -84,19 +85,24 @@
   --space-5: 20px;
   --space-6: 24px;
   --tap: 48px;
-  --control-height: 32px;
-  --field-text: var(--t13);
+  /* Controles: uma altura para campos e botões, outra para chips e segmentos. */
+  --control-height: 40px;
+  --control-sm: 32px;
+  --control-px: 16px;
+  --field-text: var(--t14);
   --r-lg: 18px;
   --r-md: 12px;
   --r-sm: 10px;
-  --shadow-card: 0 1px 2px rgba(21, 23, 28, 0.04), 0 10px 28px rgba(21, 23, 28, 0.07);
+  --shadow-card: 0 1px 2px rgba(20, 36, 61, 0.05), 0 6px 20px rgba(20, 36, 61, 0.06);
+  --shadow-btn: 0 1px 2px rgba(20, 36, 61, 0.08);
+  --ring: 0 0 0 3px rgba(37, 99, 235, 0.22);
   --shadow-float: 0 24px 64px rgba(13, 15, 19, 0.28);
   --focus: 3px solid var(--gold-ink);
   --focus-on-dark: 3px solid var(--action-on-dark);
 }
 
 @media (any-pointer: coarse) {
-  :root { --control-height: 44px; --field-text: 16px; }
+  :root { --control-height: 44px; --control-sm: 44px; --field-text: 16px; }
 }
 
 /* Ícones Phosphor (ADR-0012, Spec 015): cor do texto e tamanho por classe. O .ic-slot do HTML

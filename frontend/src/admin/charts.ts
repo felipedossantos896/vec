@@ -107,7 +107,7 @@ function renderIndicadores() {
       ${painel('Cadastros por mês', subCad, colunas(cadastros.map((c, i) => ({ ...c, destaque: i === cadastros.length - 1 })), 'Novos cadastros por mês'))}
       ${painel('Faixa etária', idades.length < total ? `Idade de ${idades.length} de ${plural(total, 'pessoa', 'pessoas')}.` : 'Idade de quem está cadastrado.', barras(regrasIndicadores.faixas(idades), idades.length, 'grafite', false))}
       ${painel('Treinamentos', 'Quantos já fizeram cada um.', barras(TREINOS.map(([k, l]): [string, number] => [l.split(' · ')[0], base.filter(r => r[k] === 'S').length]), total, 'verde', true))}
-      <section class="ind-agir" aria-labelledby="indAgir"><h2 id="indAgir">Onde agir</h2><p>Os pontos que mais pesam agora.</p>
+      <section class="ind-agir" aria-labelledby="indAgir"><h2 id="indAgir">Onde agir</h2><p>Pendências da área, com atalho para resolver.</p>
         ${agir.length ? `<ul>${agir.map(([n, t, acao, attrs]) => `<li><b>${n}</b><span>${t}</span><button type="button" ${attrs}>${acao} ${icone('seguir', { classe: 'ic-14' })}</button></li>`).join('')}</ul>` : '<p class="ind-ok">Nada pendente por aqui. 🙌</p>'}
       </section>
     </div>`;

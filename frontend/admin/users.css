@@ -49,8 +49,8 @@
 .share-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
 /* ── Configurações: Células e Usuários ── */
-.config-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 24px; padding: 4px; border-radius: var(--r-md); background: var(--sunken); }
-.config-seg button { min-height: 42px; padding: 0 16px; border-radius: 9px; color: var(--muted); font-weight: 700; transition: background 0.15s, color 0.15s; }
+.config-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; margin-bottom: 28px; padding: 3px; border-radius: var(--r-sm); background: var(--sunken); }
+.config-seg button { min-height: calc(var(--control-height) - 6px); padding: 0 16px; border-radius: 8px; color: var(--muted); font-weight: 700; transition: background 0.15s, color 0.15s; }
 .config-seg button[aria-pressed="true"] { background: var(--navy); color: var(--white); }
 .config-seg button:focus-visible { outline: var(--focus); outline-offset: 2px; }
 

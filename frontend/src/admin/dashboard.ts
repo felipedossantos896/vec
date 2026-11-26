@@ -30,7 +30,7 @@ async function carregar() {
     if (!soDiscipulos && estado.aba === 'discipulos') mostrarAba('acompanhar');
     $('tabUsuarios').classList.toggle('hidden', !estado.gerencia);
     if (!estado.gerencia && estado.aba === 'usuarios') mostrarAba('acompanhar');
-    $('whoami').textContent = `Olá, ${r.nome || s.nome} · ${rotulo(estado.escopo)}`;
+    $('whoami').innerHTML = `<span class="who-nome">${esc(r.nome || s.nome)}</span><span class="who-papel">${esc(rotulo(estado.escopo))}</span>`;
     estado.regs = r.registros.map(o => {
       const x: Registro = { ...o };
       Object.keys(o).forEach(k => { x[k] = typeof o[k] === 'string' ? o[k].trim() : o[k]; });

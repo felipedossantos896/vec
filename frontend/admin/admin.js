@@ -238,7 +238,7 @@ function entrar() {
         return mostrarLogin();
     $('loginView').classList.add('hidden');
     $('appView').classList.remove('hidden');
-    $('whoami').textContent = 'Olá, ' + s.nome;
+    $('whoami').textContent = s.nome;
     carregar();
 }
 $('btnLogout').addEventListener('click', () => {
