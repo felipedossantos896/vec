@@ -209,8 +209,27 @@ async function carregarRanking(celula) {
             $('anfStatus').textContent = 'Não foi possível conectar. Verifique a internet.';
     }
 }
+let anfitriaoNoMapa = null;
+function selecionarCasaNoMapa(linha) {
+    const botao = document.querySelector(`#anfLista [data-anf-mapa="${linha}"]`);
+    if (!botao || estado.ferramenta !== 'anfPainel')
+        return;
+    const focado = document.activeElement === botao;
+    anfitriaoNoMapa = linha;
+    renderMapa();
+    if (focado)
+        document.querySelector(`#anfLista [data-anf-mapa="${linha}"]`)?.focus();
+}
+$('anfLista').addEventListener('click', e => {
+    const botao = e.target instanceof Element ? e.target.closest('[data-anf-mapa]') : null;
+    if (botao)
+        selecionarCasaNoMapa(Number(botao.dataset.anfMapa));
+});
 function desenharRanking(d) {
     const casas = d.casas || [];
+    const visiveis = casasNoMapa();
+    if (!visiveis.some(c => c.linha === anfitriaoNoMapa))
+        anfitriaoNoMapa = visiveis[0]?.linha ?? null;
     $('anfStatus').textContent = casas.length
         ? `${casas.length} ${casas.length === 1 ? 'casa' : 'casas'} para ${d.celula}, da mais perto para a mais longe dos ${regrasAnfitriao.membros(d.membros)}.`
         : (d.membros && d.semPosicao === d.membros
@@ -227,6 +246,7 @@ function desenharRanking(d) {
                 return `<li class="anf-casa${top ? ' destaque' : ''}${c.comporta ? '' : ' nao-comporta'}" aria-describedby="${id}">
         <div class="anf-topo"><span class="anf-pos" aria-hidden="true">${i + 1}º</span>
           <button type="button" class="btn-link anf-nome" data-mapa-pessoa="${c.linha}" aria-describedby="${id}">${esc(nome(c.linha))}</button>
+          ${visiveis.some(casa => casa.linha === c.linha) ? `<button type="button" class="btn-sec" data-anf-mapa="${c.linha}" aria-label="Destacar ${esc(nome(c.linha))} no mapa" aria-pressed="${c.linha === anfitriaoNoMapa}">No mapa</button>` : ''}
           ${top ? '<span class="anf-tag">Entre as 3 mais perto</span>' : ''}${c.comporta ? '' : '<span class="anf-tag alerta">Não comporta o grupo</span>'}</div>
         <ul class="anf-expl" id="${id}">${regrasAnfitriao.explicar(c, d.membros).map(l => `<li>${esc(l)}</li>`).join('')}</ul></li>`;
             }).join('')}</ol>` : '');

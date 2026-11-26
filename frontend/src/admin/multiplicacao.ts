@@ -92,6 +92,7 @@ function desenharMultiplicacao() {
     </section>`;
   };
   $('multCorpo').innerHTML =
+    `<div class="mult-comparacao">${m.grupos.map((g, i) => `<div><span>Grupo ${i === 0 ? 'A' : 'B'}</span><strong>${regrasMult.pessoas(g.linhas.length)}</strong><small>${g.casas.some(c => c.comporta) ? 'Casa com vagas suficientes' : 'Sem casa com vagas suficientes'}</small></div>`).join('')}</div>` +
     `<p class="anf-aviso">${regrasMult.AVISO_SIMULACAO} Distância em linha reta, não é tempo de trajeto.</p>` +
     (avisos.length ? `<ul class="anf-fora">${avisos.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : '') +
     (m.ajustada && multProposta ? '<div class="end-acoes"><button type="button" class="btn-sec" data-mult="voltar">Voltar à proposta</button></div>' : '') +
