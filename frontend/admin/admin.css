@@ -119,18 +119,23 @@ dialog::backdrop { background: rgba(18, 25, 48, 0.6); }
   .login-path li:last-child::before { display: none; }
   .login-card { align-self: center; padding: 48px; }
 
-  .topbar { position: fixed; inset: 0 auto 0 0; width: 264px; padding: 28px 16px 20px; overflow-y: auto; }
-  .topbar-inner { display: flex; flex-direction: column; align-items: stretch; gap: 32px; height: 100%; }
-  .brand-lockup { padding: 0 8px; }
-  .topbar-title span { white-space: normal; line-height: 1.35; margin-top: 2px; }
+  #appView { --sidebar-width: 88px; }
+  .topbar { position: fixed; inset: 0 auto 0 0; width: var(--sidebar-width); padding: 16px 6px 12px; overflow-y: auto; }
+  .topbar-inner { display: flex; flex-direction: column; align-items: stretch; gap: 16px; min-height: 100%; }
+  .topbar .brand-lockup { flex-direction: column; gap: 4px; text-align: center; }
+  .topbar .brand-mark { flex: none; width: 32px; height: 32px; }
+  .topbar-title strong { font-size: 12px; }
+  .topbar-title span { font-size: 11px; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; margin-top: 2px; }
   .tabs { flex-direction: column; padding: 0; background: none; }
-  .tabs button { flex: none; flex-direction: column; gap: 4px; min-height: 54px; padding: 5px 8px; border-radius: var(--r-sm); font-size: 11px; line-height: 1.2; }
-  .tabs button > :is(.ic, .ic-slot) { width: 24px; height: 24px; }
+  .tabs button { flex: none; flex-direction: column; gap: 4px; min-height: 54px; padding: 5px 4px; border-radius: var(--r-sm); font-size: 11px; line-height: 1.2; }
+  .tabs button > :is(.ic, .ic-slot) { width: 28px; height: 28px; }
+  .tabs .t-longo { display: none; }
+  .tabs .t-curto { display: inline; }
   .tabs button[aria-selected="true"] { background: rgba(255, 255, 255, 0.1); color: var(--white); box-shadow: inset 3px 0 0 var(--gold); }
   .sidebar-actions { flex-direction: column; gap: 4px; margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
-  .topbar .icon-btn { justify-content: flex-start; width: 100%; padding: 0 14px; }
+  .topbar .icon-btn { flex-direction: column; gap: 3px; width: 100%; padding: 4px; font-size: 11px; }
   .topbar .icon-btn .txt { display: inline; }
-  .wrap { max-width: 1320px; margin: 0 0 0 264px; padding: 44px clamp(32px, 4vw, 64px) 64px; }
+  .wrap { max-width: 1320px; margin: 0 0 0 var(--sidebar-width); padding: 44px clamp(32px, 4vw, 64px) 64px; }
   .page-heading { margin-bottom: 28px; }
   /* O detalhe do cadastro abre como painel lateral, sem esconder a lista */
   #det { width: 520px; height: 100%; max-height: 100%; margin: 0 0 0 auto; border-radius: 0; }
