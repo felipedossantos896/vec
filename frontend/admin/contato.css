@@ -30,7 +30,7 @@
 .ct-lem { font-size: var(--t12); color: var(--ok); font-weight: 600; margin-top: 4px; }
 .ct-kick { font: 600 11px var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .ct-dlg { width: min(520px, calc(100vw - 24px)); }
-.b-pri { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--control-height); padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--grafite); background: var(--grafite); color: #fff; font-weight: 600; font-size: var(--t13); white-space: nowrap; }
+.b-pri { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--control-height); padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--action); background: var(--action); color: #fff; font-weight: 600; font-size: var(--t13); white-space: nowrap; }
 .b-pri:focus-visible, .b-sec:focus-visible, .b-zap:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 2px; }
 .toast { position: fixed; left: 50%; bottom: 24px; z-index: 2000; transform: translate(-50%, 140%); display: flex; gap: 16px; align-items: center; max-width: calc(100vw - 32px); background: var(--grafite); color: #fff; border-radius: 12px; padding: 12px 16px; font-weight: 600; font-size: var(--t13); box-shadow: var(--shadow-float); transition: transform 0.2s ease; }
 .toast.on { transform: translate(-50%, 0); }

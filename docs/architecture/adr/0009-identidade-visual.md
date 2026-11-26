@@ -40,3 +40,10 @@ valendo: nada de estilo ou script inline.
 ## Validação
 Contraste AA (texto coral só em `#c43a1f`), foco visível, movimento reduzido, 390 px a
 4K, comparação com os previews e testes de tela sem violação de CSP.
+
+## Atualização da paleta aprovada
+
+A issue #247 adota a proporção visual aproximada do Studio em produção: Cloud
+`#f4f6fa` no fundo, Navy `#14243d` na estrutura e azul `#2563eb` nas ações
+e destaques antes associados ao coral. As cores de estado e das células seguem
+suas funções.

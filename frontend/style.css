@@ -19,8 +19,8 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 .topbar-inner, .intro, .wrap { max-width: 680px; margin-inline: auto; }
 .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--white); font: 600 1.05rem var(--serif); letter-spacing: 0.01em; }
-.brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(201, 168, 76, 0.7); background: rgba(201, 168, 76, 0.12); color: var(--gold); }
-.topbar-count { color: var(--gold); font-size: 0.9rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(147, 185, 255, 0.7); background: rgba(147, 185, 255, 0.12); color: var(--action-on-dark); }
+.topbar-count { color: var(--action-on-dark); font-size: 0.9rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .progress, .progress-fill { height: 6px; border-radius: 3px; }
 .progress {
   background: rgba(255, 255, 255, 0.16); overflow: hidden;
@@ -33,7 +33,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 /* ── Faixa de abertura: o cartão da etapa sobe sobre ela ── */
 .hero { padding: 0 20px 64px; background: var(--navy); color: var(--white); }
 .intro { padding: 20px 0 8px; }
-.eyebrow { color: var(--gold); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.eyebrow { color: var(--action-ink); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .intro h1 { max-width: 16ch; margin-top: 8px; font: 500 clamp(1.9rem, 7.4vw, 2.7rem)/1.1 var(--serif); letter-spacing: -0.015em; text-wrap: balance; }
 .intro p:last-child { max-width: 38ch; margin-top: 12px; color: rgba(255, 255, 255, 0.78); }
 .wrap { margin-top: -48px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 40px max(12px, env(safe-area-inset-left, 0px)); }
@@ -41,7 +41,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 /* ── Cartão da etapa ── */
 .card { padding: clamp(20px, 5.5vw, 32px); background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
 .card-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-.step { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: var(--gold); font: 600 1.25rem var(--serif); }
+.step { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: var(--action-on-dark); font: 600 1.25rem var(--serif); }
 .card-head h2 { font: 500 clamp(1.4rem, 5.4vw, 1.75rem)/1.2 var(--serif); letter-spacing: -0.01em; outline: none; }
 .card-head p { color: var(--muted); font-size: 1rem; }
 
@@ -101,7 +101,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 [data-group="jornada"] .seg span { min-width: 60px; }
 [data-group="jornada"] .q:first-child::after { top: 50%; }
 [data-group="jornada"] .q:last-child::after { bottom: 50%; }
-[data-group="jornada"] .q:has(.sim input:checked)::before { background: var(--navy); border-color: var(--navy); color: var(--gold); }
+[data-group="jornada"] .q:has(.sim input:checked)::before { background: var(--navy); border-color: var(--navy); color: var(--action-on-dark); }
 [data-group="jornada"] .q:has(.nao input:checked)::before { background: var(--nao-bg); border-color: var(--nao-line); color: var(--nao-ink); }
 
 /* ── Opções (setor e célula) ── */
@@ -143,7 +143,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 /* ── Tela de sucesso ── */
 .done { display: none; padding: 44px 24px; text-align: center; background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
 .done.show { display: block; }
-.done-mark { display: grid; place-items: center; width: 76px; height: 76px; margin: 0 auto 20px; border-radius: 50%; background: var(--navy); color: var(--gold); box-shadow: 0 0 0 6px var(--gold-soft); }
+.done-mark { display: grid; place-items: center; width: 76px; height: 76px; margin: 0 auto 20px; border-radius: 50%; background: var(--navy); color: var(--action-on-dark); box-shadow: 0 0 0 6px var(--gold-soft); }
 .done h2 { margin-bottom: 8px; font: 500 clamp(1.7rem, 6vw, 2.1rem)/1.15 var(--serif); }
 .done p { max-width: 36ch; margin: 0 auto; color: var(--muted); }
 .btn-again { margin-top: 28px; }
@@ -169,7 +169,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 }
 @media (hover: hover) {
   .seg span:hover, .opt span:hover { border-color: var(--navy); }
-  .btn-next:hover, .btn-send:hover:not(:disabled) { background: var(--navy-2); }
+  .btn-next:hover, .btn-next:hover, .btn-send:hover:not(:disabled) { background: var(--navy-2); }
   .btn-back:hover, .btn-again:hover { background: var(--sunken); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -221,9 +221,9 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 .opt-sem span { border-style: dashed; }
 
 /* Botões */
-.btn-next { background: var(--grafite); }
-.btn-send { background: var(--coral-ink); color: #fff; box-shadow: 0 6px 18px rgba(196, 58, 31, 0.28); }
-@media (hover: hover) { .btn-send:hover:not(:disabled) { background: #a8311a; } }
+.btn-next { background: var(--action); }
+.btn-send { background: var(--action); color: #fff; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.28); }
+@media (hover: hover) { .btn-next:hover, .btn-send:hover:not(:disabled) { background: var(--action-hover); } }
 .step-nav { position: sticky; bottom: 0; z-index: 5; margin-inline: -4px; padding: 12px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--page); }
 
 /* Tela final */
