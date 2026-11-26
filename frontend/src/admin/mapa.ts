@@ -69,6 +69,11 @@ function nomeComPapel(r: Registro): string {
   return [nomeCurto(r), ...papeis].join(', ');
 }
 
+const avisoNoMapa = (r?: Registro): string => r && naLente('semDisc', r) ? 'Sem discipulador' : '';
+const nomeDoMarcador = (r: Registro): string => [nomeComPapel(r), avisoNoMapa(r)].filter(Boolean).join(', ');
+const seloCuidado = (r?: Registro): string => avisoNoMapa(r)
+  ? ' <span class="rp-cuidado" aria-hidden="true" title="Sem discipulador">!</span>' : '';
+
 // Cor do anel do rosto: a da célula; neutra para líder de área ou de setor
 const corDoRosto = (r: Registro): string => regrasLideranca.ehLider(r) ? regrasCelula.SEM_COR : corDaCelula(r.celula as string);
 
@@ -203,14 +208,15 @@ let ultimoFiltro: MapaFiltrado | null = null;
 function desenharGrupos(f: MapaFiltrado) {
   mapaLeaflet.closePopup();
   camadaGrupos.clearLayers();
-  const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), matchMedia('(pointer: coarse), (max-width: 720px)').matches);
+  const toque = matchMedia('(any-pointer: coarse), (max-width: 720px)').matches;
+  const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), toque);
   $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
   f.grupos.forEach((g, i) => {
     // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
     const pessoas = g.linhas.map(regDe).filter((r): r is Registro => Boolean(r))
       .sort((a, b) => Number(naLente(estado.lente, b)) - Number(naLente(estado.lente, a)) || a.nome.localeCompare(b.nome, 'pt-BR'));
     const acesas = pessoas.filter(r => naLente(estado.lente, r));
-    const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
+    const rotulo = `Área ${i + 1}: ${pessoas.map(nomeDoMarcador).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
     const rostosHtml = pessoas.slice(0, 3).map(r => {
       const grupo = grupoMult(r.linha);
       return rostoPin(r, grupo === 'A' ? '#2563eb' : grupo === 'B' ? '#7643a6' : corDoRosto(r));
@@ -220,10 +226,10 @@ function desenharGrupos(f: MapaFiltrado) {
       return grupo ? ` <span class="rp-grupo" data-grupo="${grupo}" aria-hidden="true">${grupo}</span>` : '';
     };
     const nomes = pessoas.length > 1
-      ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}</button>`).join('')}</span>`
-      : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}</span>`;
+      ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-expanded="false" aria-label="${esc(nomeDoMarcador(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}${seloCuidado(r)}</button>`).join('')}</span>`
+      : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}${seloCuidado(pessoas[0])}</span>`;
     const html = `<span class="rostos-pin">${rostosHtml}</span>${nomes}`;
-    const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55);
+    const larg = Math.max(toque ? 48 : 44, Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55));
     const m = L.marker([g.lat, g.lng], {
       icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
       keyboard: true, riseOnHover: true
@@ -235,6 +241,7 @@ function desenharGrupos(f: MapaFiltrado) {
     const marcador: MarcadorPessoas = { m, el, pessoas, t };
     const nomesBotoes = el.querySelectorAll<HTMLButtonElement>('.rp-pessoa');
     if (nomesBotoes.length) el.setAttribute('role', 'group');
+    else el.setAttribute('aria-expanded', 'false');
     nomesBotoes.forEach((botao, j) => {
       botao.addEventListener('click', e => {
         e.stopPropagation();
@@ -289,7 +296,7 @@ function abrirCartao(g: MarcadorPessoas, j: number, fixo = true, focar = false) 
   const mesmo = cartaoDe && cartaoDe.g.m === g.m && cartaoDe.j === j;
   if (mesmo && cartaoDe) { // já aberto pelo mouse: o clique só fixa
     if (fixo && !cartaoDe.fixo) { cartaoDe.fixo = true; cartaoDe.pop.options.autoPan = true; cartaoDe.pop.update(); } // agora cabe na tela
-    if (focar) (cartaoDe.pop.getElement() as HTMLElement | undefined)?.querySelector<HTMLElement>('.b-contato')?.focus({ preventScroll: true });
+    if (focar) (cartaoDe.pop.getElement() as HTMLElement | undefined)?.querySelector<HTMLElement>('.cartao-a > :first-child')?.focus({ preventScroll: true });
     return;
   }
   // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
@@ -298,11 +305,11 @@ function abrirCartao(g: MarcadorPessoas, j: number, fixo = true, focar = false) 
     .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
   cartaoDe = { g, j, pop, fixo };
   g.el.classList.add('selecionado');
-  g.el.querySelectorAll('.rp-pessoa')[j]?.classList.add('selecionada');
+  (g.el.querySelectorAll('.rp-pessoa')[j] ?? g.el).setAttribute('aria-expanded', 'true');
   const el = pop.getElement() as HTMLElement | undefined;
   if (!fixo) desviarCartao(pop);
   if (el && temMouse()) { el.addEventListener('mouseenter', cancelarFechar); el.addEventListener('mouseleave', agendarFechar); }
-  if (focar) el?.querySelector<HTMLElement>('.b-contato')?.focus({ preventScroll: true });
+  if (focar) el?.querySelector<HTMLElement>('.cartao-a > :first-child')?.focus({ preventScroll: true });
 }
 
 // O mapa do Leaflet se move com transform, então o cartão fica sempre abaixo do painel, dos
@@ -359,7 +366,8 @@ function ligarCartaoMapa() {
   mapaLeaflet.on('click dragstart zoomstart', () => mapaLeaflet.closePopup());
   mapaLeaflet.on('popupclose', () => {
     cartaoDe?.g.el.classList.remove('selecionado');
-    cartaoDe?.g.el.querySelector('.rp-pessoa.selecionada')?.classList.remove('selecionada');
+    cartaoDe?.g.el.querySelector('.rp-pessoa[aria-expanded="true"]')?.setAttribute('aria-expanded', 'false');
+    if (cartaoDe?.g.el.hasAttribute('aria-expanded')) cartaoDe.g.el.setAttribute('aria-expanded', 'false');
     cartaoDe = null;
   });
 }
