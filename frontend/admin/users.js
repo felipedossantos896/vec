@@ -106,7 +106,6 @@ async function carregarUsuarios() {
     if (!s)
         return mostrarLogin('Sua sessão expirou. Entre novamente.');
     $('userList').innerHTML = regrasEstados.carregando('Carregando os usuários…', 3);
-    $('btnRefresh').disabled = true;
     try {
         const r = await api({ acao: 'usuarios_listar', token: s.token });
         if (!r.ok) {
@@ -120,9 +119,6 @@ async function carregarUsuarios() {
     }
     catch (e) {
         $('userList').innerHTML = regrasEstados.html(regrasEstados.falhaCarga(navigator.onLine));
-    }
-    finally {
-        $('btnRefresh').disabled = false;
     }
 }
 function escopoTexto(u) {
@@ -347,19 +343,16 @@ $('uCopiar').addEventListener('click', async () => {
 $('uDlg').addEventListener('click', e => { if (e.target === $('uDlg'))
     $('uDlg').close(); });
 async function carregarVersaoDeploy() {
-    const el = $('deployVersion');
+    let versao = 'indisponível';
     try {
         const r = await fetch('/version', { cache: 'no-store' });
-        if (!r.ok)
-            throw new Error(`http ${r.status}`);
-        const v = (await r.text()).trim();
-        if (!v)
-            throw new Error('versão vazia');
-        el.textContent = `version: ${v}`;
+        if (r.ok)
+            versao = (await r.text()).trim() || versao;
     }
     catch {
-        el.textContent = 'version: indisponível';
+        // O painel e o login continuam disponíveis sem a informação de versão.
     }
+    document.querySelectorAll('[data-deploy-version]').forEach(el => { el.textContent = `Versão: ${versao}`; });
 }
 // ── Início ──
 carregarVersaoDeploy();

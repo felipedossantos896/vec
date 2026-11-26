@@ -60,7 +60,7 @@
     <p class="msg" id="loginMsg" role="alert"></p>
     <button type="submit" class="btn-primary" id="btnLogin">Entrar</button>
     <p class="login-ajuda">Esqueceu a senha? <b>Fale com a liderança da área.</b></p>
-    <p class="deploy-version" id="deployVersion" aria-live="polite">version: carregando</p>
+    <p class="deploy-version" data-deploy-version aria-live="polite">Versão: carregando</p>
   </form>
 </section>
 
@@ -98,10 +98,7 @@
         </button>
       </nav>
       <div class="sidebar-actions">
-        <button class="icon-btn" id="btnRefresh" type="button" aria-label="Atualizar dados">
-          <span class="ic-slot ic-18" data-ic="atualizar"></span>
-          <span class="txt">Atualizar</span>
-        </button>
+        <p class="sidebar-version" data-deploy-version aria-live="polite">Versão: carregando</p>
         <button class="icon-btn" id="btnLogout" type="button" aria-label="Sair">
           <span class="ic-slot ic-18" data-ic="sair"></span>
           <span class="txt">Sair</span>

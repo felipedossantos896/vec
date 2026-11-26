@@ -60,7 +60,8 @@ select.input { -webkit-appearance: none; appearance: none; min-width: 0; padding
 .topbar-title { min-width: 0; }
 .topbar-title strong, .topbar-title span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar-title span { color: rgba(255, 255, 255, 0.72); font-size: 0.82rem; }
-.sidebar-actions { grid-area: 1 / 2; display: flex; gap: 4px; }
+.sidebar-actions { grid-area: 1 / 2; display: flex; align-items: center; gap: 4px; }
+.sidebar-version { color: rgba(255, 255, 255, 0.78); font-size: 11px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-align: center; }
 .topbar .icon-btn { color: rgba(255, 255, 255, 0.86); }
 .topbar .icon-btn .txt { display: none; }
 .topbar :focus-visible { outline: var(--focus-on-dark); }
@@ -118,14 +119,15 @@ dialog::backdrop { background: rgba(18, 25, 48, 0.6); }
   .login-path li:last-child::before { display: none; }
   .login-card { align-self: center; padding: 48px; }
 
-  .topbar { position: fixed; inset: 0 auto 0 0; width: 264px; padding: 28px 16px 20px; }
+  .topbar { position: fixed; inset: 0 auto 0 0; width: 264px; padding: 28px 16px 20px; overflow-y: auto; }
   .topbar-inner { display: flex; flex-direction: column; align-items: stretch; gap: 32px; height: 100%; }
   .brand-lockup { padding: 0 8px; }
   .topbar-title span { white-space: normal; line-height: 1.35; margin-top: 2px; }
   .tabs { flex-direction: column; padding: 0; background: none; }
-  .tabs button { flex: none; justify-content: flex-start; gap: 12px; min-height: 46px; padding: 0 14px; border-radius: var(--r-sm); }
+  .tabs button { flex: none; flex-direction: column; gap: 4px; min-height: 54px; padding: 5px 8px; border-radius: var(--r-sm); font-size: 11px; line-height: 1.2; }
+  .tabs button > :is(.ic, .ic-slot) { width: 24px; height: 24px; }
   .tabs button[aria-selected="true"] { background: rgba(255, 255, 255, 0.1); color: var(--white); box-shadow: inset 3px 0 0 var(--gold); }
-  .sidebar-actions { flex-direction: column; gap: 2px; margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+  .sidebar-actions { flex-direction: column; gap: 4px; margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
   .topbar .icon-btn { justify-content: flex-start; width: 100%; padding: 0 14px; }
   .topbar .icon-btn .txt { display: inline; }
   .wrap { max-width: 1320px; margin: 0 0 0 264px; padding: 44px clamp(32px, 4vw, 64px) 64px; }

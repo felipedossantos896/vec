@@ -6,7 +6,6 @@ async function carregar() {
   if (!s) return mostrarLogin('Sua sessão expirou. Entre novamente.');
   $('loading').classList.remove('hidden');
   $('content').classList.add('hidden');
-  $<HTMLButtonElement>('btnRefresh').disabled = true;
   try {
     const r = await api<ListaResult>({ acao: 'listar', token: s.token });
     if (!r.ok) {
@@ -47,16 +46,8 @@ async function carregar() {
   } catch (err) {
     // Sem onclick no HTML (o CSP bloqueia): o botão tem data-recarregar (Spec 009)
     $('loading').innerHTML = regrasEstados.html(regrasEstados.falhaCarga(navigator.onLine));
-  } finally {
-    $<HTMLButtonElement>('btnRefresh').disabled = false;
   }
 }
-$('btnRefresh').addEventListener('click', () => {
-  if (estado.aba === 'usuarios') return carregarUsuarios();
-  $('loading').innerHTML = regrasEstados.carregando('Carregando as pessoas do seu escopo…');
-  carregar();
-});
-
 // ── Nome curto (Spec 011): o mesmo em toda a tela, sem dois iguais entre quem o líder vê ──
 let nomesCurtos = new Map<number, string>();
 function aplicarNomesCurtos() {
