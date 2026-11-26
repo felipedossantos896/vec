@@ -27,7 +27,7 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .gv-corpo > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
 .gv-corpo #mapaStatus { margin-top: 0; }
 /* Fundo do OpenStreetMap com a cor da identidade (decisão 1 da Spec 009) */
-.area-canvas:not(.mapa-vetorial) .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
+.area-canvas .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
 
 .area-painel { position: absolute; left: 16px; top: 16px; z-index: 610; width: 300px; max-height: calc(100% - 32px - var(--gv-h, 64px)); overflow: auto; background: rgba(21, 23, 28, 0.95); color: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: 0 14px 34px rgba(13, 15, 19, 0.26); }
 .ap-stats { display: flex; gap: 22px; align-items: flex-end; }
@@ -176,15 +176,9 @@ body.na-area .wrap { max-width: none; padding: 0; }
   .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation: none; }
 }
 
-.area-palco .area-tema { pointer-events: auto; flex: none; }
-.area-tema[aria-pressed="true"] { background: var(--navy); color: var(--white); }
 .area-canvas { background: var(--page); }
-.area-canvas:not(.mapa-vetorial) .leaflet-tile-pane { filter: saturate(.55) contrast(.84) brightness(1.09); transition: filter 220ms ease; }
-.area-canvas.mapa-navy { background: var(--navy); }
-.area-canvas.mapa-navy:not(.mapa-vetorial) .leaflet-tile-pane { filter: invert(.88) hue-rotate(173deg) saturate(.7) brightness(.72) contrast(1.14); }
 .cartao-contato { display: grid; gap: 3px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--action-wash); color: var(--ink); }
 .cartao-contato span { color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { .area-canvas .leaflet-tile-pane { transition: none; } }
 .rp-grupo[data-grupo="A"] { background: var(--action); }
 .cartao-contato strong:not(:first-child) { margin-top: 4px; }
 
