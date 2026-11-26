@@ -17,7 +17,7 @@ function renderPainelArea(base) {
     $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div></div>
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
-    <p class="ap-kick">Ferramentas</p><div class="ap-ferr"><button type="button" data-ferr="anfPainel">Escolher anfitrião ${icone('seguir', { classe: 'ic-16' })}</button><button type="button" data-ferr="multPainel">Planejar multiplicação ${icone('seguir', { classe: 'ic-16' })}</button>${celulasNova().length ? `<button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button>` : ''}</div>`;
+    ${celulasNova().length ? `<div class="ap-ferr"><button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button></div>` : ''}`;
     $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Toque num rosto para ver a pessoa e agir.`;
 }
 function renderArea() {
@@ -35,16 +35,20 @@ $('areaPainel').addEventListener('click', e => {
         renderArea();
         renderMapa();
         $('areaPainel').querySelector(`[data-lente="${estado.lente}"]`)?.focus();
-        return;
     }
-    const ferr = alvo?.closest('[data-ferr]');
-    if (ferr)
-        abrirFerramenta(ferr.dataset.ferr || '');
+});
+$('areaModos').addEventListener('click', e => {
+    const modo = e.target instanceof Element ? e.target.closest('[data-modo]') : null;
+    if (modo && modo.dataset.modo !== estado.ferramenta)
+        abrirFerramenta(modo.dataset.modo || '');
 });
 // Ferramenta no mapa (Spec 009): o painel abre ao lado do mapa e o mapa desenha as casas
 // (anfitrião) ou os grupos (multiplicação). Uma de cada vez.
 function abrirFerramenta(id) {
     estado.ferramenta = id;
+    $('areaModos').querySelectorAll('[data-modo]').forEach(botao => {
+        botao.setAttribute('aria-pressed', String(botao.dataset.modo === id));
+    });
     const aberta = id === 'anfPainel' || id === 'multPainel';
     ['anfPainel', 'multPainel'].forEach(k => { const d = $(k); d.open = k === id; d.hidden = !!aberta && k !== id; });
     $('areaFerrPainel').hidden = !aberta;
@@ -58,7 +62,7 @@ function abrirFerramenta(id) {
     if (aberta)
         $(id).querySelector('summary')?.focus({ preventScroll: true });
     else
-        $('areaPainel').querySelector('[data-ferr]')?.focus();
+        $('areaModos').querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 $('areaFerrPainel').addEventListener('click', e => {
     if (e.target instanceof Element && e.target.closest('[data-ferr-sair]'))

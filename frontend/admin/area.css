@@ -110,7 +110,6 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .casa-pin b { transform: rotate(45deg); color: #fff; font: 800 var(--t17) var(--display); }
 .casa-n.top .casa-pin { background: var(--coral); }
 .casa-n:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 3px; }
-.rp-grupo { position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; border-radius: 6px; background: var(--grafite); color: #fff; font: 800 11px/20px var(--display); text-align: center; border: 2px solid #fff; }
 @media (max-width: 720px), (max-height: 500px) {
   .area-ferr-painel { position: static; width: auto; margin: 0 0 14px; border-radius: 14px; border: 1px solid var(--line); box-shadow: none; }
   .area-palco.modo-ferr .leaflet-bottom.leaflet-right { right: 0; }
@@ -187,5 +186,20 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .cartao-contato span { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .area-canvas .leaflet-tile-pane { transition: none; } }
 .rp-grupo[data-grupo="A"] { background: var(--action); }
-.rp-grupo[data-grupo="B"] { background: #136d68; }
 .cartao-contato strong:not(:first-child) { margin-top: 4px; }
+
+/* Modos da Área ficam disponíveis no mapa em qualquer largura. */
+.area-palco .area-filtros { flex-wrap: wrap; }
+.area-modos { pointer-events: auto; display: flex; width: max-content; max-width: 100%; gap: 3px; padding: 3px; background: var(--white); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow-card); }
+.area-modos button { min-height: 32px; padding: 0 10px; border-radius: 999px; color: var(--navy); font-size: var(--t12); font-weight: 700; }
+.area-modos button[aria-pressed="true"] { background: var(--navy); color: var(--white); }
+.rp-grupo { position: static; display: inline-grid; place-items: center; width: 16px; height: 16px; border: 0; border-radius: 5px; font: 700 10px/1 var(--sans); vertical-align: middle; }
+.rp-grupo[data-grupo="B"] { background: #7643a6; }
+.mapa-grupo.selecionado .av.av-pin { box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--action), 0 6px 14px #132a4c40; }
+.rp-pessoa.selecionada { color: var(--action-ink); background: var(--action-wash); }
+.cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation-duration: 240ms; }
+@media (max-width: 720px), (max-height: 500px) {
+  .area-modos { margin-right: auto; }
+  .area-palco .area-filtros select.input { flex: 1 1 min(29%, 130px); }
+}
+@media (any-pointer: coarse) { .area-modos button { min-height: 44px; } }

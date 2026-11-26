@@ -120,6 +120,11 @@
       <section class="area-palco" id="areaPalco" aria-label="Mapa da área">
         <div id="mapaCanvas" class="mapa-canvas area-canvas" role="region" aria-label="Mapa com as pessoas da área, em áreas de cerca de 300 m"></div>
         <div class="filters ui-filter-bar area-filtros" role="group" aria-label="Filtros da área">
+          <div class="area-modos" id="areaModos" role="group" aria-label="Modo do mapa">
+            <button type="button" data-modo="" aria-pressed="true">Pessoas</button>
+            <button type="button" data-modo="multPainel" aria-pressed="false">Grupos</button>
+            <button type="button" data-modo="anfPainel" aria-pressed="false">Casas</button>
+          </div>
           <select class="input" id="aSetor" aria-label="Filtrar por setor"></select>
           <select class="input" id="aCelula" aria-label="Filtrar por célula"></select>
           <button class="btn-sec area-tema" id="areaTema" type="button" aria-label="Ativar tema Navy" aria-pressed="false">Navy</button>
