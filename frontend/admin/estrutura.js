@@ -60,7 +60,7 @@ function renderEstrutura() {
       <span class="er-n"><span class="sr-only">Pessoas: </span>${conta(r => r.celula === c.nome)}</span>
       <span class="er-st">${c.ativa ? '<span class="badge">Ativa</span>' : '<span class="badge off">Inativa</span>'}</span>
       <span class="it-seta" aria-hidden="true">${icone('abrir', { classe: 'ic-18' })}</span></button>`;
-    $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><p class="ct-kick">Ajustes</p><h1>Células e setores</h1>
+    $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><h1>Células e setores</h1>
     <p>${plural(estrutura.setores.length, 'setor', 'setores')} · ${plural(estrutura.celulas.length, 'célula', 'células')}, ${ativas} ${ativas === 1 ? 'ativa' : 'ativas'} · ${plural(estado.regs.length, 'pessoa', 'pessoas')}</p></div>
     <div class="est-acoes"><button class="b-sec" type="button" data-est="setor" data-id="0">${icone('mais', { classe: 'ic-16' })} Novo setor</button><button class="b-pri" type="button" data-est="celula" data-id="0">${icone('mais', { classe: 'ic-16' })} Nova célula</button></div></header>
     <div class="est-setores">${estrutura.setores.map(setor).join('')}</div>

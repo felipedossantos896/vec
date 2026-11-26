@@ -93,7 +93,7 @@ function mapaJornada(base: Registro[]): string {
     const sem = base.filter(r => !r.celula);
     if (sem.length) linhas += linha('Sem célula', sem, 'setor', null);
   }
-  return painel('Jornada por célula', 'Quanto de cada célula já concluiu cada etapa. Quanto mais escuro, mais gente. Toque para ver quem falta.',
+  return painel('Jornada por célula', 'Quanto de cada célula já concluiu cada etapa. Quanto mais escuro, mais gente. Selecione uma célula para ver quem falta.',
     `<table class="mapa"><thead><tr><td></td>${JORNADA.map(([, etapa], i) => `<th scope="col" aria-label="${etapa}">${i + 1}</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
      <ol class="mapa-leg">${JORNADA.map(([, etapa]) => `<li>${etapa}</li>`).join('')}</ol>
      <p class="escala" aria-hidden="true">menos${TONS.map(t => `<i data-t="${t}"></i>`).join('')}mais gente concluiu</p>`);

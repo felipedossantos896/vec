@@ -4,8 +4,8 @@
 
 .ind-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
 .ind-head .filters { flex-wrap: wrap; align-items: center; margin: 0; }
-.ind-per { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--sunken); }
-.ind-per button { min-height: 38px; padding: 0 12px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: var(--t13); white-space: nowrap; }
+.ind-per { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-sm); background: var(--sunken); }
+.ind-per button { min-height: calc(var(--control-height) - 6px); padding: 0 12px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: var(--t13); white-space: nowrap; }
 .ind-per button[aria-pressed="true"] { background: var(--white); color: var(--ink); box-shadow: 0 1px 2px rgba(21, 23, 28, 0.16); }
 .ind-per button:focus-visible { outline: var(--focus); outline-offset: 1px; }
 
@@ -64,3 +64,4 @@
   .ind-grid > :nth-child(n+3) { grid-column: span 2; }
 }
 @media (max-width: 639px) { .ind-head .filters { width: 100%; } .ind-head select.input { flex: 1 1 140px; } }
+@media (min-width: 1180px) { .ind-head .filters { flex-wrap: nowrap; } #indicadoresView .ind-head .filters select { flex: 0 1 200px; } }
