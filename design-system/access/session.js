@@ -1,8 +1,18 @@
 (async () => {
   const status = document.querySelector('#status');
+  const login = '/admin/?studio=1';
+  const forbid = () => {
+    status.textContent = 'O catálogo é exclusivo da administração do projeto.';
+    const link = document.querySelector('#access-link');
+    link.href = '/admin/';
+    link.textContent = 'Voltar ao painel';
+  };
   try {
     const session = JSON.parse(sessionStorage.getItem('vec_admin_sessao') || 'null');
-    if (!session?.token || session.expira <= Date.now()) return;
+    if (!session?.token || session.expira <= Date.now()) {
+      location.replace(login);
+      return;
+    }
     const headers = { Authorization: 'Bearer ' + session.token };
     const response = await fetch('/design-system/session', {
       method: 'POST',
@@ -16,6 +26,10 @@
         return;
       }
       const check = await fetch(root + 'inventory.json', { method: 'HEAD', headers });
+      if (check.status === 403) {
+        forbid();
+        return;
+      }
       if (!check.ok) {
         status.textContent = 'Permita cookies para o Área VEC e abra o endereço do Studio novamente.';
         return;
@@ -25,7 +39,11 @@
       document.open();
       document.write(catalog);
       document.close();
-    } else if (response.status !== 401) {
+    } else if (response.status === 401) {
+      location.replace(login);
+    } else if (response.status === 403) {
+      forbid();
+    } else {
       status.textContent = 'Não foi possível abrir o catálogo. Tente novamente.';
     }
   } catch {

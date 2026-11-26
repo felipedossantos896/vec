@@ -1,15 +1,17 @@
 # VEC Design Studio
-Catálogo local de propostas V2. Não é aplicação de produção nem fonte de dados reais.
+Catálogo de design do Área VEC com protótipos e dados fictícios.
 
 ## Executar
 Na raiz: `python3 -m http.server 4173 --bind 127.0.0.1 --directory design-system`
 Abra http://127.0.0.1:4173. Sem instalação npm, login ou API. O preview usa iframe com viewport CSS real e escala visual; 4K não implica DPR 4.
 
+Em produção, abra `/design-system/` com uma conta do Área VEC que tenha a permissão de gerenciamento de usuários.
+
 ## Escopo
 Inventário de 21 frames e duas galerias, Fundamentos e Componentes. O mapa esquemático usa marcadores fictícios. As ações dos protótipos usam estado local durante a sessão.
 
 ## Governança
-Tokens V2 são candidatos isolados; não substituem frontend/design-tokens.css nem ADRs aceitos. Aprovar identidade e telas antes de migrar produção. Registrar estados, acessibilidade, comportamento e screenshots sintéticos por PR. Nunca copiar dados reais. Não incluir Studio em rotas ou embed do servidor. CI atual pode disparar deploy em merge de documentação; não alterar pipeline neste PR.
+Os tokens V2 descrevem as propostas do catálogo. Ao documentar a interface existente, use o painel e o ADR-0009 como referências. Os previews internos usam a mesma navegação, com lateral no desktop e abas no mobile. Login, cadastro público e galerias têm layouts próprios. Registre estados, acessibilidade, comportamento e capturas com dados fictícios por PR.
 
 ## V0.2 — Map Experience
 Frames A02–A04 compartilham busca por nome ou célula, filtros, contagens derivadas, seleção, zoom esquemático e gaveta. Contato e perfil mostram feedback local. A suíte de movimento cobre navegação por teclado, fechamento com Escape e retorno de foco no mapa.

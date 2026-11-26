@@ -71,6 +71,9 @@ func main() {
 	root.Handle("/healthz", apiHandler)
 	root.HandleFunc("/version", versionHandler(version))
 	root.Handle("/design-system/", srv.StudioHandler(studio.FS))
+	studioAlias := http.RedirectHandler("/design-system/", http.StatusFound)
+	root.Handle("GET /system-design", studioAlias)
+	root.Handle("GET /system-design/{$}", studioAlias)
 	root.Handle("/", noCacheHTML(http.FileServerFS(frontend.FS)))
 
 	port := os.Getenv("PORT")

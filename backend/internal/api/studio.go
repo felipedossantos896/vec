@@ -42,6 +42,10 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
 			return
 		}
+		if !session.user.Gerencia {
+			http.Error(w, "Acesso exclusivo da administração", http.StatusForbidden)
+			return
+		}
 		catalog, err := fs.ReadFile(assets, "index.html")
 		if err != nil {
 			http.Error(w, "Catálogo indisponível", http.StatusInternalServerError)
@@ -65,6 +69,9 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 	})
 	mux.HandleFunc("GET "+studioPath+"access/session.js", func(w http.ResponseWriter, r *http.Request) {
 		serveFile(w, r, "access/session.js")
+	})
+	mux.HandleFunc("GET "+studioPath+"access/access.css", func(w http.ResponseWriter, r *http.Request) {
+		serveFile(w, r, "access/access.css")
 	})
 	mux.HandleFunc("GET "+studioPath, func(w http.ResponseWriter, r *http.Request) {
 		relative := strings.TrimPrefix(r.URL.Path, studioPath)
@@ -92,6 +99,11 @@ func (s *Server) StudioHandler(assets fs.FS) http.Handler {
 		if session == nil {
 			writeStudioCookie(w, assetRoot, "", -1)
 			http.Error(w, "Sessão necessária", http.StatusUnauthorized)
+			return
+		}
+		if !session.user.Gerencia {
+			writeStudioCookie(w, assetRoot, "", -1)
+			http.Error(w, "Acesso exclusivo da administração", http.StatusForbidden)
 			return
 		}
 		name = strings.TrimPrefix(path.Clean("/"+asset), "/")
