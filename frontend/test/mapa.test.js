@@ -43,14 +43,9 @@ test('não guarda coordenada de pessoa: só centros recebidos do servidor', () =
   assert.doesNotMatch(fonte, /localStorage|sessionStorage\.setItem/);
 });
 
-test('tamanho do rosto acompanha o zoom (Spec 012)', () => {
-  assert.equal(regras.tamanhoRosto(4, false), 40);
-  assert.equal(regras.tamanhoRosto(12, false), 40);
-  assert.equal(regras.tamanhoRosto(14, false), 50);
-  assert.equal(regras.tamanhoRosto(16, false), 60);
-  assert.equal(regras.tamanhoRosto(18, false), 60);
-  assert.equal(regras.tamanhoRosto(16, true), 52);
-  assert.equal(regras.tamanhoRosto(13, true), 45);
+test('tamanho do rosto é fixo no desktop e no toque (Spec 025)', () => {
+  assert.equal(regras.tamanhoRosto(false), 36);
+  assert.equal(regras.tamanhoRosto(true), 40);
 });
 
 test('selos e papéis do card (Spec 014)', () => {

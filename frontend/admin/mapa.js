@@ -56,7 +56,7 @@ function selosHtml(r) {
 // casa da célula e os selos
 function rostoPin(r, cor) {
     const casa = regrasMapa.selos(pessoaNoMapa(r)).baixo === 'casa';
-    return `<span class="rp${casa ? ' rp-casa' : ''}" data-cor="${cor}">${avatar(r, 'av-pin')}${selosHtml(r)}</span>`;
+    return `<span class="rp${casa ? ' rp-casa' : ''}" data-cor="${cor}">${avatar(r, 'av-pin')}${selosHtml(r)}${seloCuidado(r)}</span>`;
 }
 // "Ana Souza, líder de setor" para os rótulos acessíveis
 function nomeComPapel(r) {
@@ -139,13 +139,14 @@ function iniciarLeaflet() {
     }
     const animar = !matchMedia('(prefers-reduced-motion: reduce)').matches; // o Leaflet não respeita sozinho
     mapaLeaflet = L.map('mapaCanvas', { maxZoom: ZOOM_MAX, minZoom: 4, zoomAnimation: animar, fadeAnimation: animar, markerZoomAnimation: animar, zoomControl: false });
-    L.control.zoom({ position: 'bottomright' }).addTo(mapaLeaflet); // acima da gaveta (Spec 016)
+    const zoomEmCima = matchMedia('(min-width: 721px) and (min-height: 501px)');
+    const zoom = L.control.zoom({ position: zoomEmCima.matches ? 'topright' : 'bottomright' }).addTo(mapaLeaflet);
+    zoomEmCima.addEventListener('change', e => zoom.setPosition(e.matches ? 'topright' : 'bottomright'));
     L.control.scale({ position: 'bottomleft', imperial: false }).addTo(mapaLeaflet);
     L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
     mapaLeaflet.attributionControl.setPrefix(false);
     camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
-    // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
-    mapaLeaflet.on('zoomend', () => { if (estado.aba === 'acompanhar' && ultimoFiltro)
+    matchMedia(ALVOS_MAPA).addEventListener('change', () => { if (estado.aba === 'acompanhar' && ultimoFiltro)
         desenharGrupos(ultimoFiltro); });
     ligarCartaoMapa();
     camadaFerr = L.layerGroup().addTo(mapaLeaflet);
@@ -212,13 +213,14 @@ function renderMapa() {
 }
 // Quem aparece no mapa: todos do filtro, inclusive líderes de área e de setor (Spec 014)
 const baseMapa = () => metricasIndicadores.filtrar(estado.regs, estado.setor, estado.celula);
-// Marcadores das áreas: rostos empilhados com o tamanho do zoom atual (Spec 012)
+const ALVOS_MAPA = '(any-pointer: coarse), (max-width: 720px)';
+// Marcadores das áreas: os rostos continuam juntos no mesmo ponto aproximado.
 let ultimoFiltro = null;
 function desenharGrupos(f) {
     mapaLeaflet.closePopup();
     camadaGrupos.clearLayers();
-    const toque = matchMedia('(any-pointer: coarse), (max-width: 720px)').matches;
-    const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), toque);
+    const toque = matchMedia(ALVOS_MAPA).matches;
+    const t = regrasMapa.tamanhoRosto(toque);
     $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
     f.grupos.forEach((g, i) => {
         // Rostos empilhados (até 3) com a cor da célula; quem está na lente vem na frente
@@ -235,8 +237,8 @@ function desenharGrupos(f) {
             return grupo ? ` <span class="rp-grupo" data-grupo="${grupo}" aria-hidden="true">${grupo}</span>` : '';
         };
         const nomes = pessoas.length > 1
-            ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-expanded="false" aria-label="${esc(nomeDoMarcador(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}${seloCuidado(r)}</button>`).join('')}</span>`
-            : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}${seloCuidado(pessoas[0])}</span>`;
+            ? `<span class="rp-nomes">${pessoas.map((r, j) => `<button type="button" class="rp-pessoa" aria-expanded="false" aria-label="${esc(nomeDoMarcador(r))}${grupoMult(r.linha) ? `, Grupo ${grupoMult(r.linha)}` : ''}">${esc(nomeCurto(r))}${seloGrupo(r)}${j >= 3 ? seloCuidado(r) : ''}</button>`).join('')}</span>`
+            : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}${seloGrupo(pessoas[0])}</span>`;
         const html = `<span class="rostos-pin">${rostosHtml}</span>${nomes}`;
         const larg = Math.max(toque ? 48 : 44, Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55));
         const m = L.marker([g.lat, g.lng], {
@@ -349,7 +351,7 @@ function desviarCartao(pop) {
     // Medida sem a animação de entrada (escala): centro e tamanho reais do cartão
     const b = w.getBoundingClientRect(), cx = b.left + b.width / 2;
     const r = { left: cx - w.offsetWidth / 2, right: cx + w.offsetWidth / 2, top: b.bottom - w.offsetHeight, bottom: b.bottom, width: w.offsetWidth };
-    const palco = $('areaPalco').getBoundingClientRect();
+    const palco = $('mapaCanvas').getBoundingClientRect();
     const cruza = (o) => r.top < o.bottom && r.bottom > o.top;
     let esq = palco.left + 8, dir = palco.right - 8;
     const painel = $('areaPainel'), ferr = $('areaFerrPainel');

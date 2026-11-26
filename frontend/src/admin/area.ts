@@ -13,7 +13,8 @@ function renderPainelArea(base: Registro[]) {
   }).join('');
   const legenda = celulas.sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c =>
     `<li>${celulaChip(c)}<b>${base.filter(r => r.celula === c).length}</b></li>`).join('');
-  $('areaPainel').innerHTML = `<div class="ap-stats"><div><b>${base.length}</b><span>pessoas</span></div><div><b>${celulas.length}</b><span>${celulas.length === 1 ? 'célula' : 'células'}</span></div></div>
+  const faltamDiscipuladores = base.filter(r => naLente('semDisc', r)).length;
+  $('areaPainel').innerHTML = `<h2>Visão geral</h2><div class="ap-stats"><div>${icone('pessoas')}<b>${base.length}</b><span>Pessoas</span></div><div>${icone('casa')}<b>${celulas.length}</b><span>Células</span></div><div>${icone('aviso')}<b>${faltamDiscipuladores}</b><span>Sem discipulador</span></div></div>
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
     ${celulasNova().length ? `<div class="ap-ferr"><button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button></div>` : ''}`;
