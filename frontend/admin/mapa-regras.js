@@ -4,31 +4,6 @@
 // para poder ser testado em Node. O servidor já entrega só o escopo do usuário e
 // só o centro de cada área de ~300 m (nunca a coordenada de alguém).
 const regrasMapa = {
-    LEQUE_CIRCULO: 8, // até 8 rostos em círculo; acima disso, espiral (Spec 012)
-    // Posições do leque em pixels, em volta do centro da área (só visual: nenhuma posição real).
-    // Círculo começando no alto, com folga entre os rostos; acima de 8, espiral de Arquimedes.
-    leque(n, rosto) {
-        if (n <= 1)
-            return n === 1 ? [{ x: 0, y: -Math.round(rosto * 1.2) }] : [];
-        const passo = rosto + 8; // distância entre centros vizinhos
-        if (n <= regrasMapa.LEQUE_CIRCULO) {
-            const r = Math.max(rosto * 1.2, passo / (2 * Math.sin(Math.PI / n)));
-            return Array.from({ length: n }, (_, i) => {
-                const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
-                return { x: Math.round(r * Math.cos(a)), y: Math.round(r * Math.sin(a)) };
-            });
-        }
-        const out = [];
-        let a = -Math.PI / 2, r = rosto * 1.3;
-        const abre = (passo * 1.05) / (2 * Math.PI); // a espiral cresce uma "fileira" a cada volta
-        for (let i = 0; i < n; i++) {
-            out.push({ x: Math.round(r * Math.cos(a)), y: Math.round(r * Math.sin(a)) });
-            const da = passo / r;
-            a += da;
-            r += abre * da;
-        }
-        return out;
-    },
     // Tamanho do rosto no mapa (Spec 012): 40 px com o mapa afastado (zoom 12 ou menos) até
     // 60 px de perto (zoom 16); no celular, no máximo 52 px.
     tamanhoRosto(zoom, celular) {

@@ -31,3 +31,8 @@ o mesmo que o nome já revela hoje ao tocar.
 ## Validação
 Resposta da API sem coordenada; escopo conferido por perfil; avatar sem dado pessoal;
 foto ausente cai no avatar; teste com áreas de uma e de várias pessoas.
+
+## Nomes em áreas compartilhadas
+
+A Issue #249 mantém o agrupamento na área aproximada e mostra os nomes
+individuais junto ao marcador. Cada nome abre o cartão da pessoa.

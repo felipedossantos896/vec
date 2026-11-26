@@ -26,8 +26,8 @@ test('o arquivo de ícones é o que o gerador produz, e a licença está no repo
 
 test('nenhum ícone desenhado à mão no painel e no formulário (Spec 015)', () => {
   // Ficam de fora: a marca "Área VEC" e os desenhos que não são ícones (avatares,
-  // minigráficos e linhas do leque), além do próprio pacote de ícones.
-  const desenhos = { 'frontend/src/admin/avatar-regras.ts': 1, 'frontend/src/admin/charts.ts': 1, 'frontend/src/admin/mapa.ts': 1 };
+  // minigráficos), além do próprio pacote de ícones.
+  const desenhos = { 'frontend/src/admin/avatar-regras.ts': 1, 'frontend/src/admin/charts.ts': 1 };
   const arquivos = ['frontend/index.html', 'frontend/admin/index.html',
     ...fs.readdirSync('frontend/src/admin').filter(f => f.endsWith('.ts') && f !== 'icones.ts').map(f => `frontend/src/admin/${f}`),
     ...fs.readdirSync('frontend/src').filter(f => f.endsWith('.ts')).map(f => `frontend/src/${f}`)];

@@ -112,7 +112,7 @@ gvAlca.addEventListener('click', () => {
     }
     definirGaveta(estadoGaveta === 'aberta' ? 'recolhida' : 'aberta');
 });
-// Esc recolhe a gaveta (depois do cartão e do leque do mapa, que fecham primeiro)
+// Esc recolhe a gaveta (depois do cartão do mapa, que fecha primeiro)
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape' || e.defaultPrevented || estado.aba !== 'acompanhar' || estadoGaveta !== 'aberta')
         return;
