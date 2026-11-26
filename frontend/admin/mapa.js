@@ -15,6 +15,12 @@ let mapaCarregadoEm = 0;
 let mapaLeaflet = null;
 let camadaGrupos = null;
 let camadaFerr = null; // casas e linhas da ferramenta aberta (Spec 009)
+$('areaTema').addEventListener('click', () => {
+    const botao = $('areaTema');
+    const navy = botao.getAttribute('aria-pressed') !== 'true';
+    $('mapaCanvas').classList.toggle('mapa-navy', navy);
+    botao.setAttribute('aria-pressed', String(navy));
+});
 const regDe = (id) => estado.regs.find(r => r.linha === id);
 function nomesMapa(ids) {
     const regs = ids.map(regDe).filter((r) => Boolean(r)).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -29,7 +35,7 @@ function casasNoMapa() {
         return [];
     return (d.casas || []).slice(0, 4).map(c => {
         const g = dadosMapa.grupos.find(x => x.linhas.includes(c.linha));
-        return g ? { lat: g.lat, lng: g.lng, nome: regDe(c.linha)?.nome || `Cadastro nº ${c.linha}` } : null;
+        return g ? { lat: g.lat, lng: g.lng, linha: c.linha, nome: regDe(c.linha)?.nome || `Cadastro nº ${c.linha}` } : null;
     }).filter((x) => Boolean(x));
 }
 // Grupo (A ou B) de quem está no ponto, quando a multiplicação está aberta.
@@ -73,11 +79,15 @@ function cartaoPessoa(r) {
     const url = regrasArea.whatsapp(r.telefone);
     const nome = nomeCurto(r);
     const contato = url ? `<a class="b-contato" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Entrar em contato com ${esc(nome)} pelo WhatsApp">Entrar em contato</a>` : '';
+    const ultimoContato = parseData(r.ultimoContato);
+    const proximoContato = parseData(r.proximoContato);
+    const quando = ultimoContato ? regrasPessoas.haQuanto(ultimoContato, new Date()) : 'Sem contato registrado';
     return `<div class="cartao">
     <button type="button" class="cartao-x" data-cartao-fechar aria-label="Fechar o cartão" title="Fechar">${icone('fecharFino')}</button>
     <div class="cartao-topo"><span class="cartao-rosto" data-cor="${corDoRosto(r)}">${avatar(r, 'av-c')}</span>
       <div><b class="cartao-nome" title="${esc(regrasNomes.completo(r.nome))}">${esc(nome)}</b><span class="cartao-sub">${esc(sub.texto)}</span></div></div>
     ${sub.extras.length ? `<ul class="cartao-papeis">${sub.extras.map(x => `<li data-selo="${x.selo}"${x.selo === 'celula' ? ` data-cor="${corDaCelula(p.destaque.liderCelula[0])}"` : ''}><span class="cp-ic">${icone(x.selo)}</span>${esc(x.texto)}</li>`).join('')}</ul>` : ''}
+    <div class="cartao-contato"><strong>Último contato</strong><span>${esc(quando)}</span>${proximoContato ? `<strong>Próximo contato</strong><span>${esc(proximoContato.toLocaleDateString('pt-BR'))}</span>` : ''}</div>
     <div class="cartao-a">${contato}<button type="button" class="b-perfil" data-mapa-pessoa="${r.linha}" aria-label="Ver o perfil de ${esc(nome)}">Ver perfil ${icone('seguir', { classe: 'ic-18' })}</button></div>
   </div>`;
 }
@@ -178,13 +188,14 @@ function renderMapa() {
         // Anfitrião: casas numeradas (no centro da área de ~300 m de quem recebe) e linhas da
         // casa 1 até as áreas dos membros. Distância em linha reta, como no ranking.
         if (casas.length) {
-            const c1 = casas[0];
-            f.grupos.forEach(g => L.polyline([[c1.lat, c1.lng], [g.lat, g.lng]], { color: '#c43a1f', weight: 2, dashArray: '4 6', opacity: 0.8, interactive: false }).addTo(camadaFerr));
+            const c1 = casas.find(c => c.linha === anfitriaoNoMapa) || casas[0];
+            f.grupos.forEach(g => L.polyline([[c1.lat, c1.lng], [g.lat, g.lng]], { color: '#2563eb', weight: 2, dashArray: '4 6', opacity: 0.8, interactive: false }).addTo(camadaFerr));
             casas.forEach((c, i) => {
                 const rot = `Casa ${i + 1}: ${c.nome}`;
-                const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: `casa-n${i === 0 ? ' top' : ''}`, html: `<span class="casa-pin"><b>${i + 1}</b></span>`, iconSize: i === 0 ? [44, 44] : [36, 36], iconAnchor: i === 0 ? [22, 50] : [18, 42] }), keyboard: true, title: rot, zIndexOffset: 1000 - i });
+                const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: `casa-n${c === c1 ? ' top' : ''}`, html: `<span class="casa-pin"><b>${i + 1}</b></span>`, iconSize: c === c1 ? [44, 44] : [36, 36], iconAnchor: c === c1 ? [22, 50] : [18, 42] }), keyboard: true, title: rot, zIndexOffset: c === c1 ? 1100 : 1000 - i });
                 m.addTo(camadaFerr);
                 m.getElement()?.setAttribute('aria-label', rot);
+                m.on('click', () => selecionarCasaNoMapa(c.linha));
             });
         }
     }
@@ -218,7 +229,7 @@ function desenharGrupos(f) {
         const rotulo = `Área ${i + 1}: ${pessoas.map(nomeComPapel).join('; ') || regrasMapa.pessoas(g.linhas.length)}`;
         const grupo = grupoMult(pessoas[0]?.linha);
         const corPino = (r) => grupo === 'B' ? '#15171c' : corDoRosto(r);
-        const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
+        const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo" data-grupo="${grupo}">${grupo}</span>` : '');
         const nomes = pessoas.length > 1
             ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}">${esc(nomeCurto(r))}</button>`).join('')}</span>`
             : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}</span>`;

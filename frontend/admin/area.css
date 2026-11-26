@@ -176,3 +176,16 @@ body.na-area .wrap { max-width: none; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation: none; }
 }
+
+.area-palco .area-tema { pointer-events: auto; flex: none; }
+.area-tema[aria-pressed="true"] { background: var(--navy); color: var(--white); }
+.area-canvas { background: var(--page); }
+.area-canvas .leaflet-tile-pane { filter: saturate(.55) contrast(.84) brightness(1.09); transition: filter 220ms ease; }
+.area-canvas.mapa-navy { background: var(--navy); }
+.area-canvas.mapa-navy .leaflet-tile-pane { filter: invert(.88) hue-rotate(173deg) saturate(.7) brightness(.72) contrast(1.14); }
+.cartao-contato { display: grid; gap: 3px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--action-wash); color: var(--ink); }
+.cartao-contato span { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .area-canvas .leaflet-tile-pane { transition: none; } }
+.rp-grupo[data-grupo="A"] { background: var(--action); }
+.rp-grupo[data-grupo="B"] { background: #136d68; }
+.cartao-contato strong:not(:first-child) { margin-top: 4px; }
