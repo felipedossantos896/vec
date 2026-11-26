@@ -53,26 +53,6 @@ test('tamanho do rosto acompanha o zoom (Spec 012)', () => {
   assert.equal(regras.tamanhoRosto(13, true), 45);
 });
 
-test('leque em círculo até 8 e espiral acima disso, sem rostos sobrepostos (Spec 012)', () => {
-  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-  const menor = ps => Math.min(...ps.flatMap((a, i) => ps.slice(i + 1).map(b => dist(a, b))));
-  assert.equal(regras.leque(0, 50).length, 0);
-  for (const [n, t] of [[2, 40], [3, 50], [8, 60], [9, 40], [12, 50], [20, 60], [40, 44]]) {
-    const ps = regras.leque(n, t);
-    assert.equal(ps.length, n);
-    assert.ok(menor(ps) >= t, `n=${n}: rostos a ${menor(ps).toFixed(1)} px (rosto ${t})`);
-    assert.ok(ps.every(p => Math.hypot(p.x, p.y) >= t), `n=${n}: nenhum rosto em cima do centro`);
-  }
-  // Círculo: todos à mesma distância, o primeiro no alto
-  const c = regras.leque(4, 50);
-  assert.ok(c.every(p => Math.abs(Math.hypot(p.x, p.y) - Math.hypot(c[0].x, c[0].y)) <= 1.5));
-  assert.equal(c[0].x, 0);
-  assert.ok(c[0].y < 0);
-  // Espiral: cada rosto mais longe do centro que o anterior
-  const e = regras.leque(15, 50).map(p => Math.hypot(p.x, p.y));
-  assert.ok(e.every((d, i) => i === 0 || d >= e[i - 1] - 1));
-});
-
 test('selos e papéis do card (Spec 014)', () => {
   const d = (lider = [], casa = []) => ({ liderCelula: lider, casaCelula: casa });
   assert.deepEqual({ ...regras.selos({ papel: 'membro' }) }, {});

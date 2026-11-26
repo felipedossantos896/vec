@@ -135,7 +135,7 @@ function iniciarLeaflet(): boolean {
   camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
   // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
   mapaLeaflet.on('zoomend', () => { if (estado.aba === 'acompanhar' && ultimoFiltro) desenharGrupos(ultimoFiltro); });
-  ligarLeque();
+  ligarCartaoMapa();
   camadaFerr = L.layerGroup().addTo(mapaLeaflet);
   return true;
 }
@@ -196,7 +196,7 @@ const baseMapa = (): Registro[] => metricasIndicadores.filtrar(estado.regs, esta
 // Marcadores das áreas: rostos empilhados com o tamanho do zoom atual (Spec 012)
 let ultimoFiltro: MapaFiltrado | null = null;
 function desenharGrupos(f: MapaFiltrado) {
-  fecharLeque();
+  mapaLeaflet.closePopup();
   camadaGrupos.clearLayers();
   const t = regrasMapa.tamanhoRosto(mapaLeaflet.getZoom(), matchMedia('(pointer: coarse), (max-width: 720px)').matches);
   $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
@@ -209,131 +209,82 @@ function desenharGrupos(f: MapaFiltrado) {
     const grupo = grupoMult(pessoas[0]?.linha);
     const corPino = (r: Registro): string => grupo === 'B' ? '#15171c' : corDoRosto(r);
     const rostosHtml = pessoas.slice(0, 3).map(r => rostoPin(r, corPino(r))).join('') + (grupo ? `<span class="rp-grupo">${grupo}</span>` : '');
-    // Leque (Spec 012): todos os rostos do grupo, escondidos até abrir, com as linhas até o centro
-    const pos = pessoas.length > 1 ? regrasMapa.leque(pessoas.length, t) : [];
-    const leque = pos.length ? `<span class="leque" aria-hidden="true"><svg class="lq-linhas" width="1" height="1" aria-hidden="true">${pos.map(p => `<line x1="0" y1="0" x2="${p.x}" y2="${p.y}"/>`).join('')}</svg>` +
-      pessoas.map((r, j) => `<button type="button" class="lq-rosto" data-lq="${j}" tabindex="-1" aria-label="${esc(nomeComPapel(r))}">${rostoPin(r, corPino(r))}<span class="lq-nome">${esc(nomeCurto(r))}</span></button>`).join('') + '</span>' : '';
-    const html = `<span class="rostos-pin">${rostosHtml}${pessoas.length > 3 ? `<span class="rp-mais">+${pessoas.length - 3}</span>` : ''}</span>` +
-      `<span class="rp-nome">${esc(pessoas.length === 1 ? nomeCurto(pessoas[0]) : regrasArea.rotulo(pessoas.map(r => r.nome)))}</span>${leque}`;
-    const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55 + (pessoas.length > 3 ? t * 0.55 : 0));
+    const nomes = pessoas.length > 1
+      ? `<span class="rp-nomes">${pessoas.map(r => `<button type="button" class="rp-pessoa" aria-label="${esc(nomeComPapel(r))}">${esc(nomeCurto(r))}</button>`).join('')}</span>`
+      : `<span class="rp-nome">${esc(pessoas[0] ? nomeCurto(pessoas[0]) : '')}</span>`;
+    const html = `<span class="rostos-pin">${rostosHtml}</span>${nomes}`;
+    const larg = Math.round(t + 6 + Math.max(0, Math.min(pessoas.length, 3) - 1) * t * 0.55);
     const m = L.marker([g.lat, g.lng], {
       icon: L.divIcon({ className: `mapa-grupo${acesas.length || estado.lente === 'todos' ? '' : ' apagado'}`, html, iconSize: [larg, t + 30], iconAnchor: [larg / 2, Math.round(t / 2) + 3] }),
-      keyboard: true, title: rotulo
+      keyboard: true, riseOnHover: true
     });
     m.addTo(camadaGrupos);
     const el: HTMLElement | undefined = m.getElement();
     if (!el) return;
-    el.setAttribute('aria-label', `${rotulo}. ${pos.length ? 'Enter abre os rostos.' : 'Enter abre o cartão.'}`);
-    el.querySelectorAll<HTMLElement>('.lq-rosto').forEach((b, j) => {
-      b.style.setProperty('--x', `${pos[j].x}px`); // CSSOM: o CSP não deixa style no HTML
-      b.style.setProperty('--y', `${pos[j].y}px`);
-      b.style.transitionDelay = `${Math.min(j, 12) * 14}ms`;
+    el.setAttribute('aria-label', rotulo);
+    const marcador: MarcadorPessoas = { m, el, pessoas, t };
+    const nomesBotoes = el.querySelectorAll<HTMLButtonElement>('.rp-pessoa');
+    if (nomesBotoes.length) el.setAttribute('role', 'group');
+    nomesBotoes.forEach((botao, j) => {
+      botao.addEventListener('click', e => {
+        e.stopPropagation();
+        abrirCartao(marcador, j, true, e.detail === 0);
+      });
+      if (temMouse()) botao.addEventListener('mouseenter', () => passarNaPessoa(marcador, j));
     });
-    const gl: GrupoLeque = { m, el, pessoas, pos, t, fixo: false };
-    // Passar o mouse (Spec 017): sozinho, abre o cartão; em grupo, abre o leque, e cada rosto
-    // do leque abre o cartão daquela pessoa. Sair do rosto e do cartão fecha depois de 300 ms.
     if (temMouse()) {
       el.addEventListener('mouseenter', () => {
         cancelarFechar();
-        if (pos.length) { if (lequeAberto?.m !== m) abrirLeque(gl, false); }
-        else passarNoRosto(gl, 0);
+        if (!nomesBotoes.length) passarNaPessoa(marcador, 0);
       });
       el.addEventListener('mouseleave', agendarFechar);
-      el.querySelectorAll<HTMLElement>('.lq-rosto').forEach((b, j) => b.addEventListener('mouseenter', () => passarNoRosto(gl, j)));
     }
-    // Enter ou Espaço no marcador (o Leaflet só abriria um popup ligado a ele)
+    const selecionar = (peloTeclado: boolean) => {
+      if (nomesBotoes.length) nomesBotoes[0].focus({ preventScroll: true });
+      else abrirCartao(marcador, 0, true, peloTeclado);
+    };
     el.addEventListener('keydown', e => {
       if ((e.key !== 'Enter' && e.key !== ' ') || e.target !== el) return;
       e.preventDefault();
-      if (!pos.length) { abrirCartao(gl, 0, true, true); return; }
-      const la = lequeAberto;
-      if (la && la.m === m) { fecharLeque(); return; }
-      abrirLeque(gl, true);
-      el.querySelector<HTMLElement>('.lq-rosto')?.focus();
+      e.stopPropagation();
+      selecionar(true);
     });
-    m.on('click', (ev: { originalEvent?: Event }) => {
-      const o = ev.originalEvent;
-      const alvo = o?.target instanceof Element ? o.target : null;
-      const peloTeclado = !!o && (o.type.startsWith('key') || (o as MouseEvent).detail === 0);
-      const rosto = alvo?.closest<HTMLElement>('.lq-rosto');
-      if (rosto) { abrirCartao(gl, Number(rosto.dataset.lq), true, peloTeclado); return; }
-      if (!pos.length) { abrirCartao(gl, 0, true, peloTeclado); return; }
-      const la = lequeAberto;
-      if (la && la.m === m && la.fixo) { fecharLeque(); return; }
-      abrirLeque(gl, true);
-      if (peloTeclado) el.querySelector<HTMLElement>('.lq-rosto')?.focus();
-    });
+    m.on('click', () => selecionar(false));
   });
 }
 
-// ── Leque e cartão (Spec 012): um grupo aberto por vez; o cartão é o popup de uma pessoa ──
-type GrupoLeque = { m: any; el: HTMLElement; pessoas: Registro[]; pos: { x: number; y: number }[]; t: number; fixo: boolean };
-let lequeAberto: GrupoLeque | null = null;
-let cartaoDe: { g: GrupoLeque; j: number; pop: any; fixo: boolean } | null = null;
+type MarcadorPessoas = { m: any; el: HTMLElement; pessoas: Registro[]; t: number };
+let cartaoDe: { g: MarcadorPessoas; j: number; pop: any; fixo: boolean } | null = null;
 let tFecharCartao: ReturnType<typeof setTimeout>;
-let tFecharLeque: ReturnType<typeof setTimeout>;
 const temMouse = (): boolean => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-function abrirLeque(g: GrupoLeque, fixo: boolean) {
-  clearTimeout(tFecharLeque);
-  if (lequeAberto && lequeAberto.m !== g.m) fecharLeque();
-  g.fixo = fixo || g.fixo;
-  lequeAberto = g;
-  g.el.classList.add('aberto');
-  g.m.setZIndexOffset(2000);
-  g.el.querySelector('.leque')?.removeAttribute('aria-hidden');
-  g.el.querySelectorAll<HTMLElement>('.lq-rosto').forEach(b => { b.tabIndex = 0; });
-}
-
-function fecharLeque() {
-  clearTimeout(tFecharLeque);
-  const g = lequeAberto;
-  if (!g) return;
-  lequeAberto = null;
-  g.fixo = false;
-  g.el.classList.remove('aberto');
-  g.m.setZIndexOffset(0);
-  g.el.querySelector('.leque')?.setAttribute('aria-hidden', 'true');
-  g.el.querySelectorAll<HTMLElement>('.lq-rosto').forEach(b => { b.tabIndex = -1; });
-}
-
-// Passar e sair com o mouse (Spec 017): um cartão fixado (clique, toque ou teclado) não é
-// trocado nem fechado pelo mouse
 const FECHAR_AO_SAIR_MS = 300;
-function cancelarFechar() { clearTimeout(tFecharCartao); clearTimeout(tFecharLeque); }
+function cancelarFechar() { clearTimeout(tFecharCartao); }
 function agendarFechar() {
   cancelarFechar();
   tFecharCartao = setTimeout(() => {
     if (cartaoDe && !cartaoDe.fixo) fecharCartao({ som: false });
-    if (lequeAberto && !lequeAberto.fixo && !(cartaoDe && cartaoDe.fixo)) fecharLeque();
   }, FECHAR_AO_SAIR_MS);
 }
-function passarNoRosto(g: GrupoLeque, j: number) {
+function passarNaPessoa(g: MarcadorPessoas, j: number) {
   cancelarFechar();
   if (cartaoDe?.fixo || (cartaoDe && cartaoDe.g.m === g.m && cartaoDe.j === j)) return;
   abrirCartao(g, j, false);
 }
 
-// Cartão ancorado no rosto (ou no marcador, para quem está sozinho na área). Fixo: aberto
-// por clique, toque ou teclado; o foco vai para o cartão só quando veio do teclado.
-function abrirCartao(g: GrupoLeque, j: number, fixo = true, focar = false) {
+function abrirCartao(g: MarcadorPessoas, j: number, fixo = true, focar = false) {
   const r = g.pessoas[j];
   if (!r) return;
   cancelarFechar();
-  if (g.pos.length) abrirLeque(g, fixo);
   const mesmo = cartaoDe && cartaoDe.g.m === g.m && cartaoDe.j === j;
   if (mesmo && cartaoDe) { // já aberto pelo mouse: o clique só fixa
     if (fixo && !cartaoDe.fixo) { cartaoDe.fixo = true; cartaoDe.pop.options.autoPan = true; cartaoDe.pop.update(); } // agora cabe na tela
     if (focar) (cartaoDe.pop.getElement() as HTMLElement | undefined)?.querySelector<HTMLElement>('.b-contato')?.focus({ preventScroll: true });
     return;
   }
-  // Num grupo, o cartão abre acima do leque inteiro, para não cobrir os outros rostos
-  // (Spec 017), e o rosto da pessoa fica destacado
-  const topoLeque = g.pos.length ? Math.min(...g.pos.map(q => q.y)) - 4 : 0;
-  g.el.querySelectorAll<HTMLElement>('.lq-rosto').forEach((b, k) => b.classList.toggle('ativo', k === j));
   // O cartão desvia da barra de filtros, do painel e da gaveta (Spec 016)
   const f = folgasMapa();
-  const pop = L.popup({ offset: [0, topoLeque - Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
+  const pop = L.popup({ offset: [0, -Math.round(g.t / 2)], className: 'cartao-pop', autoPanPaddingTopLeft: f.paddingTopLeft, autoPanPaddingBottomRight: f.paddingBottomRight, closeButton: false, autoPan: fixo })
     .setLatLng(g.m.getLatLng()).setContent(cartaoPessoa(r)).openOn(mapaLeaflet);
   cartaoDe = { g, j, pop, fixo };
   const el = pop.getElement() as HTMLElement | undefined;
@@ -375,7 +326,7 @@ function fecharCartao(opcoes: { som?: boolean } = {}) {
   const c = cartaoDe;
   if (!c) return;
   const deProposito = opcoes.som !== false;
-  const volta = c.g.el.querySelectorAll<HTMLElement>('.lq-rosto')[c.j] || c.g.el;
+  const volta = c.g.el.querySelectorAll<HTMLElement>('.rp-pessoa')[c.j] || c.g.el;
   const el = c.pop.getElement() as HTMLElement | undefined;
   if (deProposito) sons.fechar();
   const fim = () => {
@@ -391,15 +342,15 @@ document.addEventListener('click', e => {
   if (e.target instanceof Element && e.target.closest('[data-cartao-fechar]')) fecharCartao();
 });
 
-// Fecha o leque ao tocar no mapa, arrastar ou dar zoom; Esc fecha o cartão e depois o leque
-function ligarLeque() {
-  mapaLeaflet.on('click dragstart zoomstart', () => { mapaLeaflet.closePopup(); fecharLeque(); });
-  mapaLeaflet.on('popupclose', () => { cartaoDe?.g.el.querySelectorAll('.lq-rosto.ativo').forEach(b => b.classList.remove('ativo')); cartaoDe = null; });
+// Toque no mapa, arrasto e zoom fecham o cartão.
+function ligarCartaoMapa() {
+  mapaLeaflet.on('click dragstart zoomstart', () => mapaLeaflet.closePopup());
+  mapaLeaflet.on('popupclose', () => { cartaoDe = null; });
 }
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]')) return;
-  if (cartaoDe) { e.preventDefault(); fecharCartao(); return; }
-  if (lequeAberto) { e.preventDefault(); const el = lequeAberto.el; fecharLeque(); el.focus(); }
+  if (e.key !== 'Escape' || estado.aba !== 'acompanhar' || document.querySelector('dialog[open]') || !cartaoDe) return;
+  e.preventDefault();
+  fecharCartao();
 });
 
 // Nome no mapa (popup) ou na lista abre a ficha da pessoa.
