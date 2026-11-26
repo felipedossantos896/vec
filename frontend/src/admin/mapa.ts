@@ -4,7 +4,6 @@
 // na ficha. A lista abaixo do mapa tem o mesmo conteúdo e funciona sem ele.
 // Política de tiles do OSM: atribuição sempre visível, sem pré-carga nem uso offline.
 
-declare const maplibregl: { setWorkerUrl(url: string): void };
 declare const L: any; // Leaflet, carregado por <script> antes deste arquivo
 
 const TILES_OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -17,76 +16,8 @@ const RECARREGAR_APOS_MS = 60_000;
 let dadosMapa: DadosMapa | null = null;
 let mapaCarregadoEm = 0;
 let mapaLeaflet: any = null;
-const ESTILOS_MAPTILER = {
-  cloud: '01a2171b-00ad-770e-81a7-f347bd2d8c8d',
-  navy: '01a2171b-8843-712f-bce5-7994dcf3c7f0'
-};
-let chaveMapTiler = '';
-let camadaBaseOSM: any;
-let camadaBaseVetorial: any;
 let camadaGrupos: any = null;
 let camadaFerr: any = null; // casas e linhas da ferramenta aberta (Spec 009)
-
-$('areaTema').addEventListener('click', () => {
-  const botao = $('areaTema');
-  const navy = botao.getAttribute('aria-pressed') !== 'true';
-  $('mapaCanvas').classList.toggle('mapa-navy', navy);
-  botao.setAttribute('aria-pressed', String(navy));
-  atualizarMapaBase();
-});
-
-function atualizarMapaBase() {
-  if (!mapaLeaflet || !chaveMapTiler) return;
-  const canvas = $('mapaCanvas');
-  const estilo = canvas.classList.contains('mapa-navy') ? ESTILOS_MAPTILER.navy : ESTILOS_MAPTILER.cloud;
-  const voltarAoOSM = () => {
-    if (camadaBaseVetorial) mapaLeaflet.removeLayer(camadaBaseVetorial);
-    camadaBaseVetorial = null;
-    canvas.classList.remove('mapa-vetorial');
-    if (!mapaLeaflet.hasLayer(camadaBaseOSM)) camadaBaseOSM.addTo(mapaLeaflet);
-  };
-  voltarAoOSM();
-  try {
-    const url = new URL(`https://api.maptiler.com/maps/${estilo}/style.json`);
-    url.searchParams.set('key', chaveMapTiler);
-    const camada = L.maplibreGL({ style: url.href, interactive: false });
-    camada.addTo(mapaLeaflet);
-    camadaBaseVetorial = camada;
-    const renderizador = camada.getMaplibreMap();
-    renderizador.once('style.load', () => {
-      if (camadaBaseVetorial !== camada) return;
-      for (const nome of ['Pathway label', 'Pedestrian labels']) {
-        const rotulo = renderizador.getLayer(nome);
-        if (rotulo) renderizador.setLayerZoomRange(nome, Math.max(16, rotulo.minzoom ?? 0), rotulo.maxzoom ?? 24);
-      }
-    });
-    renderizador.once('idle', () => {
-      if (camadaBaseVetorial !== camada) return;
-      canvas.classList.add('mapa-vetorial');
-      mapaLeaflet.removeLayer(camadaBaseOSM);
-    });
-    renderizador.on('error', () => {
-      if (camadaBaseVetorial === camada) voltarAoOSM();
-    });
-  } catch {
-    voltarAoOSM();
-  }
-}
-
-async function iniciarMapaBaseVetorial() {
-  if (typeof maplibregl === 'undefined' || typeof L.maplibreGL !== 'function') return;
-  try {
-    const resposta = await fetch('/admin/mapa-config');
-    if (!resposta.ok) return;
-    const config = await resposta.json();
-    if (typeof config.maptilerKey !== 'string' || !config.maptilerKey.trim()) return;
-    maplibregl.setWorkerUrl('/admin/vendor/maplibre/maplibre-gl-csp-worker.js');
-    chaveMapTiler = config.maptilerKey.trim();
-    atualizarMapaBase();
-  } catch {
-    // O mapa-base do OpenStreetMap já está visível.
-  }
-}
 
 const regDe = (id: number): Registro | undefined => estado.regs.find(r => r.linha === id);
 
@@ -203,8 +134,7 @@ function iniciarLeaflet(): boolean {
   mapaLeaflet = L.map('mapaCanvas', { maxZoom: ZOOM_MAX, minZoom: 4, zoomAnimation: animar, fadeAnimation: animar, markerZoomAnimation: animar, zoomControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(mapaLeaflet); // acima da gaveta (Spec 016)
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(mapaLeaflet);
-  camadaBaseOSM = L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
-  void iniciarMapaBaseVetorial();
+  L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
   mapaLeaflet.attributionControl.setPrefix(false);
   camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
   // Rostos crescem com o zoom (Spec 012): redesenha só os marcadores, sem reenquadrar
