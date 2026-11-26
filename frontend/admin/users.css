@@ -18,7 +18,7 @@
 .field-hint:empty { display: none; }
 .pass-row { display: flex; gap: 8px; }
 .pass-row .input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }
-.pass-row .btn-sec { min-height: 48px; }
+.pass-row .btn-sec { min-height: var(--control-height); }
 .perfis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px; border-radius: var(--r-md); background: var(--sunken); }
 .perfis label, .chks label { position: relative; display: block; }
 .perfis input, .chks input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }

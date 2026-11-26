@@ -9,7 +9,7 @@
 .estado.permissao .estado-ic { background: #ece8f7; color: #5b3fb5; }
 .estado-t { font: 700 1.1rem/1.25 var(--display); }
 .estado-x { max-width: 36ch; color: var(--muted); font-size: var(--t13); line-height: 1.5; }
-.estado .b-pri, .estado .b-sec { margin-top: 8px; min-height: 44px; padding: 0 18px; }
+.estado .b-pri, .estado .b-sec { margin-top: 8px; min-height: var(--control-height); padding: 0 18px; }
 .list > .estado { border: 0; }
 #loading > .estado, #gConteudo > .estado, #userList > .estado, #mapaVazio > .estado { border: 1px solid var(--border-card); border-radius: var(--r-md); background: var(--surface-card); box-shadow: var(--shadow-card); }
 #mapaVazio > .estado { margin-top: 12px; }

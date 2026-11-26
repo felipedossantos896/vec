@@ -79,6 +79,8 @@
   --space-5: 20px;
   --space-6: 24px;
   --tap: 48px;
+  --control-height: 32px;
+  --field-text: var(--t13);
   --r-lg: 18px;
   --r-md: 12px;
   --r-sm: 10px;
@@ -86,6 +88,10 @@
   --shadow-float: 0 24px 64px rgba(13, 15, 19, 0.28);
   --focus: 3px solid var(--gold-ink);
   --focus-on-dark: 3px solid var(--gold);
+}
+
+@media (any-pointer: coarse) {
+  :root { --control-height: 44px; --field-text: 16px; }
 }
 
 /* Ícones Phosphor (ADR-0012, Spec 015): cor do texto e tamanho por classe. O .ic-slot do HTML

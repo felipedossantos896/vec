@@ -1,0 +1,4 @@
+{
+  "schema_version": 1,
+  "tasks": [{ "id": "T001", "issue": 245, "depends_on": [] }]
+}

@@ -87,7 +87,7 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 .x-corpo .msg:not(:empty) { margin-top: 10px; }
 .x-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
 .x-acoes > * { min-height: 44px; }
-.b-perigo { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--danger); border-radius: 10px; background: var(--danger); color: #fff; font-weight: 600; font-size: var(--t13); }
+.b-perigo { display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-height); padding: 0 12px; border: 1.5px solid var(--danger); border-radius: 10px; background: var(--danger); color: #fff; font-weight: 600; font-size: var(--t13); }
 .b-perigo:focus-visible { outline: 3px solid var(--coral-ink); outline-offset: 2px; }
 .b-perigo:disabled { opacity: 0.7; cursor: wait; }
 
@@ -128,7 +128,7 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 
 /* ── Nova pessoa (Spec 010) ── */
 .np-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.np-acoes .b-pri { min-height: 44px; padding: 0 16px; }
+.np-acoes .b-pri { min-height: var(--control-height); padding: 0 16px; }
 .np-intro { margin-bottom: 14px; color: var(--muted); font-size: var(--t13); }
 .np-form .field { margin-bottom: 12px; }
 .np-form .msg:empty { display: none; }
