@@ -1,5 +1,11 @@
-# Referências originais — importação pendente
+# Referências visuais originais
 
-Arquivos esperados: `01-map.png`, `02-profile.png`, `03-specification.png`. São as três pranchas fornecidas em 26/11/2026, não SVGs recriados. Usar cópias com dados pessoais ocultados e revisar privacidade antes do commit. Preservar layout, dimensões e cores. Indicadores de progresso e etapas são ilustrativos, não regras de negócio. O contrato em ../../visual-contract.md prevalece sobre textos ilustrativos. Não iniciar implementação até os três PNGs estarem presentes e revisados.
+Pranchas entregues no ZIP de 26/11/2026, com tarjas localizadas para nomes e datas pessoais que ainda estavam visíveis. Foram preservadas as dimensões e a composição. A leitura das pranchas segue o [contrato visual](../../visual-contract.md).
 
-Importar os PNGs nesta pasta, executar `sha256sum *.png > SHA256SUMS` e commitar. Não incluir originais com dados pessoais.
+| Prancha | Dimensões |
+| --- | --- |
+| [Área e mapa](01-map.png) | 1672 × 941 |
+| [Ficha desktop e mobile](02-profile.png) | 1536 × 1024 |
+| [Estados, movimento e trilhos](03-specification.png) | 1536 × 1024 |
+
+Verificar integridade nesta pasta com `shasum -a 256 -c SHA256SUMS`. A comparação da implementação usa dados fictícios. Legendas e valores ilustrativos não definem regras de negócio.
