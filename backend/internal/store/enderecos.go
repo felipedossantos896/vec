@@ -64,9 +64,9 @@ func (s *Store) Endereco(ctx context.Context, sc Scope, respostaID int64) (e End
 }
 
 // mesmaConsultaGeo é verdadeira quando mudam só número, complemento ou
-// consentimento: a coordenada (em nível de rua) continua valendo. Na atualização do
-// upsert, os nomes sem prefixo são os valores antigos da linha.
-const mesmaConsultaGeo = `(cep = excluded.cep AND logradouro = excluded.logradouro AND bairro = excluded.bairro AND cidade = excluded.cidade AND uf = excluded.uf)`
+// consentimento: a coordenada de rua continua valendo. A manual também depende
+// de número e complemento. No upsert, os nomes sem prefixo são os valores antigos.
+const mesmaConsultaGeo = `(cep = excluded.cep AND logradouro = excluded.logradouro AND bairro = excluded.bairro AND cidade = excluded.cidade AND uf = excluded.uf AND (COALESCE(geo_precisao, '') <> 'manual' OR (numero = excluded.numero AND complemento = excluded.complemento)))`
 
 // SalvarEndereco grava ou troca o endereço de um cadastro do escopo, registrando o
 // consentimento informado agora por quem salva. Devolve false se o cadastro não
@@ -92,6 +92,55 @@ func (s *Store) SalvarEndereco(ctx context.Context, sc Scope, respostaID int64, 
 		      atualizado_em = excluded.atualizado_em, atualizado_por = excluded.atualizado_por`,
 		Args: append([]any{e.CEP, e.Logradouro, e.Numero, e.Complemento, e.Bairro, e.Cidade, e.UF,
 			quando, por, quando, por, respostaID}, args...),
+	})
+	if err != nil {
+		return false, err
+	}
+	return res[0].Affected > 0, nil
+}
+
+type PinoEndereco struct {
+	Lat      *float64 `json:"lat"`
+	Lng      *float64 `json:"lng"`
+	Precisao string   `json:"precisao"`
+	Revisao  string   `json:"revisao"`
+}
+
+func (s *Store) LerPinoEndereco(ctx context.Context, sc Scope, id int64) (*PinoEndereco, error) {
+	cond, args, ok := escopoSQL(sc)
+	if !ok {
+		return nil, nil
+	}
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `SELECT lat, lng, geo_precisao, atualizado_em FROM enderecos
+		      WHERE resposta_id = ? AND resposta_id IN (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
+		Args: append([]any{id}, args...),
+	})
+	if err != nil || len(res[0].Rows) == 0 {
+		return nil, err
+	}
+	r := res[0].Rows[0]
+	p := &PinoEndereco{Precisao: turso.Str(r, 2), Revisao: turso.Str(r, 3)}
+	lat, okLat := r[0].(float64)
+	lng, okLng := r[1].(float64)
+	if okLat && okLng {
+		p.Lat, p.Lng = &lat, &lng
+	}
+	return p, nil
+}
+
+func (s *Store) SalvarPinoEndereco(ctx context.Context, sc Scope, id int64, lat, lng float64, revisao, usuario string, now time.Time) (bool, error) {
+	cond, args, ok := escopoSQL(sc)
+	if !ok {
+		return false, nil
+	}
+	quando := now.UTC().Format(time.RFC3339Nano)
+	res, err := s.DB.Do(ctx, turso.Stmt{
+		SQL: `UPDATE enderecos SET lat = ?, lng = ?, geo_fonte = 'manual', geo_precisao = 'manual', geo_em = ?,
+		      atualizado_em = ?, atualizado_por = ?
+		      WHERE resposta_id = ? AND atualizado_em = ? AND resposta_id IN
+		      (SELECT id FROM respostas WHERE excluido_em IS NULL AND ` + cond + `)`,
+		Args: append([]any{lat, lng, quando, quando, usuario, id, revisao}, args...),
 	})
 	if err != nil {
 		return false, err
@@ -143,7 +192,7 @@ type PendenteGeo struct {
 func (s *Store) GravarCoordenada(ctx context.Context, respostaID int64, consultado Endereco, lat, lng *float64, fonte, precisao string, now time.Time) (bool, error) {
 	res, err := s.DB.Do(ctx, turso.Stmt{
 		SQL: `UPDATE enderecos SET lat = ?, lng = ?, geo_fonte = ?, geo_precisao = ?, geo_em = ?
-		      WHERE resposta_id = ? AND cep = ? AND logradouro = ? AND bairro = ? AND cidade = ? AND uf = ?`,
+		      WHERE resposta_id = ? AND cep = ? AND logradouro = ? AND bairro = ? AND cidade = ? AND uf = ? AND COALESCE(geo_precisao, '') <> 'manual'`,
 		Args: []any{numOuNulo(lat), numOuNulo(lng), fonte, precisao, iso(now), respostaID,
 			consultado.CEP, consultado.Logradouro, consultado.Bairro, consultado.Cidade, consultado.UF},
 	})

@@ -210,8 +210,9 @@ type adminReq struct {
 	Papel         string           `json:"papel"`
 	CriarCadastro *cadastroLiderIn `json:"criarCadastro"`
 	// Endereço da pessoa (Spec 002): consentimento marcado agora por quem salva
-	Endereco      *enderecoIn `json:"endereco"`
-	Consentimento bool        `json:"consentimento"`
+	Endereco      *enderecoIn         `json:"endereco"`
+	Consentimento bool                `json:"consentimento"`
+	PinoEndereco  *store.PinoEndereco `json:"pinoEndereco"`
 	// Anfitrião (Spec 004): confirmação marcada agora por quem salva
 	Anfitriao   *anfitriaoIn `json:"anfitriao"`
 	Confirmacao bool         `json:"confirmacao"`
@@ -307,6 +308,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.enderecoLer(ctx, req)
 		case "endereco_salvar":
 			rep = s.enderecoSalvar(ctx, req)
+		case "endereco_pino":
+			rep = s.enderecoPino(ctx, req)
 		case "endereco_excluir":
 			rep = s.enderecoExcluir(ctx, req)
 		case "anfitriao_ler":

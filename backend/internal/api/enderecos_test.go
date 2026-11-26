@@ -134,3 +134,36 @@ func TestEnderecoForaDaListaEDoCSV(t *testing.T) {
 		}
 	}
 }
+
+func TestPinoEnderecoExigeEscopoConsentimentoERevisao(t *testing.T) {
+	ctx := context.Background()
+	const revisao = "2026-11-14T12:00:00Z"
+	lat, lng := -3.73123, -38.49789
+	pino := &store.PinoEndereco{Lat: &lat, Lng: &lng, Revisao: revisao}
+	s, db, token := painelServer(t, 1)
+	db.pinoEndereco = []any{lat, lng, "manual", revisao}
+	req := adminReq{Token: token, Linha: 7}
+	rep := s.enderecoPino(ctx, req)
+	recebido, ok := rep.body["pinoEndereco"].(*store.PinoEndereco)
+	if !ok || recebido.Lat == nil || *recebido.Lat != lat || recebido.Precisao != "manual" ||
+		len(db.leituras) != 1 || !strings.Contains(db.leituras[0].SQL, "excluido_em IS NULL") {
+		t.Fatal("o editor deve retornar o ponto com escopo no SQL")
+	}
+	req.PinoEndereco = pino
+	if s.enderecoPino(ctx, req).body["erro"] != "consentimento_endereco" || len(db.escritas) != 0 {
+		t.Fatal("não deve salvar sem consentimento")
+	}
+	req.Consentimento = true
+	if s.enderecoPino(ctx, req).body["ok"] != true || len(db.escritas) != 1 ||
+		!strings.Contains(db.escritas[0].SQL, "atualizado_em = ? AND resposta_id IN") {
+		t.Fatal("a gravação manual deve conferir revisão e escopo")
+	}
+	db.afetadas = 0
+	if s.enderecoPino(ctx, req).body["erro"] != "pino_desatualizado" {
+		t.Fatal("não deve salvar pino desatualizado ou fora do escopo")
+	}
+	req.PinoEndereco = nil
+	if s.enderecoPino(ctx, req).body["erro"] != "nao_encontrado" {
+		t.Fatal("não deve ler ponto fora do escopo")
+	}
+}

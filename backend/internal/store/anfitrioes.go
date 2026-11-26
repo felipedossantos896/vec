@@ -95,7 +95,11 @@ func (s *Store) ExcluirAnfitriao(ctx context.Context, sc Scope, respostaID int64
 
 // posicaoRanking só aceita coordenadas de rua ou bairro: pela cidade é impreciso
 // demais para comparar casas (Spec 004, requisito 3).
-const posicaoRanking = `e.geo_precisao IN ('rua', 'bairro') AND e.lat IS NOT NULL AND e.lng IS NOT NULL`
+const posicaoRanking = `e.geo_precisao IN ('rua', 'bairro', 'manual') AND e.lat IS NOT NULL AND e.lng IS NOT NULL`
+
+// O ranking usa o centro da grade para pontos confirmados, como o mapa geral.
+const latRanking = `CASE WHEN e.geo_precisao = 'manual' THEN (CAST((e.lat + 180) / 0.003 AS INTEGER) + 0.5) * 0.003 - 180 ELSE e.lat END`
+const lngRanking = `CASE WHEN e.geo_precisao = 'manual' THEN (CAST((e.lng + 180) / 0.003 AS INTEGER) + 0.5) * 0.003 - 180 ELSE e.lng END`
 
 // CandidatoAnfitriao é uma pessoa confirmada do escopo. Lat/Lng ficam nil quando
 // não há endereço geocodificado pela rua ou pelo bairro. Só o servidor vê a
@@ -120,7 +124,7 @@ func (s *Store) CandidatosAnfitriao(ctx context.Context, sc Scope) (cands []Cand
 	res, err := s.DB.Do(ctx,
 		turso.Stmt{
 			SQL: `SELECT a.resposta_id, r.nome, a.capacidade, a.dias,
-			      CASE WHEN ` + posicaoRanking + ` THEN e.lat END, CASE WHEN ` + posicaoRanking + ` THEN e.lng END,
+			      CASE WHEN ` + posicaoRanking + ` THEN ` + latRanking + ` END, CASE WHEN ` + posicaoRanking + ` THEN ` + lngRanking + ` END,
 			      e.geo_precisao = 'bairro'
 			      FROM anfitrioes a JOIN respostas r ON r.id = a.resposta_id
 			      LEFT JOIN enderecos e ON e.resposta_id = a.resposta_id
@@ -167,7 +171,7 @@ func (s *Store) MembrosCelula(ctx context.Context, sc Scope, celula string) (mem
 		return nil, false, nil
 	}
 	res, err := s.DB.Do(ctx, turso.Stmt{
-		SQL: `SELECT r.id, CASE WHEN ` + posicaoRanking + ` THEN e.lat END, CASE WHEN ` + posicaoRanking + ` THEN e.lng END
+		SQL: `SELECT r.id, CASE WHEN ` + posicaoRanking + ` THEN ` + latRanking + ` END, CASE WHEN ` + posicaoRanking + ` THEN ` + lngRanking + ` END
 		      FROM respostas r LEFT JOIN enderecos e ON e.resposta_id = r.id
 		      WHERE r.id IN (SELECT id FROM respostas WHERE celula = ? COLLATE NOCASE AND excluido_em IS NULL AND ` + cond + `)
 		      ORDER BY r.id`,

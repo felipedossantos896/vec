@@ -147,6 +147,44 @@ func (s *Server) enderecoSalvar(ctx context.Context, req adminReq) reply {
 	return s.enderecoLer(ctx, req)
 }
 
+// enderecoPino é exclusivo do editor da ficha; lista e mapa não recebem o ponto exato.
+func (s *Server) enderecoPino(ctx context.Context, req adminReq) reply {
+	a, code, err := s.authenticate(ctx, req.Token)
+	if err != nil {
+		return s.internal("endereco_pino", err)
+	}
+	if code != "" {
+		return failReply(code)
+	}
+	if req.Linha <= 0 {
+		return failReply("dados_invalidos")
+	}
+	if p := req.PinoEndereco; p != nil {
+		if !req.Consentimento {
+			return failReply("consentimento_endereco")
+		}
+		if p.Lat == nil || p.Lng == nil || *p.Lat < -85 || *p.Lat > 85 || *p.Lng < -180 || *p.Lng > 180 || p.Revisao == "" {
+			return failReply("dados_invalidos")
+		}
+		salvo, err := s.Store.SalvarPinoEndereco(ctx, a.scope, req.Linha, *p.Lat, *p.Lng, p.Revisao, a.user.Usuario, s.Now())
+		if err != nil {
+			return s.internal("endereco_pino", err)
+		}
+		if !salvo {
+			return failReply("pino_desatualizado")
+		}
+		return okReply(nil)
+	}
+	pino, err := s.Store.LerPinoEndereco(ctx, a.scope, req.Linha)
+	if err != nil {
+		return s.internal("endereco_pino", err)
+	}
+	if pino == nil {
+		return failReply("nao_encontrado")
+	}
+	return okReply(map[string]any{"pinoEndereco": pino})
+}
+
 func (s *Server) enderecoExcluir(ctx context.Context, req adminReq) reply {
 	a, code, err := s.authenticate(ctx, req.Token)
 	if err != nil {
