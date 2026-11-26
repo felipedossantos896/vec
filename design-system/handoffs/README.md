@@ -9,3 +9,6 @@ Fonte compartilhada de referências de UX/UI para Codex e Claude Code. Não subs
 3. Aprovar proposta e reconciliar ADR/Spec vigente; vincular Issue e tarefa do grafo antes de implementar.
 4. Agente lê AGENTS.md, handoff e código atual; não inventa regras. Referências são conceituais, não screenshots de implementação.
 5. Validar com Playwright nos quatro viewports do Studio, teclado e movimento reduzido; anexar evidências ao PR e atualizar handoff da Spec.
+
+## Contrato visual obrigatório
+[Revisão de fidelidade visual](visual-contract.md). Handoffs 001 e 002 bloqueados para implementação até PNGs sanitizados aprovados. SVGs anteriores não são baseline.
