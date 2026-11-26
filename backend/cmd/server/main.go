@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -70,6 +71,7 @@ func main() {
 	root.Handle("/api/foto", apiHandler)
 	root.Handle("/healthz", apiHandler)
 	root.HandleFunc("/version", versionHandler(version))
+	root.HandleFunc("GET /admin/mapa-config", mapaConfigHandler(os.Getenv("MAPTILER_API_KEY")))
 	root.Handle("/design-system/", srv.StudioHandler(studio.FS))
 	studioAlias := http.RedirectHandler("/design-system/", http.StatusFound)
 	root.Handle("GET /system-design", studioAlias)
@@ -103,6 +105,15 @@ func main() {
 		fatal(log, "http", err)
 	}
 	log.Info("servidor encerrado")
+}
+
+// A chave da Maps API é pública por definição e usada pelo navegador para buscar tiles.
+func mapaConfigHandler(chave string) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"maptilerKey": chave})
+	}
 }
 
 func versionHandler(appVersion string) http.HandlerFunc {
