@@ -57,7 +57,7 @@ function renderEstrutura() {
       <span class="er-set">${esc(c.setor || '—')}</span>
       <span class="er-enc">${esc(encontroDe(c) || '—')}</span>
       <span class="er-casa">${esc(casaDe(c) || 'sem anfitrião')}</span>
-      <span class="er-n"><span class="sr-only">Pessoas: </span>${conta(r => r.celula === c.nome)}</span>
+      <span class="er-n"><span class="sr-only">Pessoas: </span>${(n => `${n}<small class="er-n-rot" aria-hidden="true"> ${n === 1 ? 'pessoa' : 'pessoas'}</small>`)(conta(r => r.celula === c.nome))}</span>
       <span class="er-st">${c.ativa ? '<span class="badge">Ativa</span>' : '<span class="badge off">Inativa</span>'}</span>
       <span class="it-seta" aria-hidden="true">${icone('abrir', { classe: 'ic-18' })}</span></button>`;
     $('estruturaView').innerHTML = `<header class="page-heading with-action"><div><h1>Células e setores</h1>
