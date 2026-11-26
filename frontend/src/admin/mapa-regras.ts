@@ -14,11 +14,8 @@ type MapaFiltrado = {
 };
 
 const regrasMapa = {
-  // Tamanho do rosto no mapa (Spec 012): 40 px com o mapa afastado (zoom 12 ou menos) até
-  // 60 px de perto (zoom 16); no celular, no máximo 52 px.
-  tamanhoRosto(zoom: number, celular: boolean): number {
-    const t = Math.round(40 + Math.min(Math.max(zoom - 12, 0), 4) * 5);
-    return celular ? Math.min(t, 52) : t;
+  tamanhoRosto(toque: boolean): number {
+    return toque ? 40 : 36;
   },
 
   // Mantém só quem está no filtro de setor/célula; grupos que ficam vazios somem.

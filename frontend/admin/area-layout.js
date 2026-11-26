@@ -2,7 +2,7 @@
 // ══════ ÁREA EM TELA CHEIA (Spec 016) ══════
 // O mapa ocupa o espaço livre da tela; o conteúdo de baixo vive numa gaveta suspensa por
 // cima do mapa. Aqui ficam as medidas (CSSOM, por causa do CSP), a gaveta (toque, arrasto,
-// teclado) e a troca de lugar do painel escuro e da ferramenta no celular.
+// teclado) e a troca de lugar do painel e da ferramenta no celular.
 const palco = $('areaPalco');
 const gaveta = $('gaveta');
 const gvAlca = $('gvAlca');
@@ -41,7 +41,7 @@ function definirGaveta(estado, focarAlca = false) {
 }
 function abrirGaveta() { if (estadoGaveta !== 'aberta')
     definirGaveta('aberta'); }
-// Painel escuro e ferramenta: no celular, dentro da gaveta; no resto, flutuando no palco
+// No celular, painel e ferramenta ficam dentro da gaveta.
 function arrumarPaineis() {
     const cel = matchMedia(CELULAR).matches;
     const painel = $('areaPainel'), ferr = $('areaFerrPainel');
@@ -56,7 +56,7 @@ function arrumarPaineis() {
 }
 // Recuos do mapa para o enquadramento (Spec 016): barra de filtros, painel, ferramenta e gaveta
 function folgasMapa() {
-    const p = palco.getBoundingClientRect();
+    const p = $('mapaCanvas').getBoundingClientRect();
     const filtros = document.querySelector('.area-filtros')?.getBoundingClientRect();
     const topo = Math.max(24, filtros ? filtros.bottom - p.top + 16 : 24);
     const painel = $('areaPainel');
