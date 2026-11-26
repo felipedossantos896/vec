@@ -2,7 +2,7 @@
 
 /* ── Rodapé do detalhe: ações sempre à mão ── */
 .det-actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 22px -22px calc(-28px - env(safe-area-inset-bottom, 0px)); padding: 12px 22px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--cream); }
-.det-actions .btn-sec.solid { flex: 1 1 200px; min-height: 48px; }
+.det-actions .btn-sec.solid { flex: 1 1 200px; min-height: var(--control-height); }
 .det-actions .btn-sec:disabled { opacity: 0.7; cursor: wait; }
 .btn-link.perigo { color: var(--danger); }
 .btn-sec.perigo { border-color: var(--danger); background: var(--danger); color: var(--white); }
@@ -42,7 +42,7 @@
 /* ── Discipulado ── */
 .falta { display: block; line-height: 1.4; }
 .sug-vinculo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.sug-vinculo .btn-sec { min-height: 40px; white-space: normal; text-align: left; }
+.sug-vinculo .btn-sec { min-height: var(--control-height); white-space: normal; text-align: left; }
 
 /* ── Contato e acompanhamento ── */
 .whats { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
