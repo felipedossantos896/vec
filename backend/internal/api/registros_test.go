@@ -23,7 +23,8 @@ type painelDB struct {
 	escopos      [][]any
 	afetadas     int64
 	escritas     []turso.Stmt
-	foto         []byte       // foto guardada do cadastro 7 (nil = nenhuma)
+	foto         []byte // foto guardada do cadastro 7 (nil = nenhuma)
+	pinoEndereco []any
 	endereco     []any        // endereço guardado do cadastro 7 (nil = nenhum)
 	pontos       [][]any      // situação de geocodificação devolvida ao mapa
 	leituras     []turso.Stmt // consultas do mapa, para conferir o escopo
@@ -125,6 +126,11 @@ func (d *painelDB) Do(_ context.Context, stmts ...turso.Stmt) ([]*turso.Result, 
 		case strings.HasPrefix(st.SQL, "SELECT e.resposta_id, e.lat"):
 			d.leituras = append(d.leituras, st)
 			out[i].Rows = d.pontos
+		case strings.HasPrefix(st.SQL, "SELECT lat, lng, geo_precisao"):
+			d.leituras = append(d.leituras, st)
+			if d.pinoEndereco != nil && d.afetadas > 0 {
+				out[i].Rows = [][]any{d.pinoEndereco}
+			}
 		case strings.HasPrefix(st.SQL, "SELECT cep"):
 			if d.endereco != nil && d.afetadas > 0 {
 				out[i].Rows = [][]any{d.endereco}

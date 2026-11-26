@@ -6,6 +6,7 @@ const TEXTO_CONSENTIMENTO = 'A pessoa autorizou o uso do endereço para organiza
 const ERROS_ENDERECO = {
     cep_invalido: 'Confira o CEP: são 8 dígitos.',
     uf_invalida: 'Escolha a UF.',
+    pino_desatualizado: 'O endereço mudou. Reabra o ajuste do ponto e tente de novo.',
     endereco_incompleto: 'Preencha rua, número, bairro e cidade.',
     consentimento_endereco: 'Marque a autorização da pessoa para salvar o endereço.',
     nao_encontrado: 'Este cadastro não está mais disponível. Atualize a lista.',
@@ -23,7 +24,7 @@ function renderEndereco() {
     $('endCorpo').innerHTML = e
         ? `<address class="end-linhas">${regrasEndereco.linhas(e).map(l => `<span>${esc(l)}</span>`).join('')}</address>
       <p class="field-hint">Autorizado em ${soData(e.consentimentoEm)} por ${esc(e.consentimentoPor)}. Atualizado em ${soData(e.atualizadoEm)} por ${esc(e.atualizadoPor)}.</p>
-      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button></div>`
+      <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Editar endereço</button><button type="button" class="btn-sec" data-end="pino">Ajustar ponto no mapa</button><button type="button" class="btn-link perigo" data-end="remover">Remover endereço</button></div>`
         : `<p class="nota-fraca">Sem endereço cadastrado.</p>
       <div class="end-acoes"><button type="button" class="btn-sec" data-end="editar">Cadastrar endereço</button></div>`;
 }
@@ -181,6 +182,54 @@ $('detBody').addEventListener('submit', async (e) => {
     $('endMsg').textContent = '';
     $('endCorpo').querySelector('[data-end="editar"]')?.focus();
 });
+async function abrirEditorPino(r, botao) {
+    const res = await chamarEndereco(r, { acao: 'endereco_pino' }, botao);
+    const pino = res?.pinoEndereco;
+    if (!pino || !botao.isConnected || !$('det').open)
+        return;
+    if (typeof L === 'undefined') {
+        $('endMsg').textContent = 'Não foi possível abrir o mapa.';
+        return;
+    }
+    $('endCorpo').innerHTML = `<p class="field-hint">${pino.precisao === 'manual' ? 'Precisão manual confirmada.' : 'Arraste o mapa até alinhar o pino à entrada da casa.'} O ponto exato só aparece nesta ficha.</p>
+    <div class="end-pino-palco"><div id="endPinoMapa" class="end-pino-mapa" aria-label="Mapa para ajustar a localização"></div><span class="end-pino-marca" aria-hidden="true"></span></div>
+    <label class="end-consent"><input type="checkbox" id="endPinoConsentimento"><span>A pessoa autorizou salvar o ponto exato na ficha.</span></label>
+    <div class="end-acoes"><button type="button" id="endPinoSalvar" class="btn-sec solid">Confirmar ponto</button><button type="button" class="btn-link" data-end="cancelar">Cancelar</button></div>`;
+    const el = $('endPinoMapa');
+    const localizado = pino.lat !== null && pino.lng !== null;
+    const mapa = L.map(el, { minZoom: 4, maxZoom: ZOOM_MAX }).setView(localizado ? [pino.lat, pino.lng] : [-14.2, -51.9], localizado ? 16 : 4);
+    L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapa);
+    const dialogo = $('det');
+    const fechar = () => {
+        observador.disconnect();
+        dialogo.removeEventListener('close', fechar);
+        mapa.remove();
+        if (el.isConnected && !dialogo.open)
+            renderEndereco();
+    };
+    const observador = new MutationObserver(() => { if (!el.isConnected)
+        fechar(); });
+    observador.observe($('detBody'), { childList: true, subtree: true });
+    dialogo.addEventListener('close', fechar, { once: true });
+    const salvar = $('endPinoSalvar');
+    const consentiu = $('endPinoConsentimento');
+    const atualizarBotao = () => { salvar.disabled = !consentiu.checked || mapa.getZoom() < 16; };
+    consentiu.addEventListener('change', atualizarBotao);
+    mapa.on('zoomend', atualizarBotao);
+    atualizarBotao();
+    el.focus();
+    salvar.addEventListener('click', async () => {
+        const { lat, lng } = mapa.getCenter().wrap();
+        const resposta = await chamarEndereco(r, { acao: 'endereco_pino', pinoEndereco: { lat, lng, revisao: pino.revisao }, consentimento: consentiu.checked }, salvar);
+        if (!resposta?.ok || !el.isConnected || !dialogo.open)
+            return;
+        dadosMapa = null;
+        await carregarEnderecoDe(r);
+        $('endCorpo').querySelector('[data-end="pino"]')?.focus();
+        if (estado.aba === 'acompanhar')
+            renderMapa();
+    });
+}
 $('detBody').addEventListener('click', async (e) => {
     const b = e.target instanceof Element ? e.target.closest('[data-end]') : null;
     const r = registroAberto();
@@ -189,6 +238,8 @@ $('detBody').addEventListener('click', async (e) => {
     $('endMsg').textContent = '';
     if (b.dataset.end === 'editar')
         formEndereco();
+    else if (b.dataset.end === 'pino')
+        await abrirEditorPino(r, b);
     else if (b.dataset.end === 'cancelar') {
         renderEndereco();
         $('endCorpo').querySelector('[data-end="editar"]')?.focus();

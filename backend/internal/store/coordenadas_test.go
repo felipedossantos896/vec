@@ -25,10 +25,8 @@ func TestSalvarEnderecoInvalidaCoordenadaSoQuandoMudaAConsulta(t *testing.T) {
 			t.Errorf("mudança de %s não invalida a coordenada", campo)
 		}
 	}
-	for _, campo := range []string{"numero", "complemento"} {
-		if strings.Contains(mesmaConsultaGeo, campo) {
-			t.Errorf("%s não vai ao Nominatim e não deve invalidar a coordenada", campo)
-		}
+	if !strings.Contains(mesmaConsultaGeo, "COALESCE(geo_precisao, '') <> 'manual' OR (numero = excluded.numero AND complemento = excluded.complemento)") {
+		t.Error("número e complemento só devem invalidar a coordenada manual")
 	}
 }
 

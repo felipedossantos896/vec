@@ -140,7 +140,7 @@ func TestCandidatosAnfitriaoUsaEscopoEFiltraPrecisao(t *testing.T) {
 		}
 	}
 	q := db.doCalls[0][0].SQL
-	if !strings.Contains(q, "e.geo_precisao IN ('rua', 'bairro')") {
+	if !strings.Contains(q, "e.geo_precisao IN ('rua', 'bairro', 'manual')") {
 		t.Fatalf("posição pela cidade não pode entrar no ranking: %s", q)
 	}
 	if c := db.doCalls[0][1].SQL; !strings.Contains(c, "interesse_anfitriao = 'S'") || !strings.Contains(c, "NOT IN (SELECT resposta_id FROM anfitrioes)") {
@@ -161,7 +161,7 @@ func TestMembrosCelulaUsaEscopoECelula(t *testing.T) {
 	st := db.doCalls[0][0]
 	cond, args, _ := escopoSQL(sc)
 	if !strings.Contains(st.SQL, "celula = ? COLLATE NOCASE AND excluido_em IS NULL AND "+cond) ||
-		!strings.Contains(st.SQL, "e.geo_precisao IN ('rua', 'bairro')") {
+		!strings.Contains(st.SQL, "e.geo_precisao IN ('rua', 'bairro', 'manual')") {
 		t.Fatalf("SQL sem célula, escopo ou filtro de precisão: %s", st.SQL)
 	}
 	if len(st.Args) != 1+len(args) || st.Args[0] != "Hope" || st.Args[1] != args[0] {
