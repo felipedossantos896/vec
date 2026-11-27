@@ -11,6 +11,7 @@ function secao(titulo: string, linhas: [string, string][], simbolo?: string): st
 
 // ── Trilhos (Spec 027) ──
 const ICONE_TRILHO: Record<string, string> = { membro: 'pessoas', discipulador: 'discipulos', lider: 'celula' };
+const seloTrilho = (t: Trilho): string => `<span class="tri-selo${t.obrigatorio ? '' : ' opcional'}">${t.obrigatorio ? 'Obrigatório' : 'Opcional'}</span>`;
 const barraTrilho = (feitas: number, total: number): string =>
   `<span class="tri-barra" aria-hidden="true"><i data-w="${total ? Math.round((feitas / total) * 100) : 0}"></i></span>`;
 
@@ -20,7 +21,7 @@ function trilhosResumo(r: Registro): string {
     const { feitas, total } = regrasTrilhos.progresso(r, t);
     return `<li><button type="button" class="tri-linha" data-dtab="jornada" data-trilho="${t.id}" data-tri="${t.id}">
       <span class="tri-ic">${icone(ICONE_TRILHO[t.id], { classe: 'ic-16' })}</span>
-      <span class="tri-nome">${t.titulo}</span>
+      <span class="tri-nome">${t.titulo} ${seloTrilho(t)}</span>
       <span class="tri-conta"><b>${feitas}</b> de ${total}<span class="sr-only"> etapas registradas</span></span>
       ${barraTrilho(feitas, total)}
       ${icone('seguir', { classe: 'ic-16 tri-seta' })}
@@ -42,7 +43,7 @@ function trilhoCompleto(r: Registro, t: Trilho): string {
   }).join('');
   return `<section class="det-sec tri" id="tri-${t.id}" data-tri="${t.id}" aria-labelledby="tri-h-${t.id}">
     <header class="tri-topo"><span class="tri-ic">${icone(ICONE_TRILHO[t.id], { classe: 'ic-18' })}</span>
-      <span><h4 id="tri-h-${t.id}">${t.titulo}</h4><small>${t.resumo}</small></span>
+      <span><h4 id="tri-h-${t.id}">${t.titulo}</h4>${seloTrilho(t)}<small>${t.resumo}</small></span>
       <span class="tri-conta"><b>${feitas}</b> de ${total}<span class="sr-only"> etapas registradas</span></span></header>
     ${barraTrilho(feitas, total)}
     <ol class="tri-etapas">${etapas}</ol></section>`;
