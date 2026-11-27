@@ -199,6 +199,7 @@ type adminReq struct {
 	ID      int64  `json:"id"`
 	SetorID int64  `json:"setorId"`
 	Texto   string `json:"texto"` // anotação de acompanhamento // cadastro da própria pessoa, ligado ao login
+	Onde    string `json:"onde"`  // erro_cliente: arquivo:linha do erro no painel
 	// Edição de cadastro: número do cadastro e os campos do formulário
 	Linha  int64                      `json:"linha"`
 	Imagem string                     `json:"imagem"` // foto de perfil em base64
@@ -330,6 +331,8 @@ func (s *Server) handleAPI(w http.ResponseWriter, r *http.Request) {
 			rep = s.usuariosListar(ctx, req)
 		case "usuario_salvar":
 			rep = s.usuarioSalvar(ctx, req)
+		case "erro_cliente":
+			rep = s.erroCliente(ctx, req)
 		default:
 			rep = failReply("acao_desconhecida")
 		}

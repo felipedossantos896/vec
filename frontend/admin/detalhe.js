@@ -7,6 +7,16 @@ const abasDe = (trilha) => ABAS_DETALHE.filter(([k]) => trilha || k !== 'jornada
 function secao(titulo, linhas, simbolo) {
     return `<div class="det-sec"><h4>${simbolo ? icone(simbolo, { classe: 'ic-18' }) : ''}${titulo}</h4><dl>${linhas.map(([l, v]) => `<div class="det-row"><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
+// Uma parte da ficha que falhar vira um aviso; o resto da ficha abre normalmente.
+function parteSegura(nome, montar) {
+    try {
+        return montar();
+    }
+    catch (e) {
+        reportarErro(e);
+        return `<div class="det-sec"><p class="nota-fraca">Não foi possível mostrar ${nome} agora. A equipe já foi avisada.</p></div>`;
+    }
+}
 // ── Trilhos (Spec 027) ──
 const ICONE_TRILHO = { membro: 'pessoas', discipulador: 'discipulos', lider: 'celula' };
 const seloTrilho = (t) => `<span class="tri-selo${t.obrigatorio ? '' : ' opcional'}">${t.obrigatorio ? 'Obrigatório' : 'Opcional'}</span>`;
@@ -43,7 +53,30 @@ function trilhoCompleto(r, t) {
     ${barraTrilho(feitas, total)}
     <ol class="tri-etapas">${etapas}</ol></section>`;
 }
+// A ficha sempre abre: se a montagem completa falhar, abre o essencial com um aviso.
 function abrirDetalhe(r) {
+    try {
+        montarDetalhe(r);
+        return;
+    }
+    catch (e) {
+        reportarErro(e);
+    }
+    const d = $('det');
+    $('detNome').textContent = String(r.nome || 'Cadastro');
+    $('detNomeCompleto').hidden = true;
+    $('detSub').textContent = r.celula ? String(r.celula) : '';
+    $('detBody').innerHTML = `<div class="det-topo-acoes"><button type="button" class="b-sec" data-acao="editar">${icone('ficha', { classe: 'ic-16' })}Editar perfil</button></div>
+    <div class="det-sec"><p class="nota-fraca">Não foi possível mostrar a ficha completa agora. A equipe já foi avisada; enquanto isso, dá para editar o cadastro.</p></div>`;
+    d.dataset.linha = String(r.linha);
+    if (!d.open) {
+        if (typeof d.showModal === 'function')
+            d.showModal();
+        else
+            d.setAttribute('open', '');
+    }
+}
+function montarDetalhe(r) {
     const txt = (v) => v ? esc(v) : '<span class="pill x">—</span>';
     $('detNome').textContent = nomeCurto(r);
     const completo = regrasNomes.completo(r.nome);
@@ -56,7 +89,7 @@ function abrirDetalhe(r) {
     const interesses = INTERESSES.filter(([k]) => r[k] === 'S');
     const trilha = regrasLideranca.temTrilha(r); // o líder de área não tem jornada (Spec 013)
     const discipulos = estado.regs.filter(x => x.discipuladorId === r.linha).length;
-    const resumo = (trilha ? trilhosResumo(r) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
+    const resumo = (trilha ? parteSegura('a jornada', () => trilhosResumo(r)) : `<div class="det-sec"><h4>${esc(regrasLideranca.rotulo(r))}</h4><p class="nota-fraca">Supervisiona a área: sem célula fixa e sem jornada.</p></div>`) +
         secao('Dados principais', [
             linhasContato(r)[0],
             ['Discipulador', r.discipulador ? esc(r.discipulador) + semVinculo(r) : `<button type="button" class="btn-link${regrasLideranca.temTrilha(r) ? ' det-alerta' : ''}" data-acao="editar">Vincular</button>`],
@@ -67,7 +100,7 @@ function abrirDetalhe(r) {
         (interesses.length ? `<div class="det-sec"><h4>Quer servir como</h4><p class="det-tags">${interesses.map(([, l]) => `<span>${l}</span>`).join('')}</p></div>` : '') +
         acoesDetalhe(r);
     const [membro, ...outros] = regrasTrilhos.TRILHOS;
-    const jornada = trilha ? `<div class="tri-grade">${trilhoCompleto(r, membro)}<div class="tri-col">${outros.map(t => trilhoCompleto(r, t)).join('')}</div></div>` : '';
+    const jornada = trilha ? parteSegura('a jornada', () => `<div class="tri-grade">${trilhoCompleto(r, membro)}<div class="tri-col">${outros.map(t => trilhoCompleto(r, t)).join('')}</div></div>`) : '';
     const ficha = '<div class="det-ficha-dados">' +
         secao('Dados pessoais', [['Nascimento', nasc], ...linhasContato(r), ['Recebeu Jesus', pill(r.recebeuJesus)]], 'ficha') +
         '<div class="det-ficha-apoio">' + blocoEndereco() +
