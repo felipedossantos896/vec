@@ -77,9 +77,16 @@ func (g *gzipWriter) close() {
 // CSP é a política de conteúdo das páginas (Spec 008): só scripts, estilos e
 // fontes do próprio app (nada inline), tiles do OpenStreetMap no mapa e a busca de
 // CEP no ViaCEP. Rotas com política própria (a foto) sobrescrevem o cabeçalho.
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; " +
-	"img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://viacep.com.br; " +
-	"frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+const cspInicio = "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; "
+const cspFim = "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+const CSP = cspInicio +
+	"img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://viacep.com.br; " + cspFim
+
+// O painel e o worker local do MapLibre buscam estilo, tiles, fontes e ícones do
+// mapa Positron no OpenFreeMap (Spec 028). As outras páginas mantêm a política padrão.
+const cspPainel = cspInicio +
+	"img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; " +
+	"connect-src 'self' https://viacep.com.br https://tiles.openfreemap.org; worker-src 'self'; " + cspFim
 
 // Seguranca adiciona cabeçalhos de proteção básicos a todas as respostas.
 func Seguranca(next http.Handler) http.Handler {
@@ -89,6 +96,9 @@ func Seguranca(next http.Handler) http.Handler {
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		if r.URL.Path == "/admin/" || r.URL.Path == "/admin/index.html" || r.URL.Path == "/admin/vendor/maplibre/maplibre-gl-csp-worker.js" {
+			h.Set("Content-Security-Policy", cspPainel)
+		}
 		if strings.HasPrefix(r.URL.Path, "/admin") {
 			h.Set("X-Robots-Tag", "noindex, nofollow")
 			h.Set("Cache-Control", "no-store")

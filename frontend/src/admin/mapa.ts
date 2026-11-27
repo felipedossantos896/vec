@@ -1,13 +1,18 @@
 // ══════ MAPA DE MEMBROS (Spec 003) ══════
-// Leaflet (versionado em admin/vendor/leaflet) com o fundo do OpenStreetMap. Cada
+// Leaflet (versionado em admin/vendor/leaflet) com o fundo Positron do OpenFreeMap,
+// vetorial via MapLibre (Spec 028); o OpenStreetMap fica como alternativa. Cada
 // marcador é uma área de ~300 m com a contagem de pessoas; o endereço exato fica só
 // na ficha. A lista abaixo do mapa tem o mesmo conteúdo e funciona sem ele.
 // Política de tiles do OSM: atribuição sempre visível, sem pré-carga nem uso offline.
 
 declare const L: any; // Leaflet, carregado por <script> antes deste arquivo
+declare const maplibregl: { setWorkerUrl(url: string): void } | undefined;
 
 const TILES_OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATRIBUICAO_OSM = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Reportar erro no mapa</a>';
+// Positron do OpenFreeMap: gratuito, sem chave e sem conta (Spec 028).
+const ESTILO_VETORIAL = 'https://tiles.openfreemap.org/styles/positron';
+const ATRIBUICAO_VETORIAL = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 const ZOOM_MAX = 18; // aproxima o mapa-base; as posições permanecem aproximadas
 const ZOOM_ENQUADRAMENTO = 14;
 const ZOOM_TILES = ZOOM_MAX + 1; // detectRetina reduz em um o teto efetivo da camada no Leaflet 1.9.4
@@ -18,6 +23,8 @@ let mapaCarregadoEm = 0;
 let mapaLeaflet: any = null;
 let camadaGrupos: any = null;
 let camadaFerr: any = null; // casas e linhas da ferramenta aberta (Spec 009)
+let camadaOSM: any = null;
+let camadaVetorial: any = null;
 
 const regDe = (id: number): Registro | undefined => estado.regs.find(r => r.linha === id);
 
@@ -141,13 +148,44 @@ function iniciarLeaflet(): boolean {
   const zoom = L.control.zoom({ position: zoomEmCima.matches ? 'topright' : 'bottomright' }).addTo(mapaLeaflet);
   zoomEmCima.addEventListener('change', e => zoom.setPosition(e.matches ? 'topright' : 'bottomright'));
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(mapaLeaflet);
-  L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM }).addTo(mapaLeaflet);
   mapaLeaflet.attributionControl.setPrefix(false);
+  // O adaptador do MapLibre precisa de centro e zoom: entra quando o mapa já foi enquadrado.
+  if (typeof maplibregl !== 'undefined' && typeof L.maplibreGL === 'function') mapaLeaflet.whenReady(() => { if (!iniciarFundoVetorial()) usarFundoOSM(); });
+  else usarFundoOSM();
   camadaGrupos = L.layerGroup().addTo(mapaLeaflet);
   matchMedia(ALVOS_MAPA).addEventListener('change', () => { if (estado.aba === 'acompanhar' && ultimoFiltro) desenharGrupos(ultimoFiltro); });
   ligarCartaoMapa();
   camadaFerr = L.layerGroup().addTo(mapaLeaflet);
   return true;
+}
+
+// O OpenStreetMap entra quando o MapLibre não carregou, não há WebGL ou o estilo falhou.
+function usarFundoOSM() {
+  if (camadaVetorial) { mapaLeaflet.removeLayer(camadaVetorial); mapaLeaflet.attributionControl.removeAttribution(ATRIBUICAO_VETORIAL); camadaVetorial = null; }
+  $('mapaCanvas').classList.remove('mapa-vetorial');
+  camadaOSM ||= L.tileLayer(TILES_OSM, { maxZoom: ZOOM_TILES, detectRetina: true, attribution: ATRIBUICAO_OSM });
+  if (!mapaLeaflet.hasLayer(camadaOSM)) camadaOSM.addTo(mapaLeaflet).bringToBack();
+}
+
+function iniciarFundoVetorial(): boolean {
+  try {
+    maplibregl!.setWorkerUrl('/admin/vendor/maplibre/maplibre-gl-csp-worker.js');
+    const camada = L.maplibreGL({ style: ESTILO_VETORIAL, interactive: false, attributionControl: false });
+    camada.addTo(mapaLeaflet);
+    mapaLeaflet.attributionControl.addAttribution(ATRIBUICAO_VETORIAL); // o adaptador não repassa a atribuição
+    camadaVetorial = camada;
+    $('mapaCanvas').classList.add('mapa-vetorial');
+    const mapa = camada.getMaplibreMap();
+    // Erro antes do primeiro desenho completo (estilo, fontes, WebGL): volta ao OSM.
+    // Depois disso, um tile que falhe isolado não troca o fundo inteiro.
+    let pronto = false;
+    mapa.once('idle', () => { pronto = true; });
+    mapa.on('error', () => { if (camadaVetorial === camada && !pronto) usarFundoOSM(); });
+    return true;
+  } catch {
+    camadaVetorial = null;
+    return false;
+  }
 }
 
 function renderMapa() {
