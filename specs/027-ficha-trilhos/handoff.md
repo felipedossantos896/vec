@@ -24,3 +24,12 @@ Nenhuma. As decisões estão registradas abaixo.
 ## Obrigatoriedade (27/11/2026)
 - Por decisão do responsável, o trilho do membro e o do discipulador ("cuidar de pessoas") são obrigatórios, e o do líder de célula é opcional. Cada trilho mostra um selo "Obrigatório" ou "Opcional" no resumo e na aba Jornada.
 - Sem pendências abertas nesta spec.
+
+## Ficha que não abre com dados reais (27/11/2026)
+- **Sintoma:** os logs de produção mostram que, depois do #290, nenhuma abertura de ficha chega a `endereco_ler`. A última foi às 10:15, com o #288. `abrirDetalhe` quebra antes de abrir o diálogo.
+- **O que não reproduz:** os arquivos de produção, idênticos aos locais, rodados com dados fictícios no Chromium e no WebKit, e 18 variações de dados.
+- **Proteções:**
+  - `abrirDetalhe` sempre abre a ficha. Se a montagem inteira falhar, abre o essencial com "Editar perfil".
+  - Se só a jornada falhar, ela vira um aviso e o resto da ficha aparece.
+- **Registro:** erros de JavaScript do painel vão para o log do servidor (`acao: erro_cliente`, mensagem "erro no painel") com o tipo, até 3 linhas da pilha e a mensagem técnica, sem dados do cadastro nem do usuário.
+- **Próximo passo:** depois do deploy, ler `fly logs` para achar a causa real e corrigi-la.

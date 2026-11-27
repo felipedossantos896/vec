@@ -235,6 +235,26 @@ async function api<T extends ApiResult>(payload: object): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+// ── Erros do painel ──
+// Um erro de JavaScript vai para o log do servidor (acao erro_cliente) com o tipo, o
+// arquivo:linha e a mensagem técnica, para a equipe corrigir sem pedir nada ao líder.
+// Nada da tela nem do cadastro é enviado; cada erro vai uma vez, até 10 por página.
+const errosEnviados = new Set<string>();
+function reportarErro(erro: unknown, onde = '') {
+  const e = erro instanceof Error ? erro : null;
+  const texto = e ? e.message : String(erro);
+  const linhaPilha = (e?.stack || '').split('\n').filter(l => /\.js:\d+/.test(l)).slice(0, 3).map(l => l.trim()).join(' < ');
+  const local = (onde || linhaPilha).replace(/https?:\/\/[^/\s]+/g, '').trim();
+  const chave = `${texto}|${local}`;
+  if (errosEnviados.has(chave) || errosEnviados.size >= 10) return;
+  errosEnviados.add(chave);
+  const s = lerSessao();
+  if (!s) return;
+  api({ acao: 'erro_cliente', token: s.token, tipo: e?.name || 'Erro', onde: local, texto }).catch(() => {});
+}
+window.addEventListener('error', ev => reportarErro(ev.error || ev.message, ev.filename ? `${ev.filename.split('/').pop()}:${ev.lineno}:${ev.colno}` : ''));
+window.addEventListener('unhandledrejection', ev => reportarErro(ev.reason));
+
 // ── Login ──
 $('passToggle').addEventListener('click', () => {
   const inp = $<HTMLInputElement>('senha');
