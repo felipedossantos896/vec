@@ -271,9 +271,9 @@ $('loginForm').addEventListener('submit', async e => {
     } else if (r.erro === 'sem_escopo') {
       msg.textContent = 'Seu acesso ainda não foi configurado. Fale com a liderança da área.';
     } else if (r.erro === 'bloqueado') {
-      msg.textContent = 'Muitas tentativas. Aguarde 15 minutos e tente novamente.';
+      msg.textContent = 'Muitas tentativas. Aguarde 15 minutos e tente de novo.';
     } else if (r.erro === 'login_limitado') {
-      msg.textContent = 'Muitas tentativas no painel. Aguarde um minuto e tente novamente.';
+      msg.textContent = 'Muitas tentativas no painel. Aguarde um minuto e tente de novo.';
     } else {
       msg.textContent = 'Usuário ou senha incorretos.';
     }

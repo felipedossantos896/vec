@@ -18,7 +18,7 @@ function renderPainelArea(base: Registro[]) {
     <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
     ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
     ${celulasNova().length ? `<div class="ap-ferr"><button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button></div>` : ''}`;
-  $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Toque num rosto para ver a pessoa e agir.`;
+  $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Selecione um rosto para ver a pessoa e agir.`;
 }
 
 function renderArea() {

@@ -103,9 +103,9 @@ function painelDiscipulado(base, resumoGrupo) {
     const todos = prontos.length > 6 ? `<button type="button" class="btn-link" data-sit="podeDiscipular">Ver todas as ${prontos.length} pessoas</button>` : '';
     const duo = `<section class="panel duo-panel"><header class="panel-head"><h2>Discipuladores</h2><p>${resumo}</p></header><div class="duo">
     <div><h3 class="mini">Quem discipula</h3>${linhas ? `<div class="cells rolar">${linhas}</div>` : '<p class="vazio">Vincule os discipuladores ao editar os cadastros.</p>'}</div>
-    <div><h3 class="mini">Cobertura por célula</h3>${cobertura ? `<ol class="meters">${cobertura}</ol>` : '<p class="vazio">Nenhum cadastro com célula.</p>'}</div></div></section>`;
+    <div><h3 class="mini">Cobertura por célula</h3>${cobertura ? `<ol class="meters">${cobertura}</ol>` : '<p class="vazio">A cobertura aparece quando houver cadastros ligados a uma célula.</p>'}</div></div></section>`;
     return grupo('disc', 'Discipulado', resumoGrupo, duo +
-        painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém por aqui.</p>'), 'disc');
+        painel('Prontos para discipular', prontos.length ? `${plural(prontos.length, 'pessoa fez', 'pessoas fizeram')} o Expresso 01 e ainda não ${prontos.length === 1 ? 'discipula' : 'discipulam'} ninguém.` : 'Quem fez o Expresso 01 e ainda não discipula.', prontos.length ? `<ul class="pessoas">${prontos.slice(0, 6).map(r => pessoa(r, esc(r.celula || 'Sem célula'))).join('')}</ul>${todos}` : '<p class="vazio">Ninguém nessa situação agora.</p>'), 'disc');
 }
 // Um toque num discipulador leva à lista de quem ele acompanha
 $('aConteudo').addEventListener('click', e => {

@@ -33,7 +33,7 @@ const regrasEstados = {
     falhaCarga(online) {
         return online
             ? { tipo: 'erro', titulo: 'Não foi possível carregar', texto: 'Tente de novo em instantes. Se continuar, avise a liderança da área.', acao: { rotulo: 'Tentar de novo', attr: 'data-recarregar', primaria: true } }
-            : { tipo: 'offline', titulo: 'Sem internet agora', texto: 'Assim que a conexão voltar, toque em Tentar de novo.', acao: { rotulo: 'Tentar de novo', attr: 'data-recarregar', primaria: true } };
+            : { tipo: 'offline', titulo: 'Sem internet agora', texto: 'Quando a conexão voltar, use Tentar de novo.', acao: { rotulo: 'Tentar de novo', attr: 'data-recarregar', primaria: true } };
     },
     mapaVazio() {
         return { tipo: 'mapa', titulo: 'O mapa ainda está vazio', texto: 'Cadastre endereços na ficha das pessoas para vê-las aqui.', acao: { rotulo: 'Ver quem não tem endereço', attr: 'data-ver-lista' } };

@@ -178,7 +178,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(88px + env(safe-
 }
 
 /* ── WhatsApp e autorização de uso dos dados ── */
-.opcional { color: var(--muted); font-weight: 400; font-size: inherit; }
+.opcional { margin-left: 2px; color: var(--muted); font-size: var(--t12); font-weight: 500; }
 .aceite { margin-top: 22px; }
 .aceite-box { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--white); line-height: 1.4; cursor: pointer; }
 .aceite-box input { flex-shrink: 0; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--navy); cursor: pointer; }

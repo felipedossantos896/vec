@@ -139,7 +139,7 @@ async function chamarEdicao<T extends ApiResult>(payload: object, msg: HTMLEleme
     const res = await api<T>({ ...payload, token: s.token });
     if (res.ok) return res;
     if (res.erro === 'sessao') { limparSessao(); $<HTMLDialogElement>('det').close(); mostrarLogin('Sua sessão expirou. Entre novamente.'); return null; }
-    msg.textContent = ERROS_EDICAO[res.erro || ''] || 'Não foi possível salvar. Tente novamente.';
+    msg.textContent = ERROS_EDICAO[res.erro || ''] || 'Não foi possível salvar. Tente de novo.';
   } catch (err) {
     msg.textContent = 'Não foi possível conectar. Verifique a internet.';
   } finally {

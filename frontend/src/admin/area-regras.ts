@@ -26,7 +26,7 @@ const regrasArea = {
     if (p.diasSemContato >= regrasArea.DIAS_ALERTA) return `${p.diasSemContato} dias sem contato`;
     if (p.semDiscipulador) return 'Sem discipulador';
     if (p.semCelula) return 'Sem célula';
-    if (p.naoBatizado) return 'Ainda não batizado(a)';
+    if (p.naoBatizado) return 'Sem batismo';
     return `${p.diasSemContato} dias sem contato`;
   },
 

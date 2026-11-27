@@ -65,7 +65,7 @@ function renderEstrutura() {
     <p>${plural(estrutura.setores.length, 'setor', 'setores')} · ${plural(estrutura.celulas.length, 'célula', 'células')}, ${ativas} ${ativas === 1 ? 'ativa' : 'ativas'} · ${plural(estado.regs.length, 'pessoa', 'pessoas')}</p></div>
     <div class="est-acoes"><button class="b-sec" type="button" data-est="setor" data-id="0">${icone('mais', { classe: 'ic-16' })} Novo setor</button><button class="b-pri" type="button" data-est="celula" data-id="0">${icone('mais', { classe: 'ic-16' })} Nova célula</button></div></header>
     <div class="est-setores">${estrutura.setores.map(setor).join('')}</div>
-    <div class="est-tab">${estrutura.celulas.length ? '<div class="est-thead" aria-hidden="true"><span>Célula</span><span>Setor</span><span>Encontro</span><span>Casa</span><span>Pessoas</span><span>Situação</span><span></span></div>' + ordem.map(linha).join('') : '<p class="empty">Nenhuma célula ainda.</p>'}</div>
+    <div class="est-tab">${estrutura.celulas.length ? '<div class="est-thead" aria-hidden="true"><span>Célula</span><span>Setor</span><span>Encontro</span><span>Casa</span><span>Pessoas</span><span>Situação</span><span></span></div>' + ordem.map(linha).join('') : '<p class="empty">Nenhuma célula cadastrada. Use Nova célula para criar a primeira.</p>'}</div>
     <p class="field-hint">Células inativas saem do formulário público e do mapa, mas as pessoas continuam vinculadas.</p>`;
 }
 
@@ -147,7 +147,7 @@ $('estForm').addEventListener('submit', async e => {
     });
     if (r.ok) { estDlg.close(); carregar(); return; }
     if (r.erro === 'sessao') { limparSessao(); estDlg.close(); return mostrarLogin('Sua sessão expirou. Entre novamente.'); }
-    msg.textContent = ERROS_EST[r.erro || ''] || 'Não foi possível salvar. Tente novamente.';
+    msg.textContent = ERROS_EST[r.erro || ''] || 'Não foi possível salvar. Tente de novo.';
   } catch (err) {
     msg.textContent = 'Não foi possível conectar. Verifique a internet.';
   } finally {

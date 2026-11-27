@@ -143,7 +143,7 @@ async function chamarEdicao(payload, msg, botao) {
             mostrarLogin('Sua sessão expirou. Entre novamente.');
             return null;
         }
-        msg.textContent = ERROS_EDICAO[res.erro || ''] || 'Não foi possível salvar. Tente novamente.';
+        msg.textContent = ERROS_EDICAO[res.erro || ''] || 'Não foi possível salvar. Tente de novo.';
     }
     catch (err) {
         msg.textContent = 'Não foi possível conectar. Verifique a internet.';
