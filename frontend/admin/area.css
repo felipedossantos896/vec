@@ -28,7 +28,7 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .gv-corpo > * { max-width: 1180px; margin-left: auto; margin-right: auto; }
 .gv-corpo #mapaStatus { margin-top: 0; }
 /* Fundo do OpenStreetMap com a cor da identidade (decisão 1 da Spec 009) */
-.area-canvas .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
+.area-canvas:not(.mapa-vetorial) .leaflet-tile-pane { filter: grayscale(0.65) sepia(0.12) saturate(0.85) brightness(1.04) contrast(0.95); }
 
 .area-painel { position: absolute; left: 16px; top: calc(var(--area-cab, 0px) + 12px); z-index: 610; width: 300px; max-height: calc(100% - var(--area-cab, 0px) - var(--gv-h, 64px) - 24px); overflow: auto; background: var(--white); color: var(--navy); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow-card); }
 .area-painel h2 { font: 700 var(--t17) var(--display); margin-bottom: 12px; }

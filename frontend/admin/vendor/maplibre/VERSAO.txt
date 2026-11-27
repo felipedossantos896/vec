@@ -1,0 +1,7 @@
+MapLibre GL JS 5.19.0 (https://maplibre.org), cópia de dist/ do pacote npm maplibre-gl@5.19.0 (build CSP).
+Adaptador Leaflet 0.1.4, cópia do pacote npm @maplibre/maplibre-gl-leaflet@0.1.4.
+maplibre-gl-csp.js        sha256 a6be9ebbd932bc8e0733147eda04819becdcc453829316a0b1bad1b4e5619460
+maplibre-gl-csp-worker.js sha256 b83ff8093df2258e89f9ea6e4e3e877066510cd0688049efac9aa47928595a85
+maplibre-gl.css           sha256 761a1130f0960ea369d917ec843f7d1af5ca1dcf27701aef1d9d59821b3bab25
+leaflet-maplibre-gl.js    sha256 1e6cf8cb3eb5fd909879aa1bf36a383fb506c9a5b2dbbfababce65a294dd1fcb
+Licenças: BSD 3-Clause (LICENSE.txt) e ISC (LICENSE-leaflet). Não editar: para atualizar, trocar os arquivos e estes hashes.
