@@ -6,7 +6,7 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .area-canvas { position: absolute; inset: var(--area-cab, 0px) 0 0; height: auto; min-height: 0; margin: 0; border-radius: 0; }
 .area-titulo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 /* Zoom e atribuição do OpenStreetMap sempre acima da gaveta */
-.area-canvas .leaflet-bottom { bottom: calc(var(--gv-h, 64px) + 4px); transition: bottom 0.22s ease; }
+.area-canvas .leaflet-bottom { bottom: calc(var(--gv-h, 64px) + 4px); transition: bottom var(--dur-sheet) var(--ease-sheet); }
 /* Camadas (Spec 016): rostos (600) < painel, filtros e ferramenta < cartão (700) < gaveta */
 .area-canvas .leaflet-map-pane { z-index: auto; }
 .area-palco .area-filtros { position: absolute; top: 14px; right: 16px; left: 332px; z-index: 620; display: flex; flex-wrap: nowrap; justify-content: flex-end; gap: 8px; margin: 0; pointer-events: none; }
@@ -14,14 +14,14 @@ body.na-area .wrap { max-width: none; padding: 0; }
 #mapaVazio:not(:empty) { position: absolute; top: 50%; left: 50%; z-index: 640; width: min(360px, calc(100% - 32px)); transform: translate(-50%, -50%); }
 
 /* Gaveta suspensa: recolhida mostra a alça e o resumo; aberta vai a 85% do mapa */
-.gaveta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 750; display: flex; flex-direction: column; height: var(--gv-aberta, 64px); transform: translateY(calc(var(--gv-aberta, 64px) - var(--gv-h, 64px))); transition: transform 0.22s ease; background: var(--page); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 28px rgba(21, 23, 28, 0.18); }
+.gaveta { position: absolute; left: 0; right: 0; bottom: 0; z-index: 750; display: flex; flex-direction: column; height: var(--gv-aberta, 64px); transform: translateY(calc(var(--gv-aberta, 64px) - var(--gv-h, 64px))); transition: transform var(--dur-sheet) var(--ease-sheet); background: var(--page); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 28px rgba(21, 23, 28, 0.18); }
 .gaveta.arrastando, .area-palco:has(.gaveta.arrastando) .leaflet-bottom { transition: none; }
 .gv-alca { flex: none; display: grid; justify-items: center; gap: 6px; width: 100%; min-height: 64px; padding: 8px 18px 10px; touch-action: none; cursor: grab; color: var(--ink); border-radius: 18px 18px 0 0; }
 .gaveta.arrastando .gv-alca { cursor: grabbing; }
 .gv-puxador { width: 44px; height: 5px; border-radius: 99px; background: var(--line-strong); }
 .gv-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; max-width: 1180px; }
 .gv-resumo { font: 700 var(--t15) var(--display); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gv-linha .ic { color: var(--muted); transition: transform 0.22s ease; }
+.gv-linha .ic { color: var(--muted); transition: transform var(--dur-sheet) var(--ease-sheet); }
 .gaveta[data-estado="aberta"] .gv-linha .ic { transform: rotate(180deg); }
 .gv-alca:focus-visible { outline: var(--focus); outline-offset: -3px; }
 .gv-corpo { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 4px 24px 28px; }
@@ -44,9 +44,12 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .lente b { font: 700 var(--t15) var(--display); font-variant-numeric: tabular-nums; }
 .lente.on { background: var(--action-wash); color: var(--action-ink); }
 .lente:focus-visible, .ap-ferr button:focus-visible { outline: var(--focus); outline-offset: 2px; }
-.ap-leg { display: grid; gap: 6px; font-size: var(--t13); }
-.ap-leg li { display: flex; justify-content: space-between; color: var(--navy); }
-.ap-leg b { color: var(--muted); font-weight: 600; }
+.ap-leg { display: grid; gap: 2px; font-size: var(--t13); }
+.ap-cel { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 32px; padding: 0 12px; border-radius: 8px; color: var(--navy); font-size: inherit; text-align: left; }
+.ap-cel b { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ap-cel[aria-pressed="true"] { background: var(--action-wash); color: var(--action-ink); }
+.ap-cel[aria-pressed="true"] b { color: var(--action-ink); }
+.ap-cel:focus-visible { outline: var(--focus); outline-offset: 2px; }
 .ap-ferr { display: grid; gap: 6px; }
 .ap-ferr button { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin-top: 12px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-strong); color: var(--navy); font-weight: 600; font-size: var(--t13); text-align: left; }
 .area-priv { margin-top: 12px; font-size: var(--t12); color: var(--muted); }
@@ -89,9 +92,10 @@ body.na-area .wrap { max-width: none; padding: 0; }
   .area-palco .area-filtros select.input { flex: 1 1 0; width: auto; }
   .gv-corpo { padding: 4px 14px calc(20px + env(safe-area-inset-bottom, 0px)); }
   .area-painel { position: static; width: auto; max-height: none; margin: 0 0 14px; border-radius: 14px; }
-  .ap-lentes { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
-  .ap-lentes li { flex: none; }
-  .lente { gap: 10px; }
+  .ap-lentes { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ap-lentes li { flex: 1 1 auto; }
+  .lente { gap: 10px; min-height: 40px; border: 1px solid var(--line); }
+  .lente.on { border-color: transparent; }
   .fale-lista { grid-template-columns: 1fr; }
   .fale-a .b-zap, .fale-a .b-sec { min-height: 44px; }
 }
@@ -188,7 +192,8 @@ body.na-area .wrap { max-width: none; padding: 0; }
 /* Modos da Área ficam disponíveis no mapa em qualquer largura. */
 .area-palco .area-filtros { flex-wrap: wrap; }
 .area-modos { pointer-events: auto; display: flex; width: max-content; max-width: 100%; gap: 3px; padding: 3px; background: var(--white); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow-card); }
-.area-modos button { min-height: 32px; padding: 0 10px; border-radius: 999px; color: var(--navy); font-size: var(--t12); font-weight: 700; }
+.area-modos button { min-height: calc(var(--control-height) - 8px); padding: 0 14px; border-radius: 999px; color: var(--navy); font-size: var(--t13); font-weight: 600; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out); }
+.area-modos button:focus-visible { outline: var(--focus); outline-offset: 2px; }
 .area-modos button[aria-pressed="true"] { background: var(--navy); color: var(--white); }
 .rp-grupo { position: static; display: inline-grid; place-items: center; width: 16px; height: 16px; border: 0; border-radius: 5px; font: 700 10px/1 var(--sans); vertical-align: middle; }
 .rp-grupo[data-grupo="B"] { background: #7643a6; }
@@ -197,10 +202,11 @@ body.na-area .wrap { max-width: none; padding: 0; }
 .rp-pessoa[aria-expanded="true"] { color: var(--action-ink); background: var(--action-wash); font-weight: 800; }
 .cartao-pop .leaflet-popup-content-wrapper, .cartao-pop .leaflet-popup-tip-container { animation-duration: 240ms; }
 @media (max-width: 720px), (max-height: 500px) {
-  .area-modos { margin-right: auto; }
+  .area-modos { flex: 1 1 100%; width: auto; margin-right: 0; }
+  .area-modos button { flex: 1; }
   .area-palco .area-filtros select.input { flex: 1 1 min(29%, 130px); }
 }
-@media (any-pointer: coarse) { .area-modos button { min-height: 44px; } }
+@media (any-pointer: coarse) { .area-modos button { min-height: calc(var(--control-height) - 8px); } }
 @media (min-width: 721px) and (min-height: 501px) {
   .area-palco { --area-cab: 106px; }
   .area-titulo { top: 14px; left: 16px; width: auto; height: auto; clip-path: none; font: 800 var(--t24, 1.5rem)/1.25 var(--display); }
@@ -215,3 +221,24 @@ body.na-area .wrap { max-width: none; padding: 0; }
   .mapa-grupo.selecionado .rp:only-child::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; box-shadow: 0 0 0 9px var(--action); animation: rp-halo 2s ease-out 2; opacity: 0; pointer-events: none; }
 }
 @keyframes rp-halo { from { transform: scale(0.9); opacity: 0.28; } to { transform: scale(1.55); opacity: 0; } }
+
+/* Movimento da Área: curtas, com saída suave, e desligadas para quem pede menos movimento. */
+.area-palco { --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1); --dur-sheet: 280ms; }
+.lente, .ap-cel, .ap-ferr button { transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out), transform 100ms var(--ease-out); }
+@media (hover: hover) {
+  .lente:not(.on):hover, .ap-cel:not([aria-pressed="true"]):hover { background: var(--sunken); }
+  .ap-ferr button:hover { background: var(--sunken); }
+  .area-modos button[aria-pressed="false"]:hover { background: var(--sunken); }
+}
+.lente:active, .ap-cel:active, .ap-ferr button:active, .area-modos button:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: no-preference) {
+  .area-painel, .area-ferr-painel:not([hidden]) { animation: area-surge 240ms var(--ease-out) both; }
+  .rostos-pin { animation: rostos-surgem 220ms var(--ease-out) both; }
+}
+@keyframes area-surge { from { opacity: 0; transform: translateY(6px); } }
+@keyframes rostos-surgem { from { opacity: 0; transform: translateY(4px) scale(0.9); } }
+@media (prefers-reduced-motion: reduce) {
+  .lente, .ap-cel, .ap-ferr button, .area-modos button { transition: none; }
+  .lente:active, .ap-cel:active, .ap-ferr button:active, .area-modos button:active { transform: none; }
+}
+@media (any-pointer: coarse) { .ap-cel { min-height: 44px; } }
