@@ -7,6 +7,26 @@ const regrasMapa = {
     tamanhoRosto(toque) {
         return toque ? 40 : 36;
     },
+    // Colisão de nomes no mapa: percorre os marcadores na ordem de prioridade e mostra o nome
+    // só se ele não cobrir um nome já mostrado nem o rosto de outro marcador. O rosto nunca some.
+    nomesQueCabem(itens, ordem, folga = 2) {
+        const cruza = (a, b) => a.left < b.right + folga && b.left < a.right + folga && a.top < b.bottom + folga && b.top < a.bottom + folga;
+        const vazia = (c) => c.right <= c.left || c.bottom <= c.top;
+        const mostrados = [];
+        const cabe = itens.map(() => false);
+        ordem.forEach(i => {
+            const nome = itens[i]?.nome;
+            if (!nome || vazia(nome)) {
+                cabe[i] = Boolean(nome);
+                return;
+            }
+            const bate = mostrados.some(c => cruza(c, nome)) || itens.some((o, j) => j !== i && !vazia(o.rosto) && cruza(o.rosto, nome));
+            cabe[i] = !bate;
+            if (!bate)
+                mostrados.push(nome);
+        });
+        return cabe;
+    },
     // Mantém só quem está no filtro de setor/célula; grupos que ficam vazios somem.
     filtrar(d, visiveis) {
         const so = (ids) => ids.filter(id => visiveis.has(id));
