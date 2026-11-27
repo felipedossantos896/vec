@@ -4,6 +4,7 @@
 // só o centro de cada área de ~300 m (nunca a coordenada de alguém).
 
 type GrupoMapa = { lat: number; lng: number; linhas: number[]; peloBairro: number };
+type Caixa = { left: number; top: number; right: number; bottom: number };
 type DestaqueMapa = { liderCelula: string[]; casaCelula: string[] };
 type DadosMapa = { grupos: GrupoMapa[]; soCidade: number[]; naoLocalizados: number[]; pendentes: number[]; destaques?: Record<string, DestaqueMapa> };
 type PessoaNoMapa = { papel?: string; setor?: string; destaque?: DestaqueMapa };
@@ -16,6 +17,24 @@ type MapaFiltrado = {
 const regrasMapa = {
   tamanhoRosto(toque: boolean): number {
     return toque ? 40 : 36;
+  },
+
+  // Colisão de nomes no mapa: percorre os marcadores na ordem de prioridade e mostra o nome
+  // só se ele não cobrir um nome já mostrado nem o rosto de outro marcador. O rosto nunca some.
+  nomesQueCabem(itens: { nome: Caixa | null; rosto: Caixa }[], ordem: number[], folga = 2): boolean[] {
+    const cruza = (a: Caixa, b: Caixa): boolean =>
+      a.left < b.right + folga && b.left < a.right + folga && a.top < b.bottom + folga && b.top < a.bottom + folga;
+    const vazia = (c: Caixa): boolean => c.right <= c.left || c.bottom <= c.top;
+    const mostrados: Caixa[] = [];
+    const cabe = itens.map(() => false);
+    ordem.forEach(i => {
+      const nome = itens[i]?.nome;
+      if (!nome || vazia(nome)) { cabe[i] = Boolean(nome); return; }
+      const bate = mostrados.some(c => cruza(c, nome)) || itens.some((o, j) => j !== i && !vazia(o.rosto) && cruza(o.rosto, nome));
+      cabe[i] = !bate;
+      if (!bate) mostrados.push(nome);
+    });
+    return cabe;
   },
 
   // Mantém só quem está no filtro de setor/célula; grupos que ficam vazios somem.

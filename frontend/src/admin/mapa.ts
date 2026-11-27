@@ -207,9 +207,23 @@ const baseMapa = (): Registro[] => metricasIndicadores.filtrar(estado.regs, esta
 const ALVOS_MAPA = '(any-pointer: coarse), (max-width: 720px)';
 // Marcadores das áreas: os rostos continuam juntos no mesmo ponto aproximado.
 let ultimoFiltro: MapaFiltrado | null = null;
+let marcadoresNoMapa: { el: HTMLElement; prioridade: number }[] = [];
+
+// Esconde os nomes que colidem na tela (no celular, com o mapa afastado, eles se cobriam).
+// Quem está na lente e as áreas com mais gente ganham prioridade; o rosto fica sempre.
+function ajustarNomes() {
+  if (!marcadoresNoMapa.length) return;
+  const caixa = (el: Element | null) => el ? el.getBoundingClientRect() : null;
+  const itens = marcadoresNoMapa.map(({ el }) => ({ nome: caixa(el.querySelector('.rp-nome, .rp-nomes')), rosto: caixa(el.querySelector('.rostos-pin')) || new DOMRect() }));
+  const ordem = marcadoresNoMapa.map((_, i) => i).sort((a, b) => marcadoresNoMapa[b].prioridade - marcadoresNoMapa[a].prioridade || a - b);
+  const cabe = regrasMapa.nomesQueCabem(itens, ordem);
+  marcadoresNoMapa.forEach(({ el }, i) => el.classList.toggle('sem-nome', !cabe[i] && !el.classList.contains('selecionado')));
+}
+
 function desenharGrupos(f: MapaFiltrado) {
   mapaLeaflet.closePopup();
   camadaGrupos.clearLayers();
+  marcadoresNoMapa = [];
   const toque = matchMedia(ALVOS_MAPA).matches;
   const t = regrasMapa.tamanhoRosto(toque);
   $('mapaCanvas').style.setProperty('--rosto', `${t}px`); // CSSOM: o CSP não deixa style no HTML
@@ -240,6 +254,7 @@ function desenharGrupos(f: MapaFiltrado) {
     const el: HTMLElement | undefined = m.getElement();
     if (!el) return;
     el.setAttribute('aria-label', rotulo);
+    marcadoresNoMapa.push({ el, prioridade: (acesas.length && estado.lente !== 'todos' ? 1000 : 0) + pessoas.length });
     const marcador: MarcadorPessoas = { m, el, pessoas, t };
     const nomesBotoes = el.querySelectorAll<HTMLButtonElement>('.rp-pessoa');
     if (nomesBotoes.length) el.setAttribute('role', 'group');
@@ -259,7 +274,12 @@ function desenharGrupos(f: MapaFiltrado) {
       el.addEventListener('mouseleave', agendarFechar);
     }
     const selecionar = (peloTeclado: boolean) => {
-      if (nomesBotoes.length) nomesBotoes[0].focus({ preventScroll: true });
+      // Lista de nomes escondida pela colisão: aproxima o mapa, como num agrupamento
+      if (nomesBotoes.length && el.classList.contains('sem-nome') && mapaLeaflet.getZoom() < mapaLeaflet.getMaxZoom()) {
+        mapaLeaflet.setView(m.getLatLng(), Math.min(mapaLeaflet.getZoom() + 2, mapaLeaflet.getMaxZoom()));
+        return;
+      }
+      if (nomesBotoes.length) { el.classList.remove('sem-nome'); nomesBotoes[0].focus({ preventScroll: true }); }
       else abrirCartao(marcador, 0, true, peloTeclado);
     };
     el.addEventListener('keydown', e => {
@@ -270,6 +290,7 @@ function desenharGrupos(f: MapaFiltrado) {
     });
     m.on('click', () => selecionar(false));
   });
+  requestAnimationFrame(ajustarNomes);
 }
 
 type MarcadorPessoas = { m: any; el: HTMLElement; pessoas: Registro[]; t: number };
@@ -366,8 +387,10 @@ document.addEventListener('click', e => {
 // Toque no mapa, arrasto e zoom fecham o cartão.
 function ligarCartaoMapa() {
   mapaLeaflet.on('click dragstart zoomstart', () => mapaLeaflet.closePopup());
+  mapaLeaflet.on('zoomend resize', () => requestAnimationFrame(ajustarNomes));
   mapaLeaflet.on('popupclose', () => {
     cartaoDe?.g.el.classList.remove('selecionado');
+    requestAnimationFrame(ajustarNomes);
     cartaoDe?.g.el.querySelector('.rp-pessoa[aria-expanded="true"]')?.setAttribute('aria-expanded', 'false');
     if (cartaoDe?.g.el.hasAttribute('aria-expanded')) cartaoDe.g.el.setAttribute('aria-expanded', 'false');
     cartaoDe = null;

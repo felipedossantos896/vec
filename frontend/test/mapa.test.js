@@ -80,3 +80,22 @@ test('subtítulo e ação do cartão (Spec 017)', () => {
   assert.deepEqual({ ...regras.acaoContato('https://wa.me/5585999990000') }, { tipo: 'whatsapp', rotulo: 'Entrar em contato' });
   assert.deepEqual({ ...regras.acaoContato('') }, { tipo: 'registrar', rotulo: 'Registrar contato' });
 });
+
+test('esconde só os nomes que colidem, respeitando a prioridade e sem esconder rostos', () => {
+  const cx = (left, top, w, h) => ({ left, top, right: left + w, bottom: top + h });
+  const itens = [
+    { nome: cx(0, 40, 90, 20), rosto: cx(25, 0, 40, 30) },    // 0: área com mais gente
+    { nome: cx(60, 40, 90, 20), rosto: cx(130, 0, 40, 30) },  // 1: nome cobre o nome 0
+    { nome: cx(300, 40, 90, 20), rosto: cx(325, 0, 40, 30) }, // 2: longe de todos
+    { nome: cx(320, 0, 40, 20), rosto: cx(500, 0, 40, 30) }   // 3: nome cobre o rosto 2
+  ];
+  assert.deepEqual([...regras.nomesQueCabem(itens, [0, 1, 2, 3])], [true, false, true, false]);
+  // Invertendo a prioridade, quem vence a colisão é o 1
+  assert.deepEqual([...regras.nomesQueCabem(itens, [1, 0, 2, 3])], [false, true, true, false]);
+});
+
+test('sem nome ou com o mapa oculto (caixas vazias) nada é escondido por engano', () => {
+  const zero = { left: 0, top: 0, right: 0, bottom: 0 };
+  assert.deepEqual([...regras.nomesQueCabem([{ nome: zero, rosto: zero }, { nome: zero, rosto: zero }], [0, 1])], [true, true]);
+  assert.deepEqual([...regras.nomesQueCabem([{ nome: null, rosto: zero }], [0])], [false]);
+});
