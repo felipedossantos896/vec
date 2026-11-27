@@ -36,3 +36,7 @@ test('batismo mostra o que falta confirmar e nada depois de registrado', () => {
   assert.deepEqual([...regras.faltaParaBatismo({})], ['Café com o Pastor', 'Nova Criatura']);
   assert.deepEqual([...regras.faltaParaBatismo({ batismo: 'S' })], []);
 });
+
+test('membro e discipulador são obrigatórios; líder de célula é opcional', () => {
+  assert.deepEqual([...regras.TRILHOS.map(t => [t.id, t.obrigatorio])].map(x => [...x]), [['membro', true], ['discipulador', true], ['lider', false]]);
+});

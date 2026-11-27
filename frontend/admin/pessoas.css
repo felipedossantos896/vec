@@ -186,6 +186,9 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 .tri-ic { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--tri-wash); color: var(--tri); }
 .tri-conta { color: var(--muted); font-size: var(--t12); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tri-conta b { color: var(--navy); font: 700 var(--t15) var(--display); }
+.tri-selo { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 99px; background: var(--tri-wash); color: var(--tri); font: 600 11px/1.6 var(--sans); vertical-align: middle; white-space: nowrap; }
+.tri-selo.opcional { background: var(--sunken); color: var(--muted); }
+.tri-topo .tri-selo { display: table; margin: 4px 0 0; }
 .tri-barra { display: block; height: 6px; overflow: hidden; border-radius: 99px; background: var(--sunken); }
 .tri-barra i { display: block; height: 100%; min-width: 0; border-radius: inherit; background: var(--tri); transform-origin: left center; }
 

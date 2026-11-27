@@ -5,15 +5,15 @@
 const regrasTrilhos = {
     TRILHOS: [
         {
-            id: 'membro', titulo: 'Trilho do membro', resumo: 'Caminhada do novo convertido',
+            id: 'membro', titulo: 'Trilho do membro', resumo: 'Caminhada do novo convertido', obrigatorio: true,
             etapas: [['recebeuJesus', 'Novo nascimento'], ['cafePastor', 'Café com o Pastor'], ['estacaoDNA', 'Estação DNA'],
                 ['serveMinisterio', 'Serve em ministério'], ['celula', 'Membro de célula'], ['novaCriatura', 'Nova Criatura'],
                 ['acompInicial', 'Acompanhamento Inicial'], ['batismo', 'Batismo nas Águas'], ['batismoEspirito', 'Batismo no Espírito'],
                 ['encontroDeus', 'Encontro com Deus']]
         },
-        { id: 'discipulador', titulo: 'Trilho do discipulador', resumo: 'Para quem vai discipular', etapas: [['expresso01', 'Expresso 01']] },
+        { id: 'discipulador', titulo: 'Trilho do discipulador', resumo: 'Cuidar de pessoas', obrigatorio: true, etapas: [['expresso01', 'Expresso 01']] },
         {
-            id: 'lider', titulo: 'Trilho do líder de célula', resumo: 'Para quem vai liderar uma célula',
+            id: 'lider', titulo: 'Trilho do líder de célula', resumo: 'Para quem vai liderar uma célula', obrigatorio: false,
             etapas: [['expresso02', 'Expresso 02'], ['tlc', 'TLC · Treinamento de Líder de Célula'], ['tadel', 'Frequenta o TADEL']]
         }
     ],

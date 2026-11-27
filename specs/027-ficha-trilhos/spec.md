@@ -4,11 +4,11 @@ Aprovada pelo responsável em 27/11/2026 como redesign livre. Substitui a compos
 
 A jornada segue os trilhos da igreja:
 
-| Trilho | Etapas, na ordem |
-|---|---|
-| Membro (caminhada do novo convertido) | Novo nascimento, Café com o Pastor, Estação DNA, Serve em ministério, Membro de célula, Nova Criatura, Acompanhamento Inicial, Batismo nas Águas, Batismo no Espírito, Encontro com Deus |
-| Discipulador | Expresso 01 |
-| Líder de célula | Expresso 02, TLC (Treinamento de Líder de Célula), Frequenta o TADEL |
+| Trilho | Obrigatório | Etapas, na ordem |
+|---|---|---|
+| Membro (caminhada do novo convertido) | Sim | Novo nascimento, Café com o Pastor, Estação DNA, Serve em ministério, Membro de célula, Nova Criatura, Acompanhamento Inicial, Batismo nas Águas, Batismo no Espírito, Encontro com Deus |
+| Discipulador (cuidar de pessoas) | Sim | Expresso 01 |
+| Líder de célula | Não, opcional | Expresso 02, TLC (Treinamento de Líder de Célula), Frequenta o TADEL |
 
 Regras:
 - **Batismo nas Águas:** a pendência de Café com o Pastor e de Nova Criatura continua aparecendo.
