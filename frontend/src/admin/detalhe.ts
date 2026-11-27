@@ -87,7 +87,6 @@ function abrirDetalhe(r: Registro) {
       ['Serve em ministério', pill(r.serveMinisterio)],
       ...(r.serveMinisterio === 'S' ? ([['Ministério', txt(r.ministerioNome)]] as [string, string][]) : [])
     ], 'pessoas') + '</div></div>' +
-    (trilha ? secao('Outras etapas', regrasTrilhos.FORA_DOS_TRILHOS.map(([k, l]): [string, string] => [l, pill(r[k]) + dataEtapa(r, k)])) : '') +
     secao('Treinamentos', TREINOS.map(([k, l]): [string, string] => [l, pill(r[k])])) +
     secao('Discipulado e interesses', [['Discipulador', txt(r.discipulador) + semVinculo(r)], ...INTERESSES.map(([k, l]): [string, string] => ['Interesse: ' + l.toLowerCase(), pill(r[k])])]) +
     (r.sugestao ? `<div class="det-sec"><h4>Sugestão para as células</h4><div class="det-text">${esc(r.sugestao)}</div></div>` : '') +

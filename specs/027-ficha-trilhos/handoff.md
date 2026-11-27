@@ -15,5 +15,9 @@ T001 / #289, branch `claude/redesign-ficha-trilhos`.
 - Playwright em 1440×900 e 390×844, com dados fictícios. Conferidos: abas, setas entre as abas, Escape, clique no trilho e datas em dd/mm/aaaa.
 
 ## Pendências
-- Decidir em que trilho entram Batismo no Espírito e Encontro com Deus.
 - Confirmar se o trilho do líder continua "opcional", como dizia o rótulo antigo.
+
+## Correção pós-merge (27/11/2026)
+- O `trilhos-regras.js` não estava no `go:embed`. Em produção, o arquivo dava 404 e a ficha não abria. Agora ele está embutido e listado no CI, e o novo `TestPageAssetsAreEmbedded` falha se alguma página pedir um script ou CSS fora do `go:embed`.
+- Por decisão do responsável, Batismo no Espírito e Encontro com Deus entraram no trilho do membro, depois do Batismo nas Águas. A seção "Outras etapas" saiu.
+- Continua pendente confirmar se o trilho do líder é "opcional".

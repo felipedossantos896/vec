@@ -11,7 +11,8 @@ const regrasTrilhos = {
       id: 'membro', titulo: 'Trilho do membro', resumo: 'Caminhada do novo convertido',
       etapas: [['recebeuJesus', 'Novo nascimento'], ['cafePastor', 'Café com o Pastor'], ['estacaoDNA', 'Estação DNA'],
         ['serveMinisterio', 'Serve em ministério'], ['celula', 'Membro de célula'], ['novaCriatura', 'Nova Criatura'],
-        ['acompInicial', 'Acompanhamento Inicial'], ['batismo', 'Batismo nas Águas']]
+        ['acompInicial', 'Acompanhamento Inicial'], ['batismo', 'Batismo nas Águas'], ['batismoEspirito', 'Batismo no Espírito'],
+        ['encontroDeus', 'Encontro com Deus']]
     },
     { id: 'discipulador', titulo: 'Trilho do discipulador', resumo: 'Para quem vai discipular', etapas: [['expresso01', 'Expresso 01']] },
     {
@@ -19,9 +20,6 @@ const regrasTrilhos = {
       etapas: [['expresso02', 'Expresso 02'], ['tlc', 'TLC · Treinamento de Líder de Célula'], ['tadel', 'Frequenta o TADEL']]
     }
   ] as Trilho[],
-
-  // Etapas registradas no cadastro que ainda não têm trilho definido
-  FORA_DOS_TRILHOS: [['batismoEspirito', 'Batismo no Espírito'], ['encontroDeus', 'Encontro com Deus']] as [string, string][],
 
   // "Membro de célula" vem da célula informada; as demais, do Sim/Não do cadastro.
   estado(r: Record<string, unknown>, campo: string): EstadoEtapa {
