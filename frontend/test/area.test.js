@@ -19,7 +19,7 @@ test('motivo em uma frase', () => {
   assert.equal(regras.motivo(p('A', 94, { semDiscipulador: true })), '94 dias sem contato');
   assert.equal(regras.motivo(p('A', 5, { semDiscipulador: true })), 'Sem discipulador');
   assert.equal(regras.motivo(p('A', 5, { semCelula: true })), 'Sem célula');
-  assert.equal(regras.motivo(p('A', 5, { naoBatizado: true })), 'Ainda não batizado(a)');
+  assert.equal(regras.motivo(p('A', 5, { naoBatizado: true })), 'Sem batismo');
 });
 
 test('rótulo do ponto e link do WhatsApp', () => {

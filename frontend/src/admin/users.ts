@@ -124,7 +124,7 @@ function renderUsuarios() {
       <span class="u-ac"><span class="sr-only">Último acesso: </span>${esc(acesso)}</span>
       <span class="u-st">${u.ativo ? '<span class="badge">Ativo</span>' : '<span class="badge off">Desativado</span>'}</span>
     </button>`;
-  }).join('') : '<div class="empty">Nenhum usuário cadastrado.</div>';
+  }).join('') : '<div class="empty">Nenhum usuário cadastrado. Use Novo usuário para dar o primeiro acesso.</div>';
   $('userList').querySelectorAll<HTMLButtonElement>('.urow').forEach(b => b.addEventListener('click', () => abrirUsuario(estado.usuarios.find(x => x.usuario === b.dataset.u) || null)));
 }
 
@@ -180,7 +180,7 @@ function abrirUsuario(u: UsuarioPainel | null) {
   $('uLoginHint').textContent = novo ? 'Letras minúsculas, números, ponto, hífen ou sublinhado. Sem espaços.' : 'O usuário não pode ser alterado.';
   $<HTMLInputElement>('uSenha').value = '';
   $('uSenhaLbl').textContent = novo ? 'Senha' : 'Nova senha';
-  $('uSenhaHint').textContent = novo ? 'Mínimo de 6 caracteres. Toque em Gerar para criar uma senha segura.' : 'Deixe em branco para manter a senha atual.';
+  $('uSenhaHint').textContent = novo ? 'Mínimo de 6 caracteres. Use Gerar para criar uma senha segura.' : 'Deixe em branco para manter a senha atual.';
   const perfil = u && u.perfil ? u.perfil : 'CELULA';
   document.querySelectorAll<HTMLInputElement>('input[name="uPerfil"]').forEach(r => { r.checked = r.value === perfil; });
   $('uCadastro').innerHTML = '<option value="">Sem cadastro ligado</option>' + opcoesPessoas(estado.pessoas, u ? u.cadastro : 0);
@@ -256,7 +256,7 @@ $('uForm').addEventListener('submit', async e => {
     const r = await api<SalvarUsuarioResult>(dados);
     if (!r.ok) {
       if (sessaoInvalida(r)) { $<HTMLDialogElement>('uDlg').close(); return; }
-      msg.textContent = MSG_USUARIO[r.erro || ''] || 'Não foi possível salvar. Tente novamente.';
+      msg.textContent = MSG_USUARIO[r.erro || ''] || 'Não foi possível salvar. Tente de novo.';
       return;
     }
     if (r.token && r.expiraEm) salvarSessao({ ...s, token: r.token, expira: Date.now() + (r.expiraEm - 60) * 1000 });

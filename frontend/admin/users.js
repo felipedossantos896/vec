@@ -151,7 +151,7 @@ function renderUsuarios() {
       <span class="u-ac"><span class="sr-only">Último acesso: </span>${esc(acesso)}</span>
       <span class="u-st">${u.ativo ? '<span class="badge">Ativo</span>' : '<span class="badge off">Desativado</span>'}</span>
     </button>`;
-    }).join('') : '<div class="empty">Nenhum usuário cadastrado.</div>';
+    }).join('') : '<div class="empty">Nenhum usuário cadastrado. Use Novo usuário para dar o primeiro acesso.</div>';
     $('userList').querySelectorAll('.urow').forEach(b => b.addEventListener('click', () => abrirUsuario(estado.usuarios.find(x => x.usuario === b.dataset.u) || null)));
 }
 // Opções de setores e células: listas fixas + o que já existe nos cadastros e usuários
@@ -203,7 +203,7 @@ function abrirUsuario(u) {
     $('uLoginHint').textContent = novo ? 'Letras minúsculas, números, ponto, hífen ou sublinhado. Sem espaços.' : 'O usuário não pode ser alterado.';
     $('uSenha').value = '';
     $('uSenhaLbl').textContent = novo ? 'Senha' : 'Nova senha';
-    $('uSenhaHint').textContent = novo ? 'Mínimo de 6 caracteres. Toque em Gerar para criar uma senha segura.' : 'Deixe em branco para manter a senha atual.';
+    $('uSenhaHint').textContent = novo ? 'Mínimo de 6 caracteres. Use Gerar para criar uma senha segura.' : 'Deixe em branco para manter a senha atual.';
     const perfil = u && u.perfil ? u.perfil : 'CELULA';
     document.querySelectorAll('input[name="uPerfil"]').forEach(r => { r.checked = r.value === perfil; });
     $('uCadastro').innerHTML = '<option value="">Sem cadastro ligado</option>' + opcoesPessoas(estado.pessoas, u ? u.cadastro : 0);
@@ -295,7 +295,7 @@ $('uForm').addEventListener('submit', async (e) => {
                 $('uDlg').close();
                 return;
             }
-            msg.textContent = MSG_USUARIO[r.erro || ''] || 'Não foi possível salvar. Tente novamente.';
+            msg.textContent = MSG_USUARIO[r.erro || ''] || 'Não foi possível salvar. Tente de novo.';
             return;
         }
         if (r.token && r.expiraEm)

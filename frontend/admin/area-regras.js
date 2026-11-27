@@ -26,7 +26,7 @@ const regrasArea = {
         if (p.semCelula)
             return 'Sem célula';
         if (p.naoBatizado)
-            return 'Ainda não batizado(a)';
+            return 'Sem batismo';
         return `${p.diasSemContato} dias sem contato`;
     },
     // Rótulo do ponto no mapa: o primeiro nome se for uma pessoa, senão a contagem.

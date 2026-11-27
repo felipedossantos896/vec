@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#15171c">
 <meta name="format-detection" content="telephone=no">
-<title>Formulário Membro · Área VEC</title>
+<title>Formulário de membro · Área VEC</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%231a2340'/%3E%3Cpath d='M16 7v18M10 13h12' stroke='%23c9a84c' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -20,7 +20,7 @@
   <div class="fp-pitch">
     <p class="eyebrow">Formulário de membro</p>
     <p class="fp-h" id="ladoTitulo">Queremos conhecer você e caminhar junto.</p>
-    <p class="fp-t" id="ladoTexto">São 5 etapas rápidas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.</p>
+    <p class="fp-t" id="ladoTexto">São 5 etapas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.</p>
   </div>
   <ol class="fp-passos" id="ladoPassos">
     <li><span class="fp-n" aria-hidden="true">1</span><span><b>Dados pessoais</b><small>Nome, nascimento e contato</small></span></li>
@@ -50,9 +50,9 @@
 
 <div class="hero">
   <div class="intro" id="intro">
-    <p class="eyebrow">Formulário Membro</p>
+    <p class="eyebrow">Formulário de membro</p>
     <h1>Queremos conhecer você e caminhar junto.</h1>
-    <p>São 5 etapas rápidas. Você pode voltar para revisar suas respostas.</p>
+    <p>São 5 etapas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.</p>
   </div>
 </div>
 
@@ -65,7 +65,7 @@
     <section class="card" aria-labelledby="s1">
       <div class="card-head">
         <span class="step" aria-hidden="true">1</span>
-        <div><h2 id="s1" tabindex="-1">Dados pessoais</h2><p>Para sabermos quem você é.</p></div>
+        <div><h2 id="s1" tabindex="-1">Dados pessoais</h2><p>Nome, nascimento e contato.</p></div>
       </div>
 
       <div class="field" id="f-nome">
@@ -81,7 +81,7 @@
       </div>
 
       <div class="field" id="f-telefone">
-        <label class="field-label" for="telefone">WhatsApp <span class="opcional">(opcional)</span></label>
+        <label class="field-label" for="telefone">WhatsApp <span class="opcional">opcional</span></label>
         <input type="tel" id="telefone" name="telefone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="(85) 99999-9999" enterkeyhint="next" aria-describedby="err-telefone">
         <p class="err" id="err-telefone">Digite o número com DDD, como (85) 99999-9999.</p>
       </div>
@@ -123,7 +123,7 @@
           <label class="opt"><input type="radio" name="celula" value="Vencedores em Cristo"><span><i class="opt-bar" aria-hidden="true"></i><span class="opt-t"><b>Vencedores em Cristo</b></span></span></label>
         </div>
         </div>
-        <label class="opt opt-sem"><input type="radio" name="celula" value=""><span><span class="opt-t"><b>Ainda não tenho célula</b><small>A liderança vai te ajudar a encontrar uma</small></span></span></label>
+        <label class="opt opt-sem"><input type="radio" name="celula" value=""><span><span class="opt-t"><b>Ainda não tenho célula</b><small>A liderança ajuda você a encontrar uma</small></span></span></label>
       </div>
 
       <div class="sub-block qgrid" data-group="servico"></div>
@@ -138,7 +138,7 @@
     <section class="card" aria-labelledby="s4" hidden>
       <div class="card-head">
         <span class="step" aria-hidden="true">4</span>
-        <div><h2 id="s4" tabindex="-1">Treinamentos</h2><p>O que você já fez ou participa.</p></div>
+        <div><h2 id="s4" tabindex="-1">Treinamentos</h2><p>Cursos e encontros que você já fez ou faz.</p></div>
       </div>
       <div class="qgrid" data-group="treinamentos"></div>
     </section>
@@ -151,8 +151,8 @@
       </div>
 
       <div class="field">
-        <label class="field-label" for="discipulador">Nome do seu discipulador</label>
-        <input type="text" id="discipulador" name="discipulador" autocapitalize="words" placeholder="Deixe em branco se não tiver">
+        <label class="field-label" for="discipulador">Nome do seu discipulador <span class="opcional">opcional</span></label>
+        <input type="text" id="discipulador" name="discipulador" autocapitalize="words">
       </div>
 
       <div class="qgrid" data-group="interesses"></div>
@@ -185,7 +185,7 @@
     <p id="doneTexto">Suas respostas já estão com a liderança da Área VEC.</p>
     <p class="done-enc hidden" id="doneEnc"></p>
     <button type="button" class="btn-again" id="btnAgain">Enviar outro formulário</button>
-    <p class="done-pe">Quer corrigir algo? Fale com a liderança da sua célula.</p>
+    <p class="done-pe" id="donePe">Quer corrigir algo? Fale com a liderança da Área VEC.</p>
   </section>
 
 </main>

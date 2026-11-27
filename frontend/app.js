@@ -12,7 +12,7 @@ const MSG_ENVIO = {
     dados_invalidos: 'Alguma resposta não foi aceita. Atualize a página e tente de novo.',
     // Proteção contra robôs (Spec 007): nada do que foi preenchido se perde.
     envio_recusado: 'Não foi possível enviar. Recarregue a página e tente de novo.',
-    envio_expirado: 'A página ficou aberta por muito tempo. Toque em Enviar novamente.',
+    envio_expirado: 'A página ficou aberta por muito tempo. Envie novamente.',
     envio_rapido: 'Envio rápido demais. Confira os dados e envie de novo.',
     muitos_envios: 'Muitos envios desta rede agora. Aguarde alguns minutos e tente de novo.'
 };
@@ -135,7 +135,7 @@ function atualizarPassos() {
     });
     byId('ladoTitulo').textContent = ultima ? 'Falta pouco.' : 'Queremos conhecer você e caminhar junto.';
     byId('ladoTexto').textContent = ultima ? 'Conte como você quer servir e autorize o uso dos dados para enviar.'
-        : 'São 5 etapas rápidas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.';
+        : 'São 5 etapas, cerca de 3 minutos. Você pode voltar e revisar antes de enviar.';
 }
 function mostrarEtapa(focar = false) {
     etapas.forEach((etapa, i) => {
@@ -283,6 +283,7 @@ function mostrarRecebido(nome, celula) {
     const enc = celula ? (encontroDaCelula[celula] || '') : '';
     byId('doneEnc').textContent = enc ? `A ${celula} se reúne: ${enc}.` : '';
     byId('doneEnc').classList.toggle('hidden', !enc);
+    byId('donePe').textContent = `Quer corrigir algo? Fale com a liderança ${celula ? 'da sua célula' : 'da Área VEC'}.`;
     setTimeout(() => byId('doneTitulo').focus(), 50);
 }
 const encontroDaCelula = {}; // preenchido por contato.ts
@@ -304,7 +305,7 @@ form.addEventListener('submit', async (e) => {
         return;
     }
     if (!navigator.onLine) {
-        mostrarErro('Sem conexão com a internet. Suas respostas continuam aqui; conecte-se e toque em Enviar novamente.');
+        mostrarErro('Sem conexão com a internet. Suas respostas continuam aqui; conecte-se e envie novamente.');
         return;
     }
     enviando = true;
@@ -322,7 +323,7 @@ form.addEventListener('submit', async (e) => {
         if (!resp.ok || !r || !r.ok) {
             if (r && r.erro === 'envio_expirado')
                 await pedirMarca(); // a próxima tentativa já vai com uma marca nova
-            mostrarErro(MSG_ENVIO[r && r.erro] || 'Não foi possível enviar agora. Tente novamente em instantes.');
+            mostrarErro(MSG_ENVIO[r && r.erro] || 'Não foi possível enviar agora. Tente de novo em instantes.');
             return;
         }
         requestId = novoRequestId();
@@ -335,7 +336,7 @@ form.addEventListener('submit', async (e) => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     catch (err) {
-        mostrarErro('Não foi possível enviar agora. Verifique a internet e toque em Enviar novamente.');
+        mostrarErro('Não foi possível enviar agora. Verifique a internet e envie novamente.');
     }
     finally {
         enviando = false;
