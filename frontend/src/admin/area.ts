@@ -11,12 +11,13 @@ function renderPainelArea(base: Registro[]) {
     const n = k === 'todos' ? base.length : base.filter(r => naLente(k, r)).length;
     return `<li><button type="button" class="lente${estado.lente === k ? ' on' : ''}" data-lente="${k}" aria-pressed="${estado.lente === k}"><span>${rotulo}</span><b>${n}</b></button></li>`;
   }).join('');
+  // Cada célula da legenda filtra o mapa; um segundo clique volta para todas.
   const legenda = celulas.sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c =>
-    `<li>${celulaChip(c)}<b>${base.filter(r => r.celula === c).length}</b></li>`).join('');
+    `<li><button type="button" class="ap-cel" data-cel="${esc(c)}" aria-pressed="${estado.celula === c}">${celulaChip(c)}<b>${base.filter(r => r.celula === c).length}</b></button></li>`).join('');
   const faltamDiscipuladores = base.filter(r => naLente('semDisc', r)).length;
   $('areaPainel').innerHTML = `<h2>Visão geral</h2><div class="ap-stats"><div>${icone('pessoas')}<b>${base.length}</b><span>Pessoas</span></div><div>${icone('casa')}<b>${celulas.length}</b><span>Células</span></div><div>${icone('aviso')}<b>${faltamDiscipuladores}</b><span>Sem discipulador</span></div></div>
-    <p class="ap-kick">Mostrar</p><ul class="ap-lentes">${lentes}</ul>
-    ${legenda ? `<p class="ap-kick">Células</p><ul class="ap-leg">${legenda}</ul>` : ''}
+    <p class="ap-kick">Filtrar o mapa</p><ul class="ap-lentes">${lentes}</ul>
+    ${legenda ? `<p class="ap-kick">${estado.celula ? 'Célula selecionada' : 'Células'}</p><ul class="ap-leg">${legenda}</ul>` : ''}
     ${celulasNova().length ? `<div class="ap-ferr"><button type="button" data-nova-pessoa>Nova pessoa ${icone('mais', { classe: 'ic-16' })}</button></div>` : ''}`;
   $('areaSub').textContent = `${plural(base.length, 'pessoa', 'pessoas')} em ${plural(celulas.length, 'célula', 'células')}. Selecione um rosto para ver a pessoa e agir.`;
 }
@@ -25,7 +26,8 @@ function renderArea() {
   if (estado.aba !== 'acompanhar') return;
   const base = baseIndicadores();
   renderPainelArea(base);
-  $('gvResumo').textContent = `${plural(base.length, 'pessoa', 'pessoas')} no recorte`;
+  const onde = estado.celula || estado.setor;
+  $('gvResumo').textContent = `${plural(base.length, 'pessoa', 'pessoas')} ${onde ? `em ${onde}` : 'na área'}`;
 }
 
 $('areaPainel').addEventListener('click', e => {
@@ -35,6 +37,14 @@ $('areaPainel').addEventListener('click', e => {
     estado.lente = lente.dataset.lente || 'todos';
     renderArea(); renderMapa();
     $('areaPainel').querySelector<HTMLButtonElement>(`[data-lente="${estado.lente}"]`)?.focus();
+    return;
+  }
+  const cel = alvo?.closest<HTMLElement>('[data-cel]');
+  if (cel) {
+    const nome = cel.dataset.cel || '';
+    estado.celula = estado.celula === nome ? '' : nome;
+    renderTudo();
+    $('areaPainel').querySelector<HTMLButtonElement>(`[data-cel="${CSS.escape(nome)}"]`)?.focus();
   }
 });
 
