@@ -65,23 +65,8 @@
 .det-pane .det-sec { min-width: 0; margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--white); box-shadow: 0 2px 4px #14243d0f; }
 .det-ficha-dados { display: grid; gap: 12px; margin-bottom: 12px; }
 .det-ficha-dados > .det-sec, .det-ficha-apoio > .det-sec:last-child { margin-bottom: 0; }
-.det-resumo-cards { display: grid; gap: 8px; margin-bottom: 12px; }
-.det-resumo-cards > div { min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--white); box-shadow: 0 2px 4px #14243d0f; }
-.det-resumo-cards dt { display: flex; align-items: center; gap: 8px; font-size: var(--t13); font-weight: 700; }
-.det-resumo-cards dt .ic { flex: none; color: var(--action); }
-.det-resumo-cards dd { margin: 4px 0 0 26px; color: var(--muted); font-size: var(--t12); overflow-wrap: anywhere; }
-.det-resumo-cards .det-resumo-cuidado { background: #fff7ec; }
-.det-resumo-cuidado dt .ic { color: #b45309; }
 .det-alerta { color: var(--coral-ink); font-weight: 700; }
 .btn-link.det-alerta { min-height: 0; padding: 0; }
-.jor-lista { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(98px, 1fr); overflow-x: auto; padding: 8px 2px 4px; }
-.jor-lista:focus-visible { outline: var(--focus); outline-offset: 2px; border-radius: 6px; }
-.jor-lista li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start; gap: 6px; padding: 0 4px; color: var(--muted); font-size: var(--t12); line-height: 1.35; text-align: center; overflow-wrap: break-word; hyphens: auto; }
-.jor-lista li:not(:last-child)::before { content: ""; position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background: var(--line); }
-.jor-lista li.ok { color: #087038; font-weight: 600; }
-.jor-lista .det-data { display: block; margin: 0; font-size: 11px; font-weight: 500; }
-.jor-c { position: relative; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--page); }
-.jor-lista li.ok .jor-c { border-color: #15803d; background: #15803d; color: var(--white); }
 .det-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .det-tags span { padding: 4px 10px; border-radius: 999px; background: var(--sunken); font-size: var(--t12); font-weight: 600; }
 .det-ult { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--sunken); }
@@ -91,7 +76,6 @@
 @media (min-width: 768px) {
   .det-ficha-dados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .det-pane > .det-sec dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .det-resumo-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 639px) {
   #det { width: 100%; }
@@ -194,3 +178,67 @@ dialog.x-dlg { width: min(420px, calc(100vw - 24px)); height: fit-content; max-h
 .np-papel { border: 0; padding: 0; min-width: 0; }
 .ed-papel { margin: 0 0 12px; font-weight: 600; color: var(--ink); }
 .u-lider-campos { margin-top: 8px; }
+
+/* ── Spec 027: jornada nos três trilhos ── */
+#det { --tri: var(--action); --tri-wash: var(--action-wash); --tri-ok: #15803d; }
+[data-tri="discipulador"] { --tri: #0f766e; --tri-wash: #e6f4f1; }
+[data-tri="lider"] { --tri: #7643a6; --tri-wash: #f2ebf8; }
+.tri-ic { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--tri-wash); color: var(--tri); }
+.tri-conta { color: var(--muted); font-size: var(--t12); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tri-conta b { color: var(--navy); font: 700 var(--t15) var(--display); }
+.tri-barra { display: block; height: 6px; overflow: hidden; border-radius: 99px; background: var(--sunken); }
+.tri-barra i { display: block; height: 100%; min-width: 0; border-radius: inherit; background: var(--tri); transform-origin: left center; }
+
+/* Visão geral: uma linha por trilho */
+.tri-resumo ul { display: grid; gap: 4px; }
+.tri-linha { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto 16px; grid-template-areas: "ic nome conta seta" "ic barra barra seta"; align-items: center; column-gap: 12px; row-gap: 6px; width: 100%; padding: 10px 8px; border-radius: 10px; color: var(--navy); text-align: left; }
+.tri-linha .tri-ic { grid-area: ic; }
+.tri-nome { grid-area: nome; font-size: var(--t13); font-weight: 600; }
+.tri-linha .tri-conta { grid-area: conta; }
+.tri-linha .tri-barra { grid-area: barra; }
+.tri-seta { grid-area: seta; color: var(--muted); }
+.tri-linha:focus-visible { outline: var(--focus); outline-offset: 2px; }
+
+/* Aba Jornada: linha do tempo por trilho */
+.tri-grade { display: grid; gap: 12px; }
+.det-pane .tri { margin: 0; padding: 16px; scroll-margin-top: 8px; }
+.tri-topo { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.det-pane .tri-topo h4 { margin: 0; font-size: var(--t15); }
+.tri-topo small { display: block; margin-top: 2px; color: var(--muted); font-size: var(--t12); }
+.tri > .tri-barra { margin: 12px 0 4px; }
+.tri-etapas { display: grid; }
+.tri-e { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 10px 0; font-size: var(--t13); }
+.tri-e + .tri-e { border-top: 1px solid var(--line); }
+.tri-e:not(:last-child)::after { content: ""; position: absolute; left: 11px; top: 36px; bottom: -10px; width: 2px; background: var(--line); }
+.tri-e[data-estado="feito"]:not(:last-child)::after { background: var(--tri-ok); }
+.tri-no { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border: 1.5px dashed var(--line-strong); border-radius: 50%; background: var(--white); color: var(--muted); font-size: 12px; }
+.tri-e[data-estado="feito"] .tri-no { border: 0; background: var(--tri-ok); color: var(--white); }
+.tri-e[data-estado="nao"] .tri-no { border-style: solid; }
+.tri-e-t { padding-top: 3px; color: var(--navy); font-weight: 600; }
+.tri-falta { display: block; margin-top: 2px; color: #a84b06; font-size: var(--t12); font-weight: 500; }
+.tri-e-v { display: grid; justify-items: end; gap: 2px; padding-top: 3px; color: var(--muted); font-size: var(--t12); text-align: right; }
+.tri-e[data-estado="feito"] .tri-e-v { color: var(--tri-ok); font-weight: 600; }
+.tri-e-v .det-data { margin: 0; color: var(--muted); font-weight: 500; }
+
+.tri-col { display: grid; gap: 12px; align-content: start; }
+@media (min-width: 720px) {
+  .tri-grade { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+}
+/* No celular as três abas cabem numa linha: o ícone sai abaixo de 420 px */
+@media (max-width: 420px) { .det-tabs button .ic { display: none; } .det-tabs button { padding: 0 4px; white-space: nowrap; } }
+
+/* Movimento: barras enchem e as linhas reagem; nada disso com movimento reduzido */
+.tri-linha { transition: background-color 150ms ease-out, transform 100ms ease-out; }
+@media (hover: hover) { .tri-linha:hover { background: var(--sunken); } .tri-linha:hover .tri-seta { color: var(--tri); } }
+.tri-linha:active { transform: scale(0.99); }
+@media (prefers-reduced-motion: no-preference) {
+  .det-pane:not([hidden]) .tri-barra i { animation: tri-enche 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .det-pane:not([hidden]) .tri-e { animation: tri-e-entra 260ms ease-out both; }
+  .det-pane:not([hidden]) .tri-e:nth-child(2) { animation-delay: 30ms; }
+  .det-pane:not([hidden]) .tri-e:nth-child(3) { animation-delay: 60ms; }
+  .det-pane:not([hidden]) .tri-e:nth-child(4) { animation-delay: 90ms; }
+  .det-pane:not([hidden]) .tri-e:nth-child(n+5) { animation-delay: 120ms; }
+}
+@keyframes tri-enche { from { transform: scaleX(0); } }
+@keyframes tri-e-entra { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .tri-linha { transition: none; } .tri-linha:active { transform: none; } }
